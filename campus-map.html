@@ -1,0 +1,1777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>FindIt — UIU Campus Map</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet CSS & MarkerCluster CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <script src="config.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #F8FAFC;
+      --panel: #FFFFFF;
+      --tc: #0F172A;
+      --mc: #64748B;
+      --border: #E2E8F0;
+      --primary: #2563EB;
+      --primary-dark: #1D4ED8;
+      --accent-lost: #EF4444;
+      --accent-found: #10B981;
+      --accent-pending: #F59E0B;
+      --accent-smart: #8B5CF6;
+      --accent-resolved: #64748B;
+      --glass: rgba(255, 255, 255, 0.94);
+      --glass-border: rgba(255, 255, 255, 0.6);
+      --shadow-lg: 0 18px 40px rgba(15, 23, 42, 0.20);
+      --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.12);
+      --shell-bg: #dfe6ef;
+    }
+
+    body.dark {
+      --bg: #0F172A;
+      --panel: #1E293B;
+      --tc: #F1F5F9;
+      --mc: #94A3B8;
+      --border: #334155;
+      --glass: rgba(30, 41, 59, 0.95);
+      --glass-border: rgba(255, 255, 255, 0.12);
+      --shell-bg: #0b1220;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+      background: var(--shell-bg);
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Phone Frame Container ── */
+    .phone-shell {
+      width: min(100vw, 420px);
+      height: 100dvh;
+      max-height: 100dvh;
+      background: var(--bg);
+      border-radius: 28px;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.22);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 600px) {
+      body { background: var(--bg); }
+      .phone-shell {
+        width: 100vw;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+
+    /* ── Map Canvas Container ── */
+    #map-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: #e5e7eb;
+    }
+
+    /* ── Top Bar Container ── */
+    .top-controls-wrap {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+      overflow: visible;
+    }
+    .top-controls-wrap > * {
+      pointer-events: auto;
+    }
+
+    /* ── Search Bar ── */
+    .search-card {
+      background: var(--glass);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 6px 8px 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--shadow-md);
+      transition: all 0.2s ease;
+      position: relative;
+      z-index: 1001;
+      overflow: visible;
+    }
+
+    .search-card:focus-within {
+      border-color: var(--primary);
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.25);
+    }
+
+    .search-input-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+    }
+
+    .search-icon {
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+
+    .search-input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--tc);
+      font-family: 'Inter', sans-serif;
+    }
+
+    .search-input::placeholder {
+      color: var(--mc);
+      font-size: 12px;
+    }
+
+    .search-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .icon-action-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--tc);
+      transition: transform 0.12s ease, background 0.15s ease;
+    }
+
+    .icon-action-btn:active {
+      transform: scale(0.92);
+    }
+
+    .icon-action-btn.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    /* ── Floating Search Autocomplete Dropdown ── */
+    .search-results-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      max-height: 280px;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+      display: none;
+      flex-direction: column;
+      z-index: 2000;
+      padding: 6px;
+    }
+
+    .search-results-dropdown.show {
+      display: flex;
+    }
+
+    .search-result-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .search-result-item:hover, .search-result-item:active {
+      background: rgba(37, 99, 235, 0.12);
+    }
+
+    .result-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: rgba(37, 99, 235, 0.1);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .result-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .result-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--tc);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .result-sub {
+      font-size: 11px;
+      color: var(--mc);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .result-tag {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 99px;
+      background: var(--border);
+      color: var(--tc);
+    }
+
+    /* ── Floating Filter Chips ── */
+    .filter-chips-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-bottom: 2px;
+    }
+    .filter-chips-scroll::-webkit-scrollbar { display: none; }
+
+    .chip-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 99px;
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      color: var(--tc);
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .chip-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    }
+
+    .chip-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
+
+    /* ── Map Floating Side Controls ── */
+    .map-side-controls {
+      position: absolute;
+      right: 14px;
+      top: 140px;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .map-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      background: var(--glass);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--glass-border);
+      color: var(--tc);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-md);
+      cursor: pointer;
+      transition: transform 0.12s ease, background 0.15s ease;
+    }
+
+    .map-btn:active {
+      transform: scale(0.92);
+    }
+
+    .map-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* ── Campus Info Floating Card ── */
+    .info-card-float {
+      position: absolute;
+      left: 14px;
+      top: 140px;
+      z-index: 20;
+      background: var(--glass);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 10px 12px;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-width: 170px;
+    }
+
+    .info-card-title {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--mc);
+    }
+
+    .info-stats-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .stat-pill {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .stat-pill.lost { color: var(--accent-lost); }
+    .stat-pill.found { color: var(--accent-found); }
+
+    .info-active-spot {
+      font-size: 10px;
+      color: var(--tc);
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ── Navigation Banner (When Route Active) ── */
+    .nav-route-banner {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      right: 14px;
+      z-index: 1050;
+      background: linear-gradient(135deg, #1E3A8A, #2563EB);
+      color: white;
+      border-radius: 20px;
+      padding: 14px 16px;
+      box-shadow: 0 12px 30px rgba(37, 99, 235, 0.4);
+      display: none;
+      flex-direction: column;
+      gap: 8px;
+      animation: slideDown 0.3s ease-out;
+    }
+
+    @keyframes slideDown {
+      from { transform: translateY(-30px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .nav-banner-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-banner-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-banner-close {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .nav-details-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .nav-step-preview {
+      font-size: 11px;
+      background: rgba(255,255,255,0.15);
+      padding: 6px 10px;
+      border-radius: 10px;
+      line-height: 1.3;
+    }
+
+    /* ── Draggable Bottom Sheet ── */
+    .bottom-sheet {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 30;
+      background: var(--panel);
+      border-radius: 24px 24px 0 0;
+      box-shadow: 0 -10px 30px rgba(15, 23, 42, 0.15);
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), height 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      touch-action: none;
+    }
+
+    .bottom-sheet.collapsed { height: 165px; }
+    .bottom-sheet.half { height: 380px; }
+    .bottom-sheet.full { height: 85dvh; }
+
+    .sheet-handle-bar {
+      width: 100%;
+      padding: 10px 0 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+    }
+
+    .sheet-handle {
+      width: 40px;
+      height: 4.5px;
+      border-radius: 99px;
+      background: var(--mc);
+      opacity: 0.4;
+    }
+
+    .sheet-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 16px 20px;
+      scrollbar-width: none;
+    }
+    .sheet-content::-webkit-scrollbar { display: none; }
+
+    .sheet-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .sheet-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--tc);
+    }
+
+    .sheet-subtitle {
+      font-size: 11px;
+      color: var(--mc);
+    }
+
+    /* Items List in Bottom Sheet */
+    .sheet-items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sheet-item-card {
+      display: flex;
+      gap: 12px;
+      padding: 10px;
+      border-radius: 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      cursor: pointer;
+      transition: transform 0.12s ease, border-color 0.15s ease;
+    }
+
+    .sheet-item-card:active {
+      transform: scale(0.98);
+      border-color: var(--primary);
+    }
+
+    .sheet-item-img {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #CBD5E1;
+    }
+
+    .sheet-item-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .sheet-item-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .sheet-item-name {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--tc);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sheet-item-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+      flex-shrink: 0;
+    }
+
+    .badge-lost { background: #FEF2F2; color: var(--accent-lost); }
+    .badge-found { background: #ECFDF5; color: var(--accent-found); }
+    .badge-pending { background: #FFFBEB; color: var(--accent-pending); }
+    .badge-smart { background: #F3E8FF; color: var(--accent-smart); }
+
+    .sheet-item-loc {
+      font-size: 11px;
+      color: var(--mc);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 3px;
+    }
+
+    .sheet-item-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 6px;
+      font-size: 10px;
+      color: var(--mc);
+    }
+
+    /* ── Item Detail Modal (Bottom Sheet Popup) ── */
+    .detail-popup-sheet {
+      position: absolute;
+      inset: 0;
+      z-index: 1500;
+      background: rgba(15, 23, 42, 0.4);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .detail-popup-sheet.show {
+      display: flex;
+    }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .detail-card {
+      width: 100%;
+      max-height: 85dvh;
+      background: var(--panel);
+      border-radius: 26px 26px 0 0;
+      padding: 18px 18px 24px;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .detail-close-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: none;
+      color: var(--tc);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    .detail-img-wrap {
+      width: 100%;
+      height: 180px;
+      border-radius: 18px;
+      overflow: hidden;
+      position: relative;
+      background: #E2E8F0;
+    }
+
+    .detail-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .detail-badge-float {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+    }
+
+    .detail-ai-chip {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(139, 92, 246, 0.9);
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 99px;
+      backdrop-filter: blur(6px);
+    }
+
+    .detail-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--tc);
+    }
+
+    .detail-grid-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .detail-info-box {
+      background: var(--bg);
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+    }
+
+    .detail-info-label {
+      font-size: 10px;
+      color: var(--mc);
+      font-weight: 500;
+    }
+
+    .detail-info-val {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--tc);
+      margin-top: 2px;
+    }
+
+    .detail-actions-row {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1fr;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .detail-btn {
+      padding: 12px 10px;
+      border-radius: 14px;
+      border: none;
+      font-family: 'Poppins', sans-serif;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: transform 0.1s ease;
+    }
+
+    .detail-btn:active { transform: scale(0.96); }
+
+    .detail-btn-primary {
+      background: linear-gradient(135deg, #2563EB, #1D4ED8);
+      color: white;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+    }
+
+    .detail-btn-sec {
+      background: var(--bg);
+      color: var(--tc);
+      border: 1px solid var(--border);
+    }
+
+    /* ── Floating Action Buttons (FABs) ── */
+    .fabs-bottom-right {
+      position: absolute;
+      right: 14px;
+      bottom: 180px;
+      z-index: 22;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .fab-btn {
+      padding: 10px 14px;
+      border-radius: 99px;
+      background: var(--glass);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid var(--glass-border);
+      color: var(--tc);
+      font-size: 11px;
+      font-weight: 700;
+      box-shadow: var(--shadow-md);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.12s ease;
+    }
+
+    .fab-btn:active { transform: scale(0.94); }
+
+    .fab-btn.lost {
+      background: linear-gradient(135deg, #EF4444, #DC2626);
+      color: white;
+      border: none;
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+    }
+
+    .fab-btn.found {
+      background: linear-gradient(135deg, #10B981, #059669);
+      color: white;
+      border: none;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+    }
+
+    .info-card-float,
+    .filter-chips-scroll { display: none; }
+    .fab-btn span { display: none; }
+    .fab-btn { width: 48px; height: 48px; padding: 0; border-radius: 50%; justify-content: center; }
+
+    /* ── Map Settings Panel Modal ── */
+    .settings-modal {
+      position: absolute;
+      inset: 0;
+      z-index: 2000;
+      background: rgba(15, 23, 42, 0.4);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .settings-modal.show { display: flex; }
+
+    .settings-card {
+      width: 100%;
+      max-width: 340px;
+      background: var(--panel);
+      border-radius: 24px;
+      padding: 20px;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .settings-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--tc);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .layer-option {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 10px;
+      border-radius: 16px;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .layer-option.active {
+      border-color: var(--primary);
+      background: rgba(37, 99, 235, 0.08);
+    }
+
+    .layer-thumb {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background-size: cover;
+      background-position: center;
+    }
+
+    .layer-name {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--tc);
+    }
+
+    /* ── Custom Leaflet Marker Styling ── */
+    .custom-map-pin {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      border: 2.5px solid white;
+      transition: transform 0.2s ease;
+      cursor: pointer;
+    }
+
+    .custom-map-pin:hover {
+      transform: scale(1.15);
+    }
+
+    .pin-lost { background: #EF4444; }
+    .pin-found { background: #10B981; }
+    .pin-pending { background: #F59E0B; }
+    .pin-smart { background: #8B5CF6; }
+    .pin-resolved { background: #64748B; }
+
+    /* Pulse dot for user location */
+    .user-loc-dot {
+      width: 18px;
+      height: 18px;
+      background: #2563EB;
+      border: 3px solid white;
+      border-radius: 50%;
+      box-shadow: 0 0 12px rgba(37, 99, 235, 0.8);
+      position: relative;
+    }
+    .user-loc-dot::after {
+      content: '';
+      position: absolute;
+      inset: -8px;
+      border-radius: 50%;
+      background: rgba(37, 99, 235, 0.3);
+      animation: pulseCircle 2s infinite ease-out;
+    }
+    @keyframes pulseCircle {
+      0% { transform: scale(0.6); opacity: 1; }
+      100% { transform: scale(2.2); opacity: 0; }
+    }
+
+    /* Offline Toast */
+    .offline-toast {
+      position: absolute;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 40;
+      background: #1E293B;
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 99px;
+      box-shadow: var(--shadow-md);
+      display: none;
+      align-items: center;
+      gap: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="phone-shell">
+
+    <!-- ── Map Viewport ── -->
+    <div id="map-container"></div>
+
+    <!-- Offline Banner Toast -->
+    <div class="offline-toast" id="offline-toast">
+      <svg width="14" height="14" fill="none" stroke="#F59E0B" stroke-width="2" viewBox="0 0 24 24"><path d="M1 1l22 22"/><path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"/><path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"/></svg>
+      <span>Offline mode — displaying cached campus map</span>
+    </div>
+
+    <!-- ── Navigation Route Active Banner ── -->
+    <div class="nav-route-banner" id="nav-banner">
+      <div class="nav-banner-header">
+        <div class="nav-banner-title">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+          <span id="nav-target-name">Walking Route to Library</span>
+        </div>
+        <button class="nav-banner-close" onclick="cancelRoute()">✕</button>
+      </div>
+      <div class="nav-details-row">
+        <span>⏱️ <strong id="nav-eta">3 mins</strong></span>
+        <span>📏 <strong id="nav-dist">240 meters</strong></span>
+        <span>🚶 Walk Path</span>
+      </div>
+      <div class="nav-step-preview" id="nav-step">
+        Step 1: Walk straight past Central Cafeteria towards Shahid Irfan Bhuiyan Library.
+      </div>
+    </div>
+
+    <!-- ── Top Controls: Search Bar & Floating Filters ── -->
+    <div class="top-controls-wrap">
+      
+      <!-- Search Input Card -->
+      <div class="search-card">
+        <button class="icon-action-btn" onclick="location.href='home.html'" title="Back to Dashboard">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        </button>
+
+        <div class="search-input-wrap">
+          <svg class="search-icon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" class="search-input" id="map-search-input" placeholder="Search UIU Playground, Library, Indulge..." oninput="handleSearchInput(this.value)">
+        </div>
+
+        <div class="search-actions">
+          <!-- Voice Search Toggle -->
+          <button class="icon-action-btn" id="voice-btn" onclick="triggerVoiceSearch()" title="Voice Search">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/></svg>
+          </button>
+
+          <!-- Settings / Layer Toggle -->
+          <button class="icon-action-btn" onclick="openSettingsModal()" title="Map Settings">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          </button>
+        </div>
+
+        <!-- Autocomplete Dropdown List -->
+        <div class="search-results-dropdown" id="search-dropdown"></div>
+      </div>
+
+      <!-- Filter Chips -->
+      <div class="filter-chips-scroll" id="filter-chips">
+        <button class="chip-btn active" data-filter="all" onclick="filterMarkers('all', this)">All Items</button>
+        <button class="chip-btn" data-filter="lost" onclick="filterMarkers('lost', this)"><span class="chip-dot" style="background:#EF4444"></span>Lost</button>
+        <button class="chip-btn" data-filter="found" onclick="filterMarkers('found', this)"><span class="chip-dot" style="background:#10B981"></span>Found</button>
+        <button class="chip-btn" data-filter="smart" onclick="filterMarkers('smart', this)"><span class="chip-dot" style="background:#8B5CF6"></span>Smart Match</button>
+        <button class="chip-btn" data-filter="pending" onclick="filterMarkers('pending', this)"><span class="chip-dot" style="background:#F59E0B"></span>Pending</button>
+        <button class="chip-btn" data-filter="resolved" onclick="filterMarkers('resolved', this)"><span class="chip-dot" style="background:#64748B"></span>Resolved</button>
+        <button class="chip-btn" data-filter="cat-Electronics" onclick="filterCategory('Electronics', this)">Electronics</button>
+        <button class="chip-btn" data-filter="cat-Wallet" onclick="filterCategory('Wallet', this)">Wallet</button>
+        <button class="chip-btn" data-filter="cat-Phone" onclick="filterCategory('Phone', this)">Phone</button>
+        <button class="chip-btn" data-filter="cat-Keys" onclick="filterCategory('Keys', this)">Keys</button>
+        <button class="chip-btn" data-filter="cat-ID Card" onclick="filterCategory('ID Card', this)">ID Card</button>
+      </div>
+
+    </div>
+
+    <!-- ── Floating Campus Summary Info Card ── -->
+    <div class="info-card-float">
+      <span class="info-card-title" id="lbl-campus-summary">UIU Campus Live</span>
+      <div class="info-stats-row">
+        <span class="stat-pill lost">🔴 <span id="count-lost">5</span> Lost</span>
+        <span class="stat-pill found">🟢 <span id="count-found">5</span> Found</span>
+      </div>
+      <span class="info-active-spot">📍 Top spot: Academic Bldg</span>
+    </div>
+
+    <!-- ── Side Map Controls (Zoom, Compass, Location, Dark Mode, Bangla) ── -->
+    <div class="map-side-controls">
+      <!-- Recenter My Location -->
+      <button class="map-btn" onclick="centerUserLocation()" title="My Location">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/></svg>
+      </button>
+
+      <!-- Compass Reset North -->
+      <button class="map-btn" onclick="resetCompass()" title="Reset Heading">
+        <svg width="18" height="18" fill="none" stroke="#EF4444" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 19 21 12 17 5 21 12 2"/></svg>
+      </button>
+
+      <!-- Zoom In -->
+      <button class="map-btn" onclick="map.zoomIn()" title="Zoom In">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+
+      <!-- Zoom Out -->
+      <button class="map-btn" onclick="map.zoomOut()" title="Zoom Out">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+
+      <!-- Dark / Light Theme Toggle -->
+      <button class="map-btn" id="theme-btn" onclick="toggleTheme()" title="Toggle Dark/Light">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+
+      <!-- Bangla / English Language Toggle -->
+      <button class="map-btn" onclick="toggleLanguage()" title="Switch Language (EN/BN)">
+        <span style="font-size:11px; font-weight:800;" id="lang-btn-txt">BN</span>
+      </button>
+    </div>
+
+    <!-- ── Floating Action Buttons (FABs) ── -->
+    <div class="fabs-bottom-right">
+      <button class="fab-btn lost" onclick="location.href='report-lost.html'">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="lbl-fab-lost">Report Lost</span>
+      </button>
+      <button class="fab-btn found" onclick="location.href='report-found.html'">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span id="lbl-fab-found">Report Found</span>
+      </button>
+    </div>
+
+    <!-- ── Draggable Google Maps Style Bottom Sheet ── -->
+    <div class="bottom-sheet collapsed" id="bottom-sheet">
+      <div class="sheet-handle-bar" id="sheet-handle">
+        <div class="sheet-handle"></div>
+      </div>
+
+      <div class="sheet-content">
+        <div class="sheet-header-row">
+          <div>
+            <div class="sheet-title" id="lbl-sheet-title">Nearby Items at UIU</div>
+            <div class="sheet-subtitle" id="lbl-sheet-sub">Showing 10 active lost & found reports around campus</div>
+          </div>
+          <button class="icon-action-btn" onclick="toggleSheetExpand()" title="Expand Sheet">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+          </button>
+        </div>
+
+        <!-- Items Container -->
+        <div class="sheet-items-list" id="sheet-items-container"></div>
+      </div>
+    </div>
+
+    <!-- ── Item Detail Modal Popup Sheet ── -->
+    <div class="detail-popup-sheet" id="detail-modal">
+      <div class="detail-card">
+        <button class="detail-close-btn" onclick="closeDetailModal()">✕</button>
+
+        <div class="detail-img-wrap">
+          <img class="detail-img" id="detail-img" src="" alt="Item Image">
+          <span class="detail-badge-float badge-lost sheet-item-badge" id="detail-badge">Lost</span>
+          <span class="detail-ai-chip" id="detail-ai">98% AI Match</span>
+        </div>
+
+        <div>
+          <div class="detail-title" id="detail-title">iPhone 15 Pro</div>
+          <div style="font-size:12px; color:var(--mc); margin-top:2px;" id="detail-desc">Natural Titanium color, clear silicon case.</div>
+        </div>
+
+        <div class="detail-grid-info">
+          <div class="detail-info-box">
+            <div class="detail-info-label">Building & Spot</div>
+            <div class="detail-info-val" id="detail-loc">Central Cafeteria</div>
+          </div>
+          <div class="detail-info-box">
+            <div class="detail-info-label">Reported Time</div>
+            <div class="detail-info-val" id="detail-time">Today, 10:30 AM</div>
+          </div>
+          <div class="detail-info-box">
+            <div class="detail-info-label">Distance from You</div>
+            <div class="detail-info-val" id="detail-dist">180 meters</div>
+          </div>
+          <div class="detail-info-box">
+            <div class="detail-info-label">Category</div>
+            <div class="detail-info-val" id="detail-cat">Electronics</div>
+          </div>
+        </div>
+
+        <div class="detail-actions-row">
+          <button class="detail-btn detail-btn-primary" onclick="startRouteToCurrentItem()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+            Navigate
+          </button>
+          <button class="detail-btn detail-btn-sec" onclick="alert('Contacting reporter via FindIt safe chat...')">
+            💬 Chat
+          </button>
+          <button class="detail-btn detail-btn-sec" onclick="alert('Item saved to your bookmarks')">
+            🔖 Save
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Map Settings / Layer Selection Modal ── -->
+    <div class="settings-modal" id="settings-modal" onclick="closeSettingsModal()">
+      <div class="settings-card" onclick="event.stopPropagation()">
+        <div class="settings-title">
+          <span>Map Settings & Layers</span>
+          <button class="detail-close-btn" style="position:static;" onclick="closeSettingsModal()">✕</button>
+        </div>
+
+        <div class="settings-grid">
+          <div class="layer-option active" onclick="switchMapLayer('standard', this)">
+            <div class="layer-thumb" style="background-image:url('https://maps.gstatic.com/tactile/maptiles/20210609_001/vt/x=1&y=1&z=1')"></div>
+            <span class="layer-name">Standard</span>
+          </div>
+          <div class="layer-option" onclick="switchMapLayer('satellite', this)">
+            <div class="layer-thumb" style="background-image:url('https://images.unsplash.com/photo-1524661135-423995f22d0b?w=100')"></div>
+            <span class="layer-name">Satellite</span>
+          </div>
+          <div class="layer-option" onclick="switchMapLayer('terrain', this)">
+            <div class="layer-thumb" style="background-image:url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=100')"></div>
+            <span class="layer-name">Terrain</span>
+          </div>
+          <div class="layer-option" onclick="switchMapLayer('dark', this)">
+            <div class="layer-thumb" style="background:#0F172A"></div>
+            <span class="layer-name">Dark Map</span>
+          </div>
+          <div class="layer-option" onclick="switchMapLayer('light', this)">
+            <div class="layer-thumb" style="background:#F8FAFC"></div>
+            <span class="layer-name">Light Map</span>
+          </div>
+          <div class="layer-option" id="traffic-toggle-opt" onclick="toggleTrafficLayer(this)">
+            <div class="layer-thumb" style="background:#10B981"></div>
+            <span class="layer-name">Traffic</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Leaflet & MarkerCluster JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+  <script>
+    /* ── Dark mode initialization ── */
+    if (localStorage.getItem('findit_dark') === 'true') {
+      document.body.classList.add('dark');
+    }
+
+    /* ── UIU Campus Coordinates & Bounds ── */
+    const UIU_LAT = 23.7977;
+    const UIU_LNG = 90.4497;
+
+    /* ── Calibrated Real UIU Campus Locations Database ── */
+    const UIU_LOCATIONS = [
+      { id: 'loc-1', name: 'UIU Playground & Sports Field', lat: 23.7986, lng: 90.4504, category: 'Sports', icon: '⚽' },
+      { id: 'loc-2', name: 'Shahid Irfan Bhuiyan Library, UIU', lat: 23.7979, lng: 90.4494, category: 'Library', icon: '📚' },
+      { id: 'loc-3', name: 'Indulge UIU (Cafe & Lounge)', lat: 23.7975, lng: 90.4498, category: 'Dining', icon: '☕' },
+      { id: 'loc-4', name: 'Go-Kart UIU Track', lat: 23.7967, lng: 90.4505, category: 'Sports', icon: '🏎️' },
+      { id: 'loc-5', name: 'CP Five Star Chicken UIU', lat: 23.7977, lng: 90.4497, category: 'Dining', icon: '🍗' },
+      { id: 'loc-6', name: 'UIU Prayer Room', lat: 23.7976, lng: 90.4493, category: 'Amenities', icon: '🕌' },
+      { id: 'loc-7', name: 'Centre for Energy Research (CER)', lat: 23.7973, lng: 90.4495, category: 'Research', icon: '⚡' },
+      { id: 'loc-8', name: 'UIU Auditorium Hall', lat: 23.7978, lng: 90.4500, category: 'Hall', icon: '🎭' },
+      { id: 'loc-9', name: 'Main Gate & Security Desk', lat: 23.7971, lng: 90.4489, category: 'Entrance', icon: '🚪' },
+      { id: 'loc-10', name: 'Academic Building (Block A & B)', lat: 23.7978, lng: 90.4496, category: 'Academic', icon: '🏫' },
+      { id: 'loc-11', name: 'Permanent Campus Building', lat: 23.7981, lng: 90.4499, category: 'Building', icon: '🏢' },
+      { id: 'loc-12', name: 'Central Cafeteria (Olympus & Khan Kitchen)', lat: 23.7974, lng: 90.4501, category: 'Dining', icon: '🍔' },
+      { id: 'loc-13', name: 'Student Lounge & Games Zone', lat: 23.7976, lng: 90.4498, category: 'Amenities', icon: '🎮' },
+      { id: 'loc-14', name: 'Admission & Information Office', lat: 23.7975, lng: 90.4493, category: 'Office', icon: '📋' },
+      { id: 'loc-15', name: 'Registrar & Exam Controller Office', lat: 23.7976, lng: 90.4494, category: 'Office', icon: '💼' },
+      { id: 'loc-16', name: 'Computer Labs (4th Floor)', lat: 23.7982, lng: 90.4497, category: 'Lab', icon: '💻' },
+      { id: 'loc-17', name: 'Engineering Labs (EEE/CSE)', lat: 23.7972, lng: 90.4496, category: 'Lab', icon: '🔬' },
+      { id: 'loc-18', name: 'Car & Bike Parking Area', lat: 23.7969, lng: 90.4492, category: 'Parking', icon: '🅿️' },
+      { id: 'loc-19', name: 'Basketball Court', lat: 23.7972, lng: 90.4506, category: 'Sports', icon: '🏀' },
+      { id: 'loc-20', name: 'UIU Lake Area & Walkway', lat: 23.7983, lng: 90.4512, category: 'Nature', icon: '🌿' },
+      { id: 'loc-21', name: 'Medical Center & First Aid', lat: 23.7973, lng: 90.4495, category: 'Health', icon: '🏥' },
+      { id: 'loc-22', name: 'Madani Avenue UIU Bus Stop', lat: 23.7988, lng: 90.4485, category: 'Transport', icon: '🚌' }
+    ];
+
+    /* ── Sample Lost & Found Items Database ── */
+    const SAMPLE_ITEMS = [
+      {
+        id: 'item-1',
+        title: 'iPhone 15 Pro Titanium',
+        status: 'lost',
+        category: 'Phone',
+        locationName: 'Indulge UIU',
+        lat: 23.7975, lng: 90.4498,
+        time: 'Today, 10:30 AM',
+        date: 'Aug 25, 2026',
+        dist: '180m',
+        img: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300',
+        desc: 'Natural Titanium color, clear silicone case with a UIU sticker on the back.',
+        aiMatch: 98,
+        badge: 'Lost'
+      },
+      {
+        id: 'item-2',
+        title: 'Leather Wallet with Student ID',
+        status: 'found',
+        category: 'Wallet',
+        locationName: 'Main Gate Security Desk',
+        lat: 23.7971, lng: 90.4489,
+        time: 'Today, 9:15 AM',
+        date: 'Aug 25, 2026',
+        dist: '210m',
+        img: 'https://images.unsplash.com/photo-1627123424574-724758594e93?w=300',
+        desc: 'Brown genuine leather wallet containing cash and Rayan Ahmed student ID card.',
+        aiMatch: 95,
+        badge: 'Found'
+      },
+      {
+        id: 'item-3',
+        title: 'Blue Nike Backpack',
+        status: 'lost',
+        category: 'Bag',
+        locationName: 'Shahid Irfan Bhuiyan Library, UIU',
+        lat: 23.7979, lng: 90.4494,
+        time: 'Yesterday, 3:45 PM',
+        date: 'Aug 24, 2026',
+        dist: '140m',
+        img: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=300',
+        desc: 'Contains Data Structures notebook, water bottle, and blue pencil case.',
+        aiMatch: 88,
+        badge: 'Lost'
+      },
+      {
+        id: 'item-4',
+        title: 'Anker Soundcore Earbuds',
+        status: 'found',
+        category: 'Electronics',
+        locationName: 'Student Lounge & Games Zone',
+        lat: 23.7976, lng: 90.4498,
+        time: 'Today, 11:00 AM',
+        date: 'Aug 25, 2026',
+        dist: '90m',
+        img: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=300',
+        desc: 'Black charging case found near table 4 in Student Lounge.',
+        aiMatch: 92,
+        badge: 'Found'
+      },
+      {
+        id: 'item-5',
+        title: 'Casio fx-991EX Calculator',
+        status: 'smart',
+        category: 'Electronics',
+        locationName: 'Engineering Labs (EEE/CSE)',
+        lat: 23.7972, lng: 90.4496,
+        time: 'Aug 24, 1:20 PM',
+        date: 'Aug 24, 2026',
+        dist: '260m',
+        img: 'https://images.unsplash.com/photo-1587145820266-a5951ee6f620?w=300',
+        desc: 'Calculator with name written in marker on back cover.',
+        aiMatch: 99,
+        badge: 'Smart Match'
+      },
+      {
+        id: 'item-6',
+        title: 'Car & House Keys',
+        status: 'found',
+        category: 'Keys',
+        locationName: 'Go-Kart UIU Track',
+        lat: 23.7967, lng: 90.4505,
+        time: 'Today, 8:30 AM',
+        date: 'Aug 25, 2026',
+        dist: '310m',
+        img: 'https://images.unsplash.com/photo-1582139329536-e7284fece509?w=300',
+        desc: 'Set of 3 keys with silver BMW keychain.',
+        aiMatch: 85,
+        badge: 'Found'
+      },
+      {
+        id: 'item-7',
+        title: 'HP Laptop Charger Type-C',
+        status: 'pending',
+        category: 'Electronics',
+        locationName: 'Computer Labs (4th Floor)',
+        lat: 23.7982, lng: 90.4497,
+        time: 'Yesterday, 5:00 PM',
+        date: 'Aug 24, 2026',
+        dist: '190m',
+        img: 'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?w=300',
+        desc: '65W USB-C charger left plugged near PC #14.',
+        aiMatch: 76,
+        badge: 'Pending'
+      },
+      {
+        id: 'item-8',
+        title: 'Glasses with Black Frame',
+        status: 'resolved',
+        category: 'Others',
+        locationName: 'Centre for Energy Research (CER)',
+        lat: 23.7973, lng: 90.4495,
+        time: 'Aug 22, 2026',
+        date: 'Aug 22, 2026',
+        dist: '150m',
+        img: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=300',
+        desc: 'Returned safely to owner!',
+        aiMatch: 100,
+        badge: 'Resolved'
+      }
+    ];
+
+    /* ── Global Map Variables ── */
+    let map;
+    let markerClusterGroup;
+    let activeLayer;
+    let userLocationMarker;
+    let activeRoutePolyline;
+    let activeItem = null;
+    let currentFilter = 'all';
+    let currentCategory = null;
+    let isBangla = false;
+
+    /* ── Tile Layer Definitions ── */
+    const TILE_LAYERS = {
+      standard: L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&key=YOUR_GOOGLE_MAPS_API_KEY', {
+        maxZoom: 20,
+        attribution: '© Google Maps'
+      }),
+      satellite: L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}&key=YOUR_GOOGLE_MAPS_API_KEY', {
+        maxZoom: 20,
+        attribution: '© Google Satellite / UIU'
+      }),
+      terrain: L.tileLayer('https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        attribution: '© Google Terrain'
+      }),
+      dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
+        maxZoom: 20,
+        attribution: '© CartoDB / UIU'
+      }),
+      light: L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&key=YOUR_GOOGLE_MAPS_API_KEY', {
+        maxZoom: 20,
+        attribution: '© Google Maps'
+      })
+    };
+
+    /* ── Initialize Leaflet Map ── */
+    function initMap() {
+      map = L.map('map-container', {
+        center: [UIU_LAT, UIU_LNG],
+        zoom: 17,
+        zoomControl: false,
+        attributionControl: false
+      });
+
+      activeLayer = TILE_LAYERS.standard;
+      activeLayer.addTo(map);
+
+      markerClusterGroup = L.markerClusterGroup({
+        spiderfyOnMaxZoom: true,
+        showCoverageOnHover: false,
+        zoomToBoundsOnClick: true,
+        disableClusteringAtZoom: 18
+      });
+      map.addLayer(markerClusterGroup);
+
+      renderMarkers();
+      renderBottomSheetItems([]);
+      document.getElementById('bottom-sheet').style.display = 'none';
+
+      // Close dropdown if user clicks map
+      map.on('click', (e) => {
+        document.getElementById('search-dropdown').classList.remove('show');
+        const nearestSpot = getNearestLandmark(e.latlng.lat, e.latlng.lng);
+        L.popup()
+          .setLatLng(e.latlng)
+          .setContent(`<div style="font-weight:700; font-size:13px; padding:4px;">📍 ${nearestSpot}</div>`)
+          .openOn(map);
+      });
+
+      window.addEventListener('online', updateOnlineStatus);
+      window.addEventListener('offline', updateOnlineStatus);
+    }
+
+    /* ── Accurate Nearest Landmark Finder ── */
+    function getNearestLandmark(lat, lng) {
+      let closest = UIU_LOCATIONS[0];
+      let minDis = 999999;
+      UIU_LOCATIONS.forEach(loc => {
+        const d = Math.hypot(loc.lat - lat, loc.lng - lng);
+        if (d < minDis) {
+          minDis = d;
+          closest = loc;
+        }
+      });
+      return closest.name;
+    }
+
+    /* ── User Location Indicator ── */
+    function renderUserLocation() {
+      const userLat = 23.7972;
+      const userLng = 90.4490;
+
+      const userIcon = L.divIcon({
+        className: 'user-loc-wrapper',
+        html: '<div class="user-loc-dot"></div>',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12]
+      });
+
+      userLocationMarker = L.marker([userLat, userLng], { icon: userIcon }).addTo(map);
+      userLocationMarker.bindTooltip('My Location (Rayan)', { permanent: false, direction: 'top' });
+    }
+
+    function centerUserLocation() {
+      map.flyTo([23.7972, 90.4490], 18, { duration: 1.2 });
+    }
+
+    function resetCompass() {
+      map.flyTo([UIU_LAT, UIU_LNG], 17, { duration: 1 });
+    }
+
+    /* ── Render Markers on Map ── */
+    function renderMarkers() {
+      markerClusterGroup.clearLayers();
+    }
+
+    /* ── Search Input & Autocomplete Functionality ── */
+    function handleSearchInput(query) {
+      const dropdown = document.getElementById('search-dropdown');
+      query = query.trim().toLowerCase();
+
+      if (!query) {
+        dropdown.classList.remove('show');
+        dropdown.innerHTML = '';
+        return;
+      }
+
+      const locMatches = UIU_LOCATIONS.filter(l => l.name.toLowerCase().includes(query) || l.category.toLowerCase().includes(query));
+      const itemMatches = SAMPLE_ITEMS.filter(i => i.title.toLowerCase().includes(query) || i.locationName.toLowerCase().includes(query) || i.category.toLowerCase().includes(query));
+
+      let html = '';
+
+      locMatches.forEach(loc => {
+        html += `
+          <div class="search-result-item" onclick="selectSearchResult('location', ${loc.lat}, ${loc.lng}, '${escapeHtml(loc.name)}')">
+            <div class="result-icon">${loc.icon}</div>
+            <div class="result-info">
+              <div class="result-title">${loc.name}</div>
+              <div class="result-sub">UIU Campus • ${loc.category}</div>
+            </div>
+            <span class="result-tag">Location</span>
+          </div>`;
+      });
+
+      itemMatches.forEach(item => {
+        html += `
+          <div class="search-result-item" onclick="selectSearchResult('item', ${item.lat}, ${item.lng}, '${escapeHtml(item.title)}', '${item.id}')">
+            <div class="result-icon">📦</div>
+            <div class="result-info">
+              <div class="result-title">${item.title}</div>
+              <div class="result-sub">📍 ${item.locationName}</div>
+            </div>
+            <span class="result-tag" style="background:${item.status === 'lost' ? '#FEF2F2' : '#ECFDF5'}; color:${item.status === 'lost' ? '#EF4444' : '#10B981'}">${item.badge}</span>
+          </div>`;
+      });
+
+      if (locMatches.length === 0 && itemMatches.length === 0) {
+        html = `<div style="padding:12px; font-size:12px; color:var(--mc); text-align:center;">No matching UIU location or item found</div>`;
+      }
+
+      dropdown.innerHTML = html;
+      dropdown.classList.add('show');
+    }
+
+    function selectSearchResult(type, lat, lng, name, itemId) {
+      document.getElementById('search-dropdown').classList.remove('show');
+      document.getElementById('map-search-input').value = name;
+
+      map.flyTo([lat, lng], 19, { duration: 1.4 });
+
+      if (type === 'item' && itemId) {
+        const target = SAMPLE_ITEMS.find(i => i.id === itemId);
+        if (target) openDetailModal(target);
+      } else {
+        L.popup()
+          .setLatLng([lat, lng])
+          .setContent(`<div style="font-weight:700; font-size:13px; padding:4px;">📍 ${name}</div>`)
+          .openOn(map);
+      }
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/'/g, "\\'");
+    }
+
+    function triggerVoiceSearch() {
+      const btn = document.getElementById('voice-btn');
+      btn.classList.add('active');
+      const input = document.getElementById('map-search-input');
+      input.value = "UIU Playground & Sports Field";
+      handleSearchInput("UIU Playground & Sports Field");
+
+      setTimeout(() => {
+        btn.classList.remove('active');
+      }, 2000);
+    }
+
+    function filterMarkers(filterType, btnEl) {
+      document.querySelectorAll('#filter-chips .chip-btn').forEach(b => b.classList.remove('active'));
+      btnEl.classList.add('active');
+
+      currentFilter = filterType;
+      currentCategory = null;
+      renderMarkers();
+    }
+
+    function filterCategory(catName, btnEl) {
+      document.querySelectorAll('#filter-chips .chip-btn').forEach(b => b.classList.remove('active'));
+      btnEl.classList.add('active');
+
+      currentCategory = catName;
+      currentFilter = 'all';
+      renderMarkers();
+    }
+
+    function renderBottomSheetItems(items) {
+      const container = document.getElementById('sheet-items-container');
+      container.innerHTML = '';
+
+      items.forEach(item => {
+        const badgeClass = item.status === 'lost' ? 'badge-lost' : (item.status === 'found' ? 'badge-found' : 'badge-smart');
+        const card = document.createElement('div');
+        card.className = 'sheet-item-card';
+        card.onclick = () => {
+          openDetailModal(item);
+          map.flyTo([item.lat, item.lng], 19, { duration: 0.8 });
+        };
+
+        card.innerHTML = `
+          <img class="sheet-item-img" src="${item.img}" alt="${item.title}">
+          <div class="sheet-item-info">
+            <div class="sheet-item-top">
+              <span class="sheet-item-name">${item.title}</span>
+              <span class="sheet-item-badge ${badgeClass}">${item.badge}</span>
+            </div>
+            <div class="sheet-item-loc">
+              <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+              <span>${item.locationName}</span>
+            </div>
+            <div class="sheet-item-meta">
+              <span>🕒 ${item.time}</span>
+              <span>🚶 ${item.dist} away</span>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function openDetailModal(item) {
+      activeItem = item;
+      document.getElementById('detail-img').src = item.img;
+      document.getElementById('detail-title').textContent = item.title;
+      document.getElementById('detail-desc').textContent = item.desc;
+      document.getElementById('detail-loc').textContent = item.locationName;
+      document.getElementById('detail-time').textContent = item.time;
+      document.getElementById('detail-dist').textContent = item.dist;
+      document.getElementById('detail-cat').textContent = item.category;
+
+      const badgeEl = document.getElementById('detail-badge');
+      badgeEl.textContent = item.badge;
+      badgeEl.className = 'detail-badge-float sheet-item-badge ' + (item.status === 'lost' ? 'badge-lost' : 'badge-found');
+
+      document.getElementById('detail-modal').classList.add('show');
+    }
+
+    function closeDetailModal() {
+      document.getElementById('detail-modal').classList.remove('show');
+    }
+
+    function startRouteToCurrentItem() {
+      closeDetailModal();
+      if (!activeItem) return;
+
+      if (activeRoutePolyline) map.removeLayer(activeRoutePolyline);
+
+      const startPt = [23.7972, 90.4490];
+      const endPt = [activeItem.lat, activeItem.lng];
+      const midPt = [23.7975, 90.4495];
+
+      const latlngs = [startPt, midPt, endPt];
+
+      activeRoutePolyline = L.polyline(latlngs, {
+        color: '#2563EB',
+        weight: 5,
+        opacity: 0.9,
+        dashArray: '8, 8',
+        lineCap: 'round'
+      }).addTo(map);
+
+      map.fitBounds(activeRoutePolyline.getBounds(), { padding: [50, 50] });
+
+      document.getElementById('nav-target-name').textContent = `Route to ${activeItem.title}`;
+      document.getElementById('nav-dist').textContent = activeItem.dist;
+      document.getElementById('nav-step').textContent = `Walk from Main Gate past Student Lounge, turn towards ${activeItem.locationName}.`;
+      document.getElementById('nav-banner').style.display = 'flex';
+    }
+
+    function cancelRoute() {
+      if (activeRoutePolyline) {
+        map.removeLayer(activeRoutePolyline);
+        activeRoutePolyline = null;
+      }
+      document.getElementById('nav-banner').style.display = 'none';
+    }
+
+    function toggleSheetExpand() {
+      const sheet = document.getElementById('bottom-sheet');
+      if (sheet.classList.contains('collapsed')) {
+        sheet.className = 'bottom-sheet half';
+      } else if (sheet.classList.contains('half')) {
+        sheet.className = 'bottom-sheet full';
+      } else {
+        sheet.className = 'bottom-sheet collapsed';
+      }
+    }
+
+    const sheetHandle = document.getElementById('sheet-handle');
+    let startY = 0;
+    sheetHandle.addEventListener('touchstart', e => {
+      startY = e.touches[0].clientY;
+    });
+    sheetHandle.addEventListener('touchend', e => {
+      const endY = e.changedTouches[0].clientY;
+      const diff = startY - endY;
+      const sheet = document.getElementById('bottom-sheet');
+      if (diff > 40) {
+        if (sheet.classList.contains('collapsed')) sheet.className = 'bottom-sheet half';
+        else if (sheet.classList.contains('half')) sheet.className = 'bottom-sheet full';
+      } else if (diff < -40) {
+        if (sheet.classList.contains('full')) sheet.className = 'bottom-sheet half';
+        else if (sheet.classList.contains('half')) sheet.className = 'bottom-sheet collapsed';
+      }
+    });
+
+    function openSettingsModal() {
+      document.getElementById('settings-modal').classList.add('show');
+    }
+    function closeSettingsModal() {
+      document.getElementById('settings-modal').classList.remove('show');
+    }
+
+    function switchMapLayer(layerName, el) {
+      document.querySelectorAll('.layer-option').forEach(opt => opt.classList.remove('active'));
+      el.classList.add('active');
+
+      if (activeLayer) map.removeLayer(activeLayer);
+      activeLayer = TILE_LAYERS[layerName];
+      activeLayer.addTo(map);
+
+      closeSettingsModal();
+    }
+
+    function toggleTrafficLayer(el) {
+      el.classList.toggle('active');
+      alert('Live Campus Pedestrian Traffic Layer Toggled!');
+      closeSettingsModal();
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('dark');
+      const isDark = document.body.classList.contains('dark');
+      localStorage.setItem('findit_dark', isDark);
+
+      if (isDark) {
+        switchMapLayer('dark', document.querySelectorAll('.layer-option')[3]);
+      } else {
+        switchMapLayer('standard', document.querySelectorAll('.layer-option')[0]);
+      }
+    }
+
+    function toggleLanguage() {
+      isBangla = !isBangla;
+      document.getElementById('lang-btn-txt').textContent = isBangla ? 'EN' : 'BN';
+      document.getElementById('map-search-input').placeholder = isBangla 
+        ? "ইউআইইউ প্লেগ্রাউন্ড, লাইব্রেরি, ইনডালজ খুঁজুন..." 
+        : "Search UIU Playground, Library, Indulge...";
+
+      document.getElementById('lbl-campus-summary').textContent = isBangla ? "ইউআইইউ ক্যাম্পাস লাইভ" : "UIU Campus Live";
+      document.getElementById('lbl-fab-lost').textContent = isBangla ? "হারানো রিপোর্ট" : "Report Lost";
+      document.getElementById('lbl-fab-found').textContent = isBangla ? "পাওয়া জিনিস" : "Report Found";
+      document.getElementById('lbl-sheet-title').textContent = isBangla ? "ইউআইইউ ক্যাম্পাস আসপাশের জিনিসপত্র" : "Nearby Items at UIU";
+    }
+
+    function updateOnlineStatus() {
+      const toast = document.getElementById('offline-toast');
+      if (!navigator.onLine) {
+        toast.style.display = 'flex';
+      } else {
+        toast.style.display = 'none';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', initMap);
+  </script>
+</body>
+</html>

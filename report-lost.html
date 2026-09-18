@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>FindIt — Report Lost Item</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Leaflet CSS for Map Picker -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="config.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #F8FAFC;
+      --panel: #FFFFFF;
+      --tc: #0F172A;
+      --mc: #64748B;
+      --ib: #F1F5F9;
+      --accent: #EF4444;
+      --accent2: #DC2626;
+      --shell: #dfe6ef;
+      --border: #E2E8F0;
+      --primary: #2563EB;
+    }
+    body.dark {
+      --bg: #0F172A;
+      --panel: #1E293B;
+      --tc: #F1F5F9;
+      --mc: #94A3B8;
+      --ib: #1E293B;
+      --shell: #0b1220;
+      --border: #334155;
+    }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Inter', sans-serif;
+      background: var(--shell);
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .phone-shell {
+      width: min(100vw, 400px);
+      height: 100dvh;
+      max-height: 100dvh;
+      background: var(--bg);
+      border-radius: 28px;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 600px) {
+      body { background: var(--bg); }
+      .phone-shell {
+        width: 100vw;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+
+    .screen {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      background: var(--bg);
+      scrollbar-width: none;
+      padding-bottom: 32px;
+    }
+    .screen::-webkit-scrollbar { display: none; }
+
+    .header { padding: 28px 20px 14px; }
+    .header-row { display: flex; align-items: center; gap: 12px; }
+    .back-btn {
+      width: 40px; height: 40px; border-radius: 16px;
+      background: var(--ib); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .screen-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 20px; font-weight: 700;
+      color: var(--tc);
+    }
+    .type-pill {
+      display: flex; align-items: center; gap: 6px;
+      margin-top: 2px;
+    }
+    .type-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent);
+    }
+    .type-lbl { font-size: 12px; font-weight: 500; color: var(--mc); }
+
+    .form-body {
+      padding: 0 20px 32px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+
+    .field-label {
+      display: block; font-size: 14px; font-weight: 500;
+      color: var(--tc); margin-bottom: 8px;
+    }
+
+    .photos-scroll {
+      display: flex; gap: 12px;
+      overflow-x: auto; padding-bottom: 4px;
+      scrollbar-width: none;
+    }
+    .photos-scroll::-webkit-scrollbar { display: none; }
+
+    .photo-add-btn {
+      width: 96px; height: 96px; border-radius: 16px;
+      border: 2px dashed var(--mc);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 4px;
+      flex-shrink: 0; cursor: pointer; background: none;
+    }
+    .photo-add-btn span { font-size: 12px; color: var(--mc); }
+
+    .photo-thumb {
+      position: relative; width: 96px; height: 96px;
+      border-radius: 16px; overflow: hidden; flex-shrink: 0;
+      background: #E2E8F0;
+    }
+    .photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .photo-remove {
+      position: absolute; top: 4px; right: 4px;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: rgba(0,0,0,.55); border: none;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+    }
+
+    .field-wrap { display: flex; flex-direction: column; }
+    .input-row {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--ib); height: 52px;
+      border-radius: 16px; padding: 0 12px 0 16px;
+    }
+    .input-row svg { flex-shrink: 0; color: var(--mc); }
+    .input-row input {
+      flex: 1; background: transparent; border: none; outline: none;
+      font-size: 14px; color: var(--tc);
+      font-family: 'Inter', sans-serif;
+      min-width: 0;
+    }
+    .input-row input::placeholder { color: var(--mc); }
+
+    /* Map Picker Button */
+    .map-picker-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 12px;
+      background: #2563EB;
+      color: white;
+      border: none;
+      font-size: 11px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(37, 99, 235, 0.28);
+      transition: transform 0.12s ease;
+    }
+    .map-picker-btn:active { transform: scale(0.94); }
+
+    .cats-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
+    .cat-chip {
+      padding: 6px 12px; border-radius: 99px;
+      font-size: 12px; font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      background: var(--ib); color: var(--mc);
+      border: 1px solid transparent; cursor: pointer;
+      transition: all .15s;
+    }
+    .cat-chip.active {
+      background: var(--accent); color: white;
+      border-color: var(--accent);
+    }
+
+    .textarea-wrap textarea {
+      width: 100%; border-radius: 16px;
+      padding: 12px 16px; font-size: 14px;
+      font-family: 'Inter', sans-serif;
+      background: var(--ib); color: var(--tc);
+      border: none; outline: none; resize: none;
+    }
+    .textarea-wrap textarea::placeholder { color: var(--mc); }
+
+    .submit-btn {
+      width: 100%; padding: 16px;
+      border-radius: 16px; border: none;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: white; font-family: 'Poppins', sans-serif;
+      font-size: 15px; font-weight: 600;
+      box-shadow: 0 4px 18px rgba(239,68,68,.34);
+      cursor: pointer; margin-top: 4px;
+      transition: transform .1s;
+    }
+    .submit-btn:active { transform: scale(.97); }
+
+    /* ── Foodpanda / Pathao Style Map Location Picker Modal ── */
+    .map-modal-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 1000;
+      background: var(--bg);
+      display: none;
+      flex-direction: column;
+      overflow: visible;
+    }
+    .map-modal-overlay.show { display: flex; }
+
+    .map-modal-header {
+      padding: 14px 16px;
+      background: var(--panel);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+      z-index: 2000;
+      position: relative;
+      overflow: visible;
+    }
+
+    .modal-search-card {
+      flex: 1;
+      background: var(--ib);
+      border-radius: 14px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      position: relative;
+      z-index: 2001;
+      overflow: visible;
+    }
+
+    .modal-search-card input {
+      width: 100%;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 13px;
+      color: var(--tc);
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Floating Autocomplete Search Dropdown Floating Above Map */
+    .modal-search-dropdown {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      right: 0;
+      background: var(--panel);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.25);
+      max-height: 250px;
+      overflow-y: auto;
+      display: none;
+      flex-direction: column;
+      z-index: 3000;
+      padding: 6px;
+    }
+    .modal-search-dropdown.show { display: flex; }
+
+    .modal-search-item {
+      padding: 10px 12px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--tc);
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      transition: background 0.15s ease;
+    }
+    .modal-search-item:hover, .modal-search-item:active {
+      background: rgba(37, 99, 235, 0.12);
+      color: var(--primary);
+    }
+
+    .map-picker-viewport {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      z-index: 1;
+    }
+
+    #picker-map-canvas {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      inset: 0;
+      cursor: crosshair;
+    }
+
+    /* Fixed Center Target Marker (Foodpanda / Pathao style) */
+    .center-target-pin {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -100%);
+      z-index: 20;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .target-pin-bubble {
+      background: #EF4444;
+      color: white;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 99px;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+      white-space: nowrap;
+      margin-bottom: 2px;
+      animation: bouncePin 1.5s infinite ease-in-out;
+    }
+
+    @keyframes bouncePin {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    .target-pin-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #EF4444;
+      border: 3px solid white;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+    }
+
+    .target-pin-shadow {
+      width: 14px;
+      height: 4px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.25);
+      margin-top: -2px;
+    }
+
+    /* Quick Building Shortcut Pills */
+    .quick-spots-bar {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      z-index: 15;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .quick-spots-bar::-webkit-scrollbar { display: none; }
+
+    .spot-chip-btn {
+      padding: 7px 13px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(0,0,0,0.12);
+      font-size: 11px;
+      font-weight: 600;
+      color: #0F172A;
+      white-space: nowrap;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+      transition: transform 0.12s ease, background 0.15s ease;
+    }
+    .spot-chip-btn:active { transform: scale(0.94); }
+    body.dark .spot-chip-btn {
+      background: rgba(30, 41, 59, 0.95);
+      color: #F1F5F9;
+      border-color: rgba(255,255,255,0.12);
+    }
+
+    /* Bottom Confirmation Card */
+    .map-picker-bottom-card {
+      background: var(--panel);
+      padding: 16px 18px 20px;
+      border-radius: 20px 20px 0 0;
+      box-shadow: 0 -8px 24px rgba(0,0,0,0.12);
+      z-index: 25;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .selected-loc-preview {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .loc-icon-bubble {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: #FEF2F2;
+      color: #EF4444;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .loc-text-wrap {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .loc-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--tc);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .loc-sub {
+      font-size: 11px;
+      color: var(--mc);
+    }
+
+    .confirm-loc-btn {
+      width: 100%;
+      padding: 14px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, #2563EB, #1D4ED8);
+      color: white;
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+      transition: transform 0.1s ease;
+    }
+    .confirm-loc-btn:active { transform: scale(0.97); }
+  </style>
+</head>
+<body>
+  <div class="phone-shell">
+    <div class="screen">
+      <div class="header">
+        <div class="header-row">
+          <button class="back-btn" onclick="history.back()">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--tc)">
+              <path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>
+            </svg>
+          </button>
+          <div>
+            <h2 class="screen-title">Report Lost Item</h2>
+            <div class="type-pill">
+              <div class="type-dot"></div>
+              <span class="type-lbl">Lost</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-body">
+        <div>
+          <label class="field-label">Photos <span style="color:#EF4444">* (Mandatory)</span></label>
+          <div class="photos-scroll" id="photo-row">
+            <label class="photo-add-btn">
+              <input type="file" accept="image/*" multiple style="display:none" id="photo-input" onchange="addPhotos(this)">
+              <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--mc)">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+              <span>Add</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field-wrap">
+          <label class="field-label">Item Name</label>
+          <div class="input-row">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
+            </svg>
+            <input type="text" placeholder="e.g. iPhone 15 Pro">
+          </div>
+        </div>
+
+        <div>
+          <label class="field-label">Category</label>
+          <div class="cats-wrap" id="cats"></div>
+        </div>
+
+        <div class="textarea-wrap">
+          <label class="field-label">Description</label>
+          <textarea rows="4" placeholder="Describe the item in detail — color, brand, unique features..."></textarea>
+        </div>
+
+        <!-- Lost Location Field with Map Picker Trigger -->
+        <div class="field-wrap">
+          <label class="field-label">Lost Location</label>
+          <div class="input-row">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/>
+            </svg>
+            <input type="text" id="lost-loc-field" placeholder="e.g. UIU Playground & Sports Field">
+            
+            <button type="button" class="map-picker-btn" onclick="openMapPickerModal()">
+              <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+              <span>Choose on Map</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="field-wrap">
+          <label class="field-label">Date / Time</label>
+          <div class="input-row">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <input type="datetime-local" aria-label="Date and time when the item was lost" title="Select the date and time when the item was lost">
+          </div>
+        </div>
+
+        <div class="field-wrap">
+          <label class="field-label">Reward (Optional)</label>
+          <div class="input-row">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
+            </svg>
+            <input type="text" placeholder="e.g. $50 (optional)">
+          </div>
+        </div>
+
+        <div class="field-wrap">
+          <label class="field-label">Contact Method</label>
+          <div class="input-row">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.39 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.91 8.1a16 16 0 0 0 6 6l.91-.91a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            <input type="text" placeholder="Phone number or email">
+          </div>
+        </div>
+
+        <button class="submit-btn" onclick="submitReport()">Submit Report</button>
+      </div>
+    </div>
+
+    <!-- ── Foodpanda / Pathao Style Map Location Picker Modal ── -->
+    <div class="map-modal-overlay" id="picker-modal">
+      <div class="map-modal-header">
+        <button class="back-btn" style="width:34px; height:34px;" onclick="closeMapPickerModal()">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        </button>
+
+        <div class="modal-search-card">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="modal-search-input" placeholder="Search UIU Playground, Library, Indulge..." oninput="handleModalSearch(this.value)">
+          <div class="modal-search-dropdown" id="modal-dropdown"></div>
+        </div>
+      </div>
+
+      <div class="map-picker-viewport">
+        <div id="picker-map-canvas"></div>
+
+        <!-- Quick Building Shortcut Pills -->
+        <div class="quick-spots-bar">
+          <button type="button" class="spot-chip-btn" onclick="flyToSpot(23.7986, 90.4504, 'UIU Playground & Sports Field')">⚽ UIU Playground</button>
+          <button type="button" class="spot-chip-btn" onclick="flyToSpot(23.7979, 90.4494, 'Shahid Irfan Bhuiyan Library, UIU')">📚 Shahid Irfan Library</button>
+          <button type="button" class="spot-chip-btn" onclick="flyToSpot(23.7975, 90.4498, 'Indulge UIU')">☕ Indulge UIU</button>
+          <button type="button" class="spot-chip-btn" onclick="flyToSpot(23.7967, 90.4505, 'Go-Kart UIU Track')">🏎️ Go-Kart UIU</button>
+          <button type="button" class="spot-chip-btn" onclick="flyToSpot(23.7977, 90.4497, 'CP Five Star Chicken UIU')">🍗 CP Five Star</button>
+          <button type="button" class="spot-chip-btn" onclick="flyToSpot(23.7976, 90.4493, 'UIU Prayer Room')">🕌 Prayer Room</button>
+          <button type="button" class="spot-chip-btn" onclick="flyToSpot(23.7973, 90.4495, 'Centre for Energy Research (CER)')">⚡ CER</button>
+          <button type="button" class="spot-chip-btn" onclick="flyToSpot(23.7971, 90.4489, 'Main Gate & Security Desk')">🚪 Main Gate</button>
+        </div>
+
+        <!-- Fixed Center Target Pin -->
+        <div class="center-target-pin">
+          <div class="target-pin-bubble">Set Location</div>
+          <div class="target-pin-icon">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+          </div>
+          <div class="target-pin-shadow"></div>
+        </div>
+      </div>
+
+      <!-- Bottom Location Confirmation Card -->
+      <div class="map-picker-bottom-card">
+        <div class="selected-loc-preview">
+          <div class="loc-icon-bubble">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+          </div>
+          <div class="loc-text-wrap">
+            <div class="loc-title" id="selected-loc-name">UIU Playground & Sports Field</div>
+            <div class="loc-sub">UIU Campus, United City, Badda, Dhaka</div>
+          </div>
+        </div>
+
+        <button type="button" class="confirm-loc-btn" onclick="confirmSelectedLocation()">Confirm Location</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+    if (localStorage.getItem('findit_dark') === 'true') document.body.classList.add('dark');
+
+    const CATS = ['Electronics','Wallet','Phone','Keys','ID Card','Documents','Bags','Clothing','Others'];
+    let selCat = 'Electronics';
+
+    function renderCats() {
+      const wrap = document.getElementById('cats');
+      wrap.innerHTML = '';
+      CATS.forEach(c => {
+        const btn = document.createElement('button');
+        btn.className = 'cat-chip' + (c === selCat ? ' active' : '');
+        btn.textContent = c;
+        btn.onclick = () => { selCat = c; renderCats(); };
+        wrap.appendChild(btn);
+      });
+    }
+    renderCats();
+
+    function addPhotos(input) {
+      const row = document.getElementById('photo-row');
+      Array.from(input.files).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          const wrap = document.createElement('div');
+          wrap.className = 'photo-thumb';
+          wrap.innerHTML = `
+            <img src="${ev.target.result}" alt="">
+            <button class="photo-remove" onclick="this.parentElement.remove()">
+              <svg width="10" height="10" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>`;
+          row.appendChild(wrap);
+        };
+        reader.readAsDataURL(file);
+      });
+      input.value = '';
+    }
+
+    async function submitReport() {
+      const storedUser = JSON.parse(localStorage.getItem('findit_user') || sessionStorage.getItem('findit_user') || 'null');
+      if (!storedUser || !storedUser.id) {
+        alert('Please log in before submitting a report.');
+        location.href = 'login.html';
+        return;
+      }
+
+      const inputs = document.querySelectorAll('.form-body .input-row input');
+      const description = document.querySelector('.textarea-wrap textarea').value.trim();
+      const photos = Array.from(document.querySelectorAll('.photo-thumb img')).map(image => image.src);
+      const payload = {
+        userId: storedUser.id,
+        itemName: inputs[0].value.trim(),
+        category: selCat,
+        description,
+        location: inputs[1].value.trim(),
+        dateTime: inputs[2].value.trim(),
+        reward: inputs[3].value.trim(),
+        contactMethod: inputs[4].value.trim(),
+        photos
+      };
+
+      if (!payload.photos || payload.photos.length === 0) {
+        alert('Picture upload is mandatory. Please upload at least one photo before submitting.');
+        return;
+      }
+
+      if (!payload.itemName || !payload.description || !payload.location || !payload.dateTime || !payload.contactMethod) {
+        alert('Please complete all required fields.');
+        return;
+      }
+
+      const submitButton = document.querySelector('.submit-btn');
+      submitButton.disabled = true;
+      try {
+        const response = await fetch(`${window.API_BASE_URL || ''}/api/reports/lost`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || 'Unable to save the report.');
+        sessionStorage.setItem('findit_toast', 'Submit successfully');
+        location.href = 'home.html';
+      } catch (error) {
+        alert(error.message || 'Unable to connect to the server.');
+      } finally {
+        submitButton.disabled = false;
+      }
+    }
+
+    /* ── Foodpanda / Pathao Style Map Location Picker Modal Logic ── */
+    let pickerMap = null;
+    let selectedLocationText = "UIU Playground & Sports Field";
+    let isFlyingLock = false;
+
+    /* Precise Real UIU Landmarks matching Google Maps Tiles exactly */
+    const CAMPUS_LOCS = [
+      { name: 'UIU Playground & Sports Field', lat: 23.7986, lng: 90.4504, tag: 'Sports' },
+      { name: 'Shahid Irfan Bhuiyan Library, UIU', lat: 23.7979, lng: 90.4494, tag: 'Library' },
+      { name: 'Indulge UIU', lat: 23.7975, lng: 90.4498, tag: 'Dining' },
+      { name: 'Go-Kart UIU Track', lat: 23.7967, lng: 90.4505, tag: 'Sports' },
+      { name: 'CP Five Star Chicken UIU', lat: 23.7977, lng: 90.4497, tag: 'Dining' },
+      { name: 'UIU Prayer Room', lat: 23.7976, lng: 90.4493, tag: 'Amenities' },
+      { name: 'Centre for Energy Research (CER)', lat: 23.7973, lng: 90.4495, tag: 'Research' },
+      { name: 'UIU Auditorium', lat: 23.7978, lng: 90.4500, tag: 'Hall' },
+      { name: 'Main Gate & Security Desk', lat: 23.7971, lng: 90.4489, tag: 'Entrance' },
+      { name: 'Academic Building (Block A & B)', lat: 23.7978, lng: 90.4496, tag: 'Academic' },
+      { name: 'Permanent Campus Building', lat: 23.7981, lng: 90.4499, tag: 'Building' },
+      { name: 'Central Cafeteria (Olympus & Khan Kitchen)', lat: 23.7974, lng: 90.4501, tag: 'Dining' },
+      { name: 'Student Lounge & Games Zone', lat: 23.7976, lng: 90.4498, tag: 'Amenities' },
+      { name: 'Admission & Information Office', lat: 23.7975, lng: 90.4493, tag: 'Office' },
+      { name: 'Registrar Office', lat: 23.7976, lng: 90.4494, tag: 'Office' },
+      { name: 'Computer Labs (4th Floor)', lat: 23.7982, lng: 90.4497, tag: 'Lab' },
+      { name: 'Engineering Labs (EEE/CSE)', lat: 23.7972, lng: 90.4496, tag: 'Lab' },
+      { name: 'Car & Bike Parking Area', lat: 23.7969, lng: 90.4492, tag: 'Parking' },
+      { name: 'Basketball Court', lat: 23.7972, lng: 90.4506, tag: 'Sports' },
+      { name: 'UIU Lake Area & Walkway', lat: 23.7983, lng: 90.4512, tag: 'Nature' }
+    ];
+
+    function openMapPickerModal() {
+      document.getElementById('picker-modal').classList.add('show');
+      
+      if (!pickerMap) {
+        setTimeout(() => {
+          pickerMap = L.map('picker-map-canvas', {
+            center: [23.7986, 90.4504],
+            zoom: 18,
+            zoomControl: false,
+            attributionControl: false
+          });
+
+          L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+            maxZoom: 20
+          }).addTo(pickerMap);
+
+          // Allow clicking directly ANYWHERE on the map to pick exact location!
+          pickerMap.on('click', (e) => {
+            document.getElementById('modal-dropdown').classList.remove('show');
+            flyToSpot(e.latlng.lat, e.latlng.lng, getNearestLandmark(e.latlng.lat, e.latlng.lng));
+          });
+
+          // Update nearest location text as user drags map
+          pickerMap.on('move', () => {
+            if (isFlyingLock) return;
+            const center = pickerMap.getCenter();
+            updateNearestLocation(center.lat, center.lng);
+          });
+        }, 100);
+      } else {
+        setTimeout(() => pickerMap.invalidateSize(), 150);
+      }
+    }
+
+    function closeMapPickerModal() {
+      document.getElementById('picker-modal').classList.remove('show');
+    }
+
+    function getNearestLandmark(lat, lng) {
+      let closest = CAMPUS_LOCS[0];
+      let minDis = 999999;
+      CAMPUS_LOCS.forEach(loc => {
+        const d = Math.hypot(loc.lat - lat, loc.lng - lng);
+        if (d < minDis) {
+          minDis = d;
+          closest = loc;
+        }
+      });
+      return closest.name;
+    }
+
+    function updateNearestLocation(lat, lng) {
+      selectedLocationText = getNearestLandmark(lat, lng);
+      document.getElementById('selected-loc-name').textContent = selectedLocationText;
+    }
+
+    function flyToSpot(lat, lng, name) {
+      if (!pickerMap) return;
+      isFlyingLock = true;
+      selectedLocationText = name;
+      document.getElementById('selected-loc-name').textContent = name;
+      pickerMap.flyTo([lat, lng], 18, { duration: 0.8 });
+
+      setTimeout(() => {
+        isFlyingLock = false;
+        selectedLocationText = name;
+        document.getElementById('selected-loc-name').textContent = name;
+      }, 900);
+    }
+
+    function handleModalSearch(query) {
+      const dropdown = document.getElementById('modal-dropdown');
+      query = query.trim().toLowerCase();
+
+      if (!query) {
+        dropdown.classList.remove('show');
+        return;
+      }
+
+      const matches = CAMPUS_LOCS.filter(l => l.name.toLowerCase().includes(query) || l.tag.toLowerCase().includes(query));
+      let html = '';
+      matches.forEach(loc => {
+        html += `
+          <div class="modal-search-item" onclick="selectModalSearch(${loc.lat}, ${loc.lng}, '${loc.name.replace(/'/g, "\\'")}')">
+            <span>📍 ${loc.name}</span>
+            <span style="font-size:10px; color:var(--mc); font-weight:500;">${loc.tag}</span>
+          </div>`;
+      });
+
+      if (matches.length === 0) {
+        html = `<div style="padding:10px; font-size:12px; color:var(--mc); text-align:center;">No matching spot found</div>`;
+      }
+
+      dropdown.innerHTML = html;
+      dropdown.classList.add('show');
+    }
+
+    function selectModalSearch(lat, lng, name) {
+      document.getElementById('modal-dropdown').classList.remove('show');
+      document.getElementById('modal-search-input').value = name;
+      flyToSpot(lat, lng, name);
+    }
+
+    function confirmSelectedLocation() {
+      document.getElementById('lost-loc-field').value = selectedLocationText;
+      closeMapPickerModal();
+    }
+  </script>
+</body>
+</html>

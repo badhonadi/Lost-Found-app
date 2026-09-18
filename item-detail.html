@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>FindIt — Item Details</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:  #F8FAFC;
+      --cb:  #ffffff;
+      --tc:  #0F172A;
+      --mc:  #64748B;
+      --ib:  #F1F5F9;
+    }
+    body.dark {
+      --bg:  #0F172A;
+      --cb:  #1E293B;
+      --tc:  #F1F5F9;
+      --mc:  #94A3B8;
+      --ib:  #1E293B;
+    }
+
+    html, body { height: 100%; overflow: hidden; background: var(--bg); font-family: 'Inter', sans-serif; }
+
+    .screen {
+      position: absolute; inset: 0;
+      overflow-y: auto; overflow-x: hidden;
+      background: var(--bg); scrollbar-width: none;
+    }
+    .screen::-webkit-scrollbar { display: none; }
+
+    /* ── Hero image ── */
+    .hero { position: relative; height: 256px; background: #CBD5E1; flex-shrink: 0; }
+    .hero img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .hero-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(180deg, rgba(0,0,0,.32) 0%, transparent 55%);
+    }
+    .hero-top {
+      position: absolute; top: 48px; left: 16px; right: 16px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .glass-btn {
+      width: 40px; height: 40px; border-radius: 16px;
+      background: rgba(255,255,255,.2);
+      backdrop-filter: blur(8px);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity .1s;
+    }
+    .glass-btn:active { opacity: .7; }
+    .hero-right-btns { display: flex; gap: 8px; }
+    .hero-badge { position: absolute; bottom: 12px; left: 16px; }
+
+    /* ── Content ── */
+    .content { padding: 20px; }
+
+    /* title row */
+    .title-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
+    .item-title {
+      flex: 1; font-family: 'Poppins', sans-serif;
+      font-size: 21px; font-weight: 700; color: var(--tc);
+    }
+    .reward-chip {
+      flex-shrink: 0; padding: 4px 12px; border-radius: 99px;
+      font-size: 14px; font-weight: 700;
+      background: #FFF7ED; color: #F97316;
+    }
+
+    /* meta row */
+    .meta-row {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 16px;
+    }
+    .badge {
+      display: inline-block; font-size: 11px; font-weight: 600;
+      padding: 3px 10px; border-radius: 99px;
+    }
+    .badge-lost     { background: #FEF2F2; color: #DC2626; }
+    .badge-found    { background: #ECFDF5; color: #059669; }
+    .badge-open     { background: #EFF6FF; color: #2563EB; }
+    .badge-pending  { background: #FFFBEB; color: #D97706; }
+    .badge-resolved { background: #F0FDF4; color: #16A34A; }
+    .meta-stat { font-size: 12px; color: var(--mc); display: flex; align-items: center; gap: 4px; }
+
+    /* info card */
+    .info-card {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px; border-radius: 16px;
+      background: var(--cb); margin-bottom: 12px;
+    }
+    .info-icon {
+      width: 36px; height: 36px; border-radius: 12px;
+      background: #EFF6FF;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .info-lbl { font-size: 12px; color: var(--mc); }
+    .info-val { font-size: 14px; font-weight: 600; color: var(--tc); font-family: 'Inter', sans-serif; }
+
+    /* description */
+    .desc-card {
+      padding: 16px; border-radius: 16px;
+      background: var(--cb); margin-bottom: 12px;
+    }
+    .desc-heading {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--mc);
+      margin-bottom: 8px;
+    }
+    .desc-text { font-size: 14px; line-height: 1.6; color: var(--tc); }
+
+    /* poster card */
+    .poster-card {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px; border-radius: 16px;
+      background: var(--cb); margin-bottom: 12px;
+    }
+    .poster-avatar {
+      width: 40px; height: 40px; border-radius: 50%;
+      object-fit: cover; background: #E2E8F0; flex-shrink: 0;
+    }
+    .poster-by { font-size: 12px; color: var(--mc); }
+    .poster-name { font-size: 14px; font-weight: 600; color: var(--tc); font-family: 'Poppins', sans-serif; }
+    .trusted-chip {
+      display: flex; align-items: center; gap: 4px;
+      padding: 4px 10px; border-radius: 99px;
+      background: #FFF7ED; margin-left: auto;
+    }
+    .trusted-chip span { font-size: 12px; font-weight: 500; color: #F97316; }
+
+    /* ── Status tracking mini-card ── */
+    .track-card {
+      border-radius: 16px; overflow: hidden;
+      background: var(--cb);
+      box-shadow: 0 2px 10px rgba(0,0,0,.07);
+      margin-bottom: 12px;
+    }
+    .track-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px 8px;
+    }
+    .track-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--mc);
+    }
+    .track-btn {
+      display: flex; align-items: center; gap: 4px;
+      padding: 4px 12px; border-radius: 99px;
+      background: linear-gradient(135deg, #2563EB, #14B8A6);
+      border: none; cursor: pointer;
+      font-size: 10px; font-weight: 700; color: white;
+      font-family: 'Inter', sans-serif;
+    }
+    .steps-row {
+      display: flex; align-items: center;
+      padding: 0 16px 14px;
+    }
+    .step-col {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 4px; flex: 1;
+    }
+    .step-circle {
+      width: 20px; height: 20px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .step-name {
+      font-size: 7.5px; text-align: center; line-height: 1.2;
+      font-family: 'Inter', sans-serif;
+    }
+    .step-connector {
+      height: 1px; flex-shrink: 0; width: 8px;
+      margin-bottom: 12px;
+    }
+
+    /* ── Action buttons ── */
+    .action-row {
+      display: flex; gap: 12px; margin-bottom: 24px;
+    }
+    .btn-msg {
+      flex: 1; padding: 14px;
+      border-radius: 16px; border: none;
+      background: var(--ib); color: var(--tc);
+      font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      cursor: pointer; transition: opacity .1s;
+    }
+    .btn-msg:active { opacity: .7; }
+    .btn-claim {
+      flex: 1; padding: 14px;
+      border-radius: 16px; border: none;
+      background: linear-gradient(135deg, #2563EB, #14B8A6);
+      color: white;
+      font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(37,99,235,.3);
+      transition: opacity .1s;
+    }
+    .btn-claim:active { opacity: .85; }
+
+    /* ── Similar Items ── */
+    .section-title {
+      font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 700;
+      color: var(--tc); margin-bottom: 12px;
+    }
+    .similar-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 32px; }
+    .sim-card {
+      border-radius: 16px; overflow: hidden; background: var(--cb);
+      box-shadow: 0 2px 10px rgba(0,0,0,.07); cursor: pointer;
+      transition: transform .1s;
+    }
+    .sim-card:active { transform: scale(.97); }
+    .sim-img-wrap { position: relative; height: 120px; }
+    .sim-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; background: #E2E8F0; }
+    .sim-badge { position: absolute; top: 8px; left: 8px; }
+    .sim-body { padding: 8px 10px 10px; }
+    .sim-title {
+      font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 600;
+      color: var(--tc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .sim-loc { display: flex; align-items: center; gap: 3px; margin-top: 3px; }
+    .sim-loc span { font-size: 10px; color: var(--mc); }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; top: 16px; left: 16px; right: 16px; z-index: 999;
+      padding: 12px 16px; border-radius: 16px;
+      display: flex; align-items: center; gap: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.2);
+      animation: slideDown .25s ease; pointer-events: none;
+    }
+    .toast span { color: white; font-size: 14px; font-weight: 500; font-family: 'Inter', sans-serif; }
+    @keyframes slideDown { from { opacity:0; transform:translateY(-16px); } to { opacity:1; transform:translateY(0); } }
+  </style>
+</head>
+<body>
+<div class="screen" id="screen">
+
+  <!-- Hero -->
+  <div class="hero" id="hero">
+    <img id="hero-img" src="" alt="">
+    <div class="hero-overlay"></div>
+    <div class="hero-top">
+      <button class="glass-btn" onclick="history.back()">
+        <svg width="20" height="20" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+          <path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>
+        </svg>
+      </button>
+      <div class="hero-right-btns">
+        <button class="glass-btn" id="like-btn" onclick="toggleLike()">
+          <svg id="heart-empty" width="20" height="20" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+          <svg id="heart-filled" width="20" height="20" fill="#EF4444" stroke="#EF4444" stroke-width="2" viewBox="0 0 24 24" style="display:none">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        </button>
+        <button class="glass-btn" onclick="shareItem()">
+          <svg width="20" height="20" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="hero-badge" id="hero-badge"></div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- Title + reward -->
+    <div class="title-row">
+      <h2 class="item-title" id="item-title">—</h2>
+      <span class="reward-chip" id="reward-chip" style="display:none"></span>
+    </div>
+
+    <!-- Meta -->
+    <div class="meta-row">
+      <span class="badge" id="status-badge"></span>
+      <span class="meta-stat" id="views-stat">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+        —
+      </span>
+      <span class="meta-stat" id="claims-stat">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        —
+      </span>
+    </div>
+
+    <!-- Location -->
+    <div class="info-card">
+      <div class="info-icon">
+        <svg width="18" height="18" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+      </div>
+      <div>
+        <p class="info-lbl">Location</p>
+        <p class="info-val" id="info-location">—</p>
+      </div>
+    </div>
+
+    <!-- Date -->
+    <div class="info-card">
+      <div class="info-icon">
+        <svg width="18" height="18" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div>
+        <p class="info-lbl">Date</p>
+        <p class="info-val" id="info-date">—</p>
+      </div>
+    </div>
+
+    <!-- Category -->
+    <div class="info-card">
+      <div class="info-icon">
+        <svg width="18" height="18" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      </div>
+      <div>
+        <p class="info-lbl">Category</p>
+        <p class="info-val" id="info-category">—</p>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="desc-card">
+      <p class="desc-heading">Description</p>
+      <p class="desc-text" id="desc-text">—</p>
+    </div>
+
+    <!-- Posted by -->
+    <div class="poster-card">
+      <img class="poster-avatar" id="poster-avatar" src="" alt="">
+      <div>
+        <p class="poster-by">Posted by</p>
+        <p class="poster-name" id="poster-name">—</p>
+      </div>
+      <div class="trusted-chip">
+        <svg width="12" height="12" fill="none" stroke="#F97316" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+        <span>Trusted</span>
+      </div>
+    </div>
+
+    <!-- Track Status mini-card -->
+    <div class="track-card">
+      <div class="track-head">
+        <span class="track-label">Track Status</span>
+        <button class="track-btn" id="track-btn" onclick="goTrack()">
+          <svg width="11" height="11" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Track
+        </button>
+      </div>
+      <div class="steps-row" id="steps-row"></div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="action-row">
+      <button class="btn-msg" onclick="location.href='chat.html'">
+        <svg width="17" height="17" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Send Message
+      </button>
+      <button class="btn-claim" onclick="claimItem()">
+        <svg width="15" height="15" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Claim This Item
+      </button>
+    </div>
+
+    <!-- Similar Items -->
+    <p class="section-title">Similar Items</p>
+    <div class="similar-grid" id="similar-grid"></div>
+
+  </div>
+</div>
+
+<script>
+  if (localStorage.getItem('findit_dark') === 'true') document.body.classList.add('dark');
+  const dark = document.body.classList.contains('dark');
+
+  const ITEMS = [
+    { id:'1', type:'lost',  title:'iPhone 15 Pro',      category:'Electronics',
+      image:'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=600&h=400&fit=crop&auto=format',
+      location:'Library, Block A',            date:'Jan 15, 2025', status:'open',    views:234, claims:3, reward:'$50',
+      description:"Lost my iPhone 15 Pro near the library entrance. Black titanium, cracked screen protector, 'Alex' engraved on back. Contains important work files.",
+      postedBy:{ name:'Alex Chen', avatar:'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80&h=80&fit=crop&auto=format' }},
+    { id:'2', type:'found', title:'Blue Leather Wallet', category:'Wallet',
+      image:'https://images.unsplash.com/photo-1612023395494-1c4050b68647?w=600&h=400&fit=crop&auto=format',
+      location:'Cafeteria, Ground Floor',      date:'Jan 14, 2025', status:'open',    views:156, claims:1,
+      description:'Found a blue leather wallet near the cafeteria. Contains some cash and ID cards. Please provide identifying details to claim.',
+      postedBy:{ name:'Priya Sharma', avatar:'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop&auto=format' }},
+    { id:'3', type:'lost',  title:'MacBook Air M3',      category:'Electronics',
+      image:'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=600&h=400&fit=crop&auto=format',
+      location:'Engineering Block, Room 204',  date:'Jan 13, 2025', status:'pending', views:412, claims:5, reward:'$100',
+      description:"Lost my silver MacBook Air M3. Has a 'Stay Creative' sticker on the lid. Very urgent — dissertation files inside.",
+      postedBy:{ name:'Omar Hassan', avatar:'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&auto=format' }},
+    { id:'4', type:'found', title:'Car Keys + Keychain', category:'Keys',
+      image:'https://images.unsplash.com/photo-1761264889404-a194af20ae90?w=600&h=400&fit=crop&auto=format',
+      location:'Parking Lot B',               date:'Jan 12, 2025', status:'open',    views:89,  claims:0,
+      description:'Found a set of car keys with a red keychain and a small toy dinosaur attached. Left at the security desk.',
+      postedBy:{ name:'Sarah Lee', avatar:'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&auto=format' }},
+    { id:'5', type:'lost',  title:'AirPods Pro 2nd Gen', category:'Electronics',
+      image:'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=600&h=400&fit=crop&auto=format',
+      location:'Sports Complex',               date:'Jan 11, 2025', status:'open',    views:178, claims:2, reward:'$30',
+      description:"Lost white AirPods Pro 2nd generation with charging case. 'James' engraved on case. Last seen at the gym.",
+      postedBy:{ name:'James Park', avatar:'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&auto=format' }},
+    { id:'6', type:'found', title:'Student ID Card',     category:'ID Card',
+      image:'https://images.unsplash.com/photo-1623795457671-600b1223c2db?w=600&h=400&fit=crop&auto=format',
+      location:'Main Gate',                   date:'Jan 10, 2025', status:'resolved', views:302, claims:1,
+      description:'Found a student ID card near the main gate. Submitted to the Admin Office, Room 101.',
+      postedBy:{ name:'Fatima Al-Rashid', avatar:'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&h=80&fit=crop&auto=format' }},
+  ];
+
+  const STATUS_COLOR = { open:'#2563EB', pending:'#D97706', resolved:'#16A34A' };
+  const STATUS_BG    = { open:'#EFF6FF', pending:'#FFFBEB', resolved:'#F0FDF4' };
+
+  // get item id from URL
+  const urlId = new URLSearchParams(location.search).get('id') || '1';
+  const item  = ITEMS.find(i => i.id === urlId) || ITEMS[0];
+
+  let liked = false;
+
+  /* ── Populate page ── */
+  document.getElementById('hero-img').src       = item.image;
+  document.getElementById('hero-img').alt       = item.title;
+  document.getElementById('item-title').textContent = item.title;
+  document.getElementById('info-location').textContent = item.location;
+  document.getElementById('info-date').textContent     = item.date;
+  document.getElementById('info-category').textContent = item.category;
+  document.getElementById('desc-text').textContent     = item.description;
+  document.getElementById('poster-name').textContent   = item.postedBy.name;
+  document.getElementById('poster-avatar').src         = item.postedBy.avatar;
+
+  // reward
+  if (item.reward) {
+    const rc = document.getElementById('reward-chip');
+    rc.textContent = item.reward; rc.style.display = 'inline-block';
+  }
+
+  // hero badge (type)
+  const typeBg  = item.type === 'lost' ? '#FEF2F2' : '#ECFDF5';
+  const typeTxt = item.type === 'lost' ? '#DC2626'  : '#059669';
+  const typeLbl = item.type === 'lost' ? 'Lost'     : 'Found';
+  document.getElementById('hero-badge').innerHTML =
+    `<span class="badge" style="background:${typeBg};color:${typeTxt}">${typeLbl}</span>`;
+
+  // status badge
+  const sb = document.getElementById('status-badge');
+  sb.textContent = { open:'Open', pending:'Pending', resolved:'Resolved' }[item.status];
+  sb.className   = `badge badge-${item.status}`;
+
+  // views / claims
+  document.getElementById('views-stat').innerHTML =
+    `<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> ${item.views} views`;
+  document.getElementById('claims-stat').innerHTML =
+    `<svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> ${item.claims} claims`;
+
+  /* ── Track steps ── */
+  const STEPS = ['Submitted','Approved','Open','Pending','Resolved'];
+  const doneUntil  = item.status === 'open' ? 1 : item.status === 'pending' ? 2 : 4;
+  const activeStep = item.status === 'open' ? 2 : item.status === 'pending' ? 3 : -1;
+
+  const stepsRow = document.getElementById('steps-row');
+  STEPS.forEach((s, i) => {
+    const isDone   = i <= doneUntil;
+    const isActive = i === activeStep;
+
+    const col = document.createElement('div');
+    col.className = 'step-col';
+
+    let circleBg, circleBorder = 'none', circleContent = '';
+    if (isDone) {
+      circleBg = '#2563EB';
+      circleContent = `<svg width="9" height="9" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`;
+    } else if (isActive) {
+      circleBg = '#FFF7ED'; circleBorder = '1.5px solid #F97316';
+      circleContent = `<div style="width:6px;height:6px;border-radius:50%;background:#FB923C"></div>`;
+    } else {
+      circleBg = dark ? '#1E293B' : '#F1F5F9';
+    }
+
+    const nameColor = (isDone || isActive) ? 'var(--tc)' : 'var(--mc)';
+
+    col.innerHTML = `
+      <div class="step-circle" style="background:${circleBg};border:${circleBorder}">${circleContent}</div>
+      <span class="step-name" style="color:${nameColor}">${s}</span>`;
+    stepsRow.appendChild(col);
+
+    // connector
+    if (i < STEPS.length - 1) {
+      const conn = document.createElement('div');
+      conn.className = 'step-connector';
+      conn.style.background = i < doneUntil ? '#2563EB' : (dark ? '#1E293B' : '#E2E8F0');
+      stepsRow.appendChild(conn);
+    }
+  });
+
+  /* ── Similar items ── */
+  const simGrid = document.getElementById('similar-grid');
+  ITEMS.filter(i => i.id !== item.id).slice(0, 2).forEach(si => {
+    const tBg  = si.type === 'lost' ? '#FEF2F2' : '#ECFDF5';
+    const tTxt = si.type === 'lost' ? '#DC2626'  : '#059669';
+    const tLbl = si.type === 'lost' ? 'Lost'     : 'Found';
+    const card = document.createElement('div');
+    card.className = 'sim-card';
+    card.onclick = () => location.href = `item-detail.html?id=${si.id}`;
+    card.innerHTML = `
+      <div class="sim-img-wrap">
+        <img src="${si.image}" alt="${si.title}" loading="lazy">
+        <span class="badge sim-badge" style="background:${tBg};color:${tTxt}">${tLbl}</span>
+      </div>
+      <div class="sim-body">
+        <p class="sim-title">${si.title}</p>
+        <div class="sim-loc">
+          <svg width="10" height="10" fill="none" stroke="#94A3B8" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+          <span>${si.location}</span>
+        </div>
+      </div>`;
+    simGrid.appendChild(card);
+  });
+
+  /* ── Track button target ── */
+  function goTrack() { location.href = `track-status.html?id=${item.id}`; }
+
+  /* ── Like toggle ── */
+  function toggleLike() {
+    liked = !liked;
+    document.getElementById('heart-empty').style.display  = liked ? 'none'  : 'block';
+    document.getElementById('heart-filled').style.display = liked ? 'block' : 'none';
+  }
+
+  /* ── Share ── */
+  function shareItem() {
+    if (navigator.clipboard) navigator.clipboard.writeText(location.href);
+    showToast('Link copied to share!', '#2563EB');
+  }
+
+  /* ── Claim ── */
+  function claimItem() {
+    showToast('Claim request sent!', '#10B981');
+  }
+
+  /* ── Toast ── */
+  function showToast(msg, color) {
+    const old = document.querySelector('.toast');
+    if (old) old.remove();
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.style.background = color;
+    t.innerHTML = `
+      <svg width="18" height="18" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <span>${msg}</span>`;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2500);
+  }
+</script>
+</body>
+</html>

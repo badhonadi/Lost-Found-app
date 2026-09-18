@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>FindIt — Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="config.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:  #F8FAFC;
+      --cb:  #ffffff;
+      --tc:  #0F172A;
+      --mc:  #64748B;
+      --email: #075985;
+      --border: #F1F5F9;
+    }
+    body.dark {
+      --bg:  #0F172A;
+      --cb:  #1E293B;
+      --tc:  #F1F5F9;
+      --mc:  #94A3B8;
+      --email: #7DD3FC;
+      --border: #2D3B4E;
+    }
+
+    html, body {
+      height: 100%; overflow: hidden;
+      background: var(--bg);
+      font-family: 'Inter', sans-serif;
+    }
+
+    body {
+      background: #dfe6ef;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .screen {
+      width: min(100vw, 400px); height: 100dvh; max-height: 100dvh;
+      position: relative;
+      display: flex; flex-direction: column;
+      background: var(--bg);
+      border-radius: 28px;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+      overflow: hidden;
+    }
+
+    @media (max-width: 600px) {
+      body { background: var(--bg); }
+      .screen {
+        width: 100vw;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+
+    /* ── Hero banner ── */
+    .hero-banner {
+      height: 144px; flex-shrink: 0; position: relative;
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563EB 60%, #14B8A6 100%);
+    }
+    .settings-fab {
+      position: absolute; top: 48px; right: 16px;
+      width: 36px; height: 36px; border-radius: 12px;
+      background: rgba(255,255,255,.2);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── Profile info area ── */
+    .profile-info {
+      flex-shrink: 0;
+      padding: 0 20px 20px;
+      margin-top: -56px;
+      position: relative; z-index: 10;
+    }
+    .avatar-row {
+      display: flex; align-items: flex-end; gap: 16px;
+      margin-bottom: 16px;
+    }
+    .avatar-wrap { position: relative; flex-shrink: 0; }
+    .avatar-img {
+      width: 96px; height: 96px; border-radius: 24px;
+      object-fit: cover; display: block;
+      border: 4px solid var(--bg);
+      background: #CBD5E1;
+    }
+    .verified-badge {
+      position: absolute; bottom: -4px; right: -4px;
+      width: 28px; height: 28px; border-radius: 10px;
+      background: #10B981;
+      border: 2px solid var(--bg);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .user-name {
+      font-family: 'Poppins', sans-serif;
+      font-size: 20px; font-weight: 700;
+      color: var(--tc); margin-bottom: 2px;
+    }
+    .user-email { font-size: 12px; color: var(--email); font-weight: 600; }
+    .user-phone { font-size: 12px; color: var(--mc); margin-top: 2px; }
+    .trusted-row {
+      display: flex; align-items: center; gap: 4px;
+      margin-top: 4px;
+    }
+    .trusted-lbl { font-size: 12px; font-weight: 600; color: #F97316; }
+
+    /* ── Stats grid ── */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .stat-tile {
+      padding: 12px; border-radius: 16px;
+      text-align: center;
+      background: var(--cb);
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    }
+    .stat-num {
+      font-family: 'Poppins', sans-serif;
+      font-size: 18px; font-weight: 700;
+      color: var(--tc);
+    }
+    .stat-lbl { font-size: 12px; color: var(--mc); }
+
+    /* ── Menu list ── */
+    .menu-wrap {
+      flex: 1; overflow-y: auto; padding: 0 20px 16px;
+      scrollbar-width: none;
+    }
+    .menu-wrap::-webkit-scrollbar { display: none; }
+
+    .menu-card {
+      border-radius: 16px; overflow: hidden;
+      background: var(--cb);
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    }
+    .menu-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px; cursor: pointer; border: none;
+      background: transparent; width: 100%; text-align: left;
+      border-bottom: 1px solid var(--border);
+      transition: opacity .1s;
+    }
+    .menu-row:last-child { border-bottom: none; }
+    .menu-row:active { opacity: .7; }
+
+    .menu-icon-wrap {
+      width: 36px; height: 36px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .menu-label {
+      flex: 1; font-size: 14px; font-weight: 500;
+      font-family: 'Inter', sans-serif;
+      color: var(--tc);
+    }
+    .menu-label.logout { color: #EF4444; }
+
+    /* ── Bottom nav ── */
+    .bottom-nav {
+      display: flex; align-items: flex-end; justify-content: space-around;
+      padding: 8px 8px 12px;
+      background: var(--cb);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 2px; flex: 1; background: none; border: none; cursor: pointer;
+    }
+    .nav-icon-wrap { padding: 6px; border-radius: 12px; }
+    .nav-icon-wrap.active { background: #EFF6FF; }
+    .nav-label { font-size: 10px; font-weight: 500; color: var(--mc); font-family: 'Inter', sans-serif; }
+    .nav-label.active { color: #2563EB; }
+    .nav-add-bubble {
+      width: 48px; height: 48px; border-radius: 16px;
+      background: linear-gradient(135deg, #2563EB, #14B8A6);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 16px rgba(37,99,235,.4);
+    }
+
+    .edit-modal {
+      position: fixed; inset: 0; z-index: 30; display: none;
+      align-items: center; justify-content: center; padding: 20px;
+      background: rgba(15,23,42,.55);
+    }
+    .edit-modal.show { display: flex; }
+    .edit-card {
+      width: min(100%, 420px); max-height: 90vh; overflow-y: auto;
+      padding: 24px; border-radius: 18px; background: var(--cb);
+      box-shadow: 0 16px 45px rgba(15,23,42,.25);
+    }
+    .edit-title { color: var(--tc); font: 700 20px 'Poppins', sans-serif; margin-bottom: 18px; }
+    .edit-label { display: block; color: var(--mc); font-size: 12px; font-weight: 600; margin: 12px 0 6px; }
+    .edit-input { width: 100%; padding: 11px 12px; border: 1px solid #CBD5E1; border-radius: 10px; color: var(--tc); background: var(--bg); font: 14px 'Inter', sans-serif; }
+    .edit-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .edit-actions button { flex: 1; padding: 12px; border: 0; border-radius: 10px; cursor: pointer; font-weight: 700; }
+    .cancel-btn { color: var(--tc); background: var(--border); }
+    .save-btn { color: white; background: #2563EB; }
+    .save-btn:disabled { opacity: .6; cursor: wait; }
+    .edit-message { min-height: 18px; margin-top: 10px; color: #DC2626; font-size: 12px; }
+
+    .logout-modal {
+      position: fixed; inset: 0; z-index: 40; display: none;
+      align-items: center; justify-content: center; padding: 20px;
+      background: rgba(15,23,42,.55);
+    }
+    .logout-modal.show { display: flex; }
+    .logout-card {
+      width: min(100%, 320px); padding: 24px; border-radius: 18px;
+      background: var(--cb); text-align: center;
+      box-shadow: 0 16px 45px rgba(15,23,42,.25);
+    }
+    .logout-title { color: var(--tc); font: 700 19px 'Poppins', sans-serif; }
+    .logout-copy { margin-top: 8px; color: var(--mc); font-size: 13px; line-height: 1.5; }
+    .logout-actions { display: flex; gap: 10px; margin-top: 20px; }
+    .logout-actions button { flex: 1; padding: 12px; border: 0; border-radius: 10px; cursor: pointer; font-weight: 700; }
+    .logout-cancel { color: var(--tc); background: var(--border); }
+    .logout-confirm { color: white; background: #EF4444; }
+  </style>
+</head>
+<body>
+<div class="screen">
+
+  <!-- Hero banner -->
+  <div class="hero-banner">
+    <button class="settings-fab" onclick="location.href='settings.html'">
+      <svg width="17" height="17" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Profile info -->
+  <div class="profile-info">
+    <div class="avatar-row">
+      <div class="avatar-wrap">
+        <img class="avatar-img" id="profile-avatar" src="" alt="Profile photo">
+        <div class="verified-badge">
+          <svg width="14" height="14" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+      </div>
+      <div style="margin-bottom:8px">
+        <p class="user-name" id="profile-name">User</p>
+        <p class="user-email" id="profile-email">No email available</p>
+        <p class="user-phone" id="profile-phone">No phone available</p>
+        <div class="trusted-row">
+          <!-- Award icon -->
+          <svg width="13" height="13" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
+          </svg>
+          <span class="trusted-lbl">Trusted Member</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-tile">
+        <p class="stat-num" id="posts-count">0</p>
+        <p class="stat-lbl">Posts</p>
+      </div>
+      <div class="stat-tile">
+        <p class="stat-num" id="resolved-count">0</p>
+        <p class="stat-lbl">Resolved</p>
+      </div>
+      <div class="stat-tile">
+        <p class="stat-num">0</p>
+        <p class="stat-lbl">Reputation</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Menu -->
+  <div class="menu-wrap">
+    <div class="menu-card">
+
+      <!-- My Posts -->
+      <button class="menu-row" onclick="location.href='my-posts.html'">
+        <div class="menu-icon-wrap" style="background:#2563EB18">
+          <svg width="18" height="18" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+          </svg>
+        </div>
+        <span class="menu-label">My Posts</span>
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--mc)"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+
+      <!-- Smart Match -->
+      <button class="menu-row" onclick="location.href='smart-match.html'">
+        <div class="menu-icon-wrap" style="background:#F9731618">
+          <svg width="18" height="18" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+        </div>
+        <span class="menu-label">Smart Match</span>
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--mc)"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+
+      <!-- Notification Settings -->
+      <button class="menu-row" onclick="location.href='notif-settings.html'">
+        <div class="menu-icon-wrap" style="background:#7C3AED18">
+          <svg width="18" height="18" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+          </svg>
+        </div>
+        <span class="menu-label">Notification Settings</span>
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--mc)"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+
+      <!-- Settings -->
+      <button class="menu-row" onclick="location.href='edit-profile.html'">
+        <div class="menu-icon-wrap" style="background:#64748B18">
+          <svg width="18" height="18" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </div>
+        <span class="menu-label">Edit Profile</span>
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--mc)"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+
+      <!-- Help & Support -->
+      <button class="menu-row" onclick="location.href='help.html'">
+        <div class="menu-icon-wrap" style="background:#14B8A618">
+          <svg width="18" height="18" fill="none" stroke="#14B8A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <span class="menu-label">Help &amp; Support</span>
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--mc)"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+
+      <!-- Logout -->
+      <button class="menu-row" onclick="confirmLogout()">
+        <div class="menu-icon-wrap" style="background:#EF444418">
+          <svg width="18" height="18" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </div>
+        <span class="menu-label logout">Logout</span>
+        <svg width="16" height="16" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <button class="nav-item" onclick="location.href='home.html'">
+      <div class="nav-icon-wrap">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:#94A3B8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <span class="nav-label">Home</span>
+    </button>
+    <button class="nav-item" onclick="location.href='search.html'">
+      <div class="nav-icon-wrap">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:#94A3B8"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </div>
+      <span class="nav-label">Search</span>
+    </button>
+    <button class="nav-item" onclick="location.href='report-lost.html'">
+      <div class="nav-add-bubble">
+        <svg width="22" height="22" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+    </button>
+    <button class="nav-item" onclick="location.href='notifications.html'">
+      <div class="nav-icon-wrap">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:#94A3B8"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </div>
+      <span class="nav-label">Alerts</span>
+    </button>
+    <button class="nav-item">
+      <div class="nav-icon-wrap active">
+        <svg width="20" height="20" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <span class="nav-label active">Profile</span>
+    </button>
+  </nav>
+
+</div>
+
+<div class="logout-modal" id="logout-modal" onclick="closeLogout(event)">
+  <div class="logout-card" onclick="event.stopPropagation()">
+    <h2 class="logout-title">Log out?</h2>
+    <p class="logout-copy">Are you sure you want to log out of your FindIt account?</p>
+    <div class="logout-actions">
+      <button class="logout-cancel" type="button" onclick="closeLogout()">Cancel</button>
+      <button class="logout-confirm" type="button" onclick="logoutUser()">Log out</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  if (localStorage.getItem('findit_dark') === 'true') document.body.classList.add('dark');
+
+  let currentUser = null;
+
+  function defaultAvatar(gender) {
+    const femaleStyle = gender === 'female' || gender === 'others';
+    const skin = femaleStyle ? '#F2C7A5' : '#D9A77A';
+    const shirt = femaleStyle ? '#E11D48' : '#2563EB';
+    const hair = femaleStyle ? '#7C2D12' : '#334155';
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><rect width="96" height="96" rx="24" fill="#E2E8F0"/><path d="M19 96c2-22 15-32 29-32s27 10 29 32" fill="${shirt}"/><circle cx="48" cy="40" r="20" fill="${skin}"/><path d="M28 39c0-18 9-27 21-27 14 0 22 10 20 27-5-8-12-12-21-12-7 0-13 4-20 12z" fill="${hair}"/><circle cx="40" cy="42" r="2" fill="#334155"/><circle cx="56" cy="42" r="2" fill="#334155"/><path d="M43 51c3 2 7 2 10 0" fill="none" stroke="#9A5B45" stroke-width="2" stroke-linecap="round"/></svg>`;
+    return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+  }
+
+  function setProfile(user) {
+    currentUser = user;
+    document.getElementById('profile-name').textContent = user.fullName || 'User';
+    document.getElementById('profile-email').textContent = user.email || 'No email available';
+    document.getElementById('profile-phone').textContent = user.phone || 'No phone available';
+    const avatar = document.getElementById('profile-avatar');
+    avatar.alt = user.fullName ? `${user.fullName} profile photo` : 'Profile photo';
+    const fallback = defaultAvatar(user.gender);
+    avatar.onerror = () => {
+      avatar.onerror = null;
+      avatar.src = fallback;
+    };
+    avatar.src = user.avatar || fallback;
+  }
+
+  async function loadProfile() {
+    const storedUser = JSON.parse(localStorage.getItem('findit_user') || sessionStorage.getItem('findit_user') || 'null');
+    if (!storedUser || !storedUser.id) return location.replace('login.html');
+    const baseUrl = window.API_BASE_URL || '';
+    const response = await fetch(`${baseUrl}/api/users/${storedUser.id}`);
+    if (!response.ok) {
+      localStorage.removeItem('findit_user');
+      sessionStorage.removeItem('findit_user');
+      return location.replace('login.html');
+    }
+    const result = await response.json();
+    localStorage.setItem('findit_user', JSON.stringify(result.user));
+    sessionStorage.setItem('findit_user', JSON.stringify(result.user));
+    setProfile(result.user);
+  }
+
+  function confirmLogout() {
+    document.getElementById('logout-modal').classList.add('show');
+  }
+
+  function closeLogout(event) {
+    if (!event || event.target === document.getElementById('logout-modal')) {
+      document.getElementById('logout-modal').classList.remove('show');
+    }
+  }
+
+  function logoutUser() {
+    localStorage.removeItem('findit_user');
+    sessionStorage.removeItem('findit_user');
+    sessionStorage.removeItem('findit_toast');
+    location.href = 'landing.html';
+  }
+
+  loadProfile().catch(() => {
+    localStorage.removeItem('findit_user');
+    sessionStorage.removeItem('findit_user');
+    location.replace('login.html');
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>FindIt — Track Status</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #F8FAFC;
+      --cb: #ffffff;
+      --tc: #0F172A;
+      --mc: #64748B;
+      --ib: #F1F5F9;
+      --div: #F1F5F9;
+      --line: #E2E8F0;
+    }
+    body.dark {
+      --bg: #0F172A;
+      --cb: #1E293B;
+      --tc: #F1F5F9;
+      --mc: #94A3B8;
+      --ib: #1E293B;
+      --div: #1E293B;
+      --line: #1E293B;
+    }
+
+    html, body { min-height: 100%; font-family: 'Inter', sans-serif; }
+    body { min-height: 100dvh; overflow: hidden; display: flex; justify-content: center; background: #dfe6ef; }
+
+    .screen {
+      position: relative; width: min(100vw, 400px); height: 100dvh;
+      overflow-y: auto; overflow-x: hidden;
+      background: var(--bg); scrollbar-width: none;
+      display: flex; flex-direction: column;
+      border-radius: 28px; box-shadow: 0 18px 45px rgba(15,23,42,.18);
+    }
+    .screen::-webkit-scrollbar { display: none; }
+
+    @media (max-width: 600px) {
+      body { background: var(--bg); }
+      .screen { width: 100vw; border-radius: 0; box-shadow: none; }
+    }
+
+    /* ── Header ── */
+    .header {
+      flex-shrink: 0; padding: 48px 20px 16px;
+      display: flex; align-items: center; gap: 12px;
+      background: var(--bg);
+    }
+    .back-btn {
+      width: 40px; height: 40px; border-radius: 16px;
+      background: var(--ib); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .header-text { flex: 1; min-width: 0; }
+    .header-title {
+      font-family: 'Poppins', sans-serif; font-size: 18px; font-weight: 700;
+      color: var(--tc); line-height: 1.2;
+    }
+    .header-sub { font-size: 12px; color: var(--mc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ── Scrollable body ── */
+    .body { padding: 0 20px 32px; display: flex; flex-direction: column; gap: 16px; }
+
+    /* ── Card base ── */
+    .card {
+      border-radius: 16px; background: var(--cb);
+      box-shadow: 0 2px 12px rgba(0,0,0,.07);
+    }
+
+    /* ── Item preview card ── */
+    .item-card {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px;
+    }
+    .item-thumb {
+      width: 64px; height: 64px; border-radius: 12px;
+      object-fit: cover; flex-shrink: 0; background: #E2E8F0;
+    }
+    .item-info { flex: 1; min-width: 0; }
+    .item-name {
+      font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 700;
+      color: var(--tc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .item-loc { display: flex; align-items: center; gap: 4px; margin-top: 3px; }
+    .item-loc span { font-size: 12px; color: var(--mc); }
+    .item-meta-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+    .badge {
+      display: inline-block; font-size: 11px; font-weight: 600;
+      padding: 2px 10px; border-radius: 99px;
+    }
+    .badge-lost     { background: #FEF2F2; color: #DC2626; }
+    .badge-found    { background: #ECFDF5; color: #059669; }
+    .badge-open     { background: #EFF6FF; color: #2563EB; }
+    .badge-pending  { background: #FFFBEB; color: #D97706; }
+    .badge-resolved { background: #F0FDF4; color: #16A34A; }
+    .item-date { font-size: 12px; color: var(--mc); }
+
+    /* ── Status banner ── */
+    .status-banner {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 16px; border-radius: 16px;
+    }
+    .banner-icon-wrap {
+      width: 36px; height: 36px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .banner-label {
+      display: inline-block; font-size: 12px; font-weight: 800;
+      padding: 3px 10px; border-radius: 99px; color: white;
+      margin-bottom: 4px;
+    }
+    .banner-msg { font-size: 12px; font-weight: 500; line-height: 1.5; }
+
+    /* ── Resolved success card ── */
+    .resolved-card {
+      border-radius: 16px; padding: 16px;
+      background: linear-gradient(135deg, #16A34A, #14B8A6);
+      box-shadow: 0 4px 16px rgba(22,163,74,.3);
+    }
+    .resolved-head {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+    }
+    .resolved-title { color: white; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 700; }
+    .resolved-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .resolved-stat {
+      border-radius: 12px; padding: 8px;
+      background: rgba(255,255,255,.18); text-align: center;
+    }
+    .resolved-stat-val { color: white; font-family: 'Poppins', sans-serif; font-size: 12px; font-weight: 700; }
+    .resolved-stat-lbl { color: rgba(255,255,255,.7); font-size: 9px; margin-top: 1px; }
+
+    /* ── Status Timeline ── */
+    .timeline-card { padding: 16px; }
+    .section-title {
+      font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 700;
+      color: var(--tc); margin-bottom: 16px;
+    }
+    .timeline-row { display: flex; gap: 14px; }
+    .tl-col { display: flex; flex-direction: column; align-items: center; width: 28px; }
+    .tl-circle {
+      width: 28px; height: 28px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .tl-line { width: 2px; flex: 1; min-height: 22px; margin: 2px 0; }
+    .tl-content { padding-bottom: 16px; flex: 1; }
+    .tl-name {
+      font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 600;
+    }
+    .tl-time { font-size: 12px; color: var(--mc); margin-top: 2px; }
+
+    /* pulse animation for active step */
+    @keyframes pulse-ring {
+      0%, 100% { box-shadow: 0 0 0 0px rgba(249,115,22,.4); }
+      50%       { box-shadow: 0 0 0 6px rgba(249,115,22,.0); }
+    }
+    .tl-circle.active { animation: pulse-ring 1.5s ease infinite; }
+
+    /* ── Status Details ── */
+    .details-card { border-radius: 16px; overflow: hidden; background: var(--cb); box-shadow: 0 2px 12px rgba(0,0,0,.07); }
+    .details-head { padding: 14px 16px 10px; }
+    .detail-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; border-top: 1px solid var(--div);
+    }
+    .detail-row:first-child { border-top: none; }
+    .detail-lbl { font-size: 12px; color: var(--mc); }
+    .detail-val { font-size: 12px; font-weight: 600; color: var(--tc); text-align: right; max-width: 55%; }
+
+    /* ── Status History ── */
+    .history-card { padding: 16px; }
+    .hist-row { display: flex; gap: 12px; }
+    .hist-col { display: flex; flex-direction: column; align-items: center; width: 20px; }
+    .hist-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 3px; }
+    .hist-line { width: 1px; flex: 1; min-height: 16px; margin: 3px 0; background: var(--line); }
+    .hist-content { padding-bottom: 12px; flex: 1; }
+    .hist-event { font-size: 13px; font-weight: 600; color: var(--tc); font-family: 'Inter', sans-serif; }
+    .hist-time  { font-size: 12px; color: var(--mc); margin-top: 2px; }
+  </style>
+</head>
+<body>
+<div class="screen">
+
+  <!-- Header -->
+  <div class="header">
+    <button class="back-btn" onclick="goBack()">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--tc)">
+        <path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>
+      </svg>
+    </button>
+    <div class="header-text">
+      <h2 class="header-title">Track Status</h2>
+      <p class="header-sub" id="header-sub">—</p>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="body">
+
+    <!-- Item preview -->
+    <div class="card item-card">
+      <img class="item-thumb" id="item-thumb" src="" alt="">
+      <div class="item-info">
+        <p class="item-name" id="item-name">—</p>
+        <div class="item-loc">
+          <svg width="10" height="10" fill="none" stroke="#94A3B8" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+          <span id="item-loc-text">—</span>
+        </div>
+        <div class="item-meta-row">
+          <span class="badge" id="type-badge">—</span>
+          <span class="item-date" id="item-date">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status banner -->
+    <div class="status-banner" id="status-banner">
+      <div class="banner-icon-wrap" id="banner-icon-wrap">
+        <span id="banner-icon"></span>
+      </div>
+      <div>
+        <span class="banner-label" id="banner-label">—</span>
+        <p class="banner-msg" id="banner-msg">—</p>
+      </div>
+    </div>
+
+    <!-- Resolved success card (hidden by default) -->
+    <div class="resolved-card" id="resolved-card" style="display:none">
+      <div class="resolved-head">
+        <svg width="16" height="16" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+        <span class="resolved-title">Successfully Returned</span>
+      </div>
+      <div class="resolved-stats">
+        <div class="resolved-stat"><p class="resolved-stat-val" id="resolved-date">—</p><p class="resolved-stat-lbl">Resolved Date</p></div>
+        <div class="resolved-stat"><p class="resolved-stat-val" id="resolved-contact">—</p><p class="resolved-stat-lbl">Contact Method</p></div>
+        <div class="resolved-stat"><p class="resolved-stat-val">—</p><p class="resolved-stat-lbl">Resolution Time</p></div>
+      </div>
+    </div>
+
+    <!-- Status Timeline -->
+    <div class="card timeline-card">
+      <p class="section-title">Status Timeline</p>
+      <div id="timeline"></div>
+    </div>
+
+    <!-- Status Details -->
+    <div class="details-card">
+      <div class="details-head">
+        <p class="section-title" style="margin-bottom:0">Status Details</p>
+      </div>
+      <div class="detail-row">
+        <span class="detail-lbl">Current Status</span>
+        <span class="badge" id="detail-status">—</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-lbl">Last Updated</span>
+        <span class="detail-val" id="detail-updated">—</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-lbl">Current Handler</span>
+        <span class="detail-val">Admin — UIU Security Office</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-lbl">Category</span>
+        <span class="detail-val" id="detail-category">—</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-lbl">Report Date</span>
+        <span class="detail-val" id="detail-date">—</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-lbl">Contact Method</span>
+        <span class="detail-val" id="detail-contact">—</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-lbl">Description</span>
+        <span class="detail-val" id="detail-description">—</span>
+      </div>
+    </div>
+
+    <!-- Status History -->
+    <div class="card history-card">
+      <p class="section-title">Status History</p>
+      <div id="history-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  if (localStorage.getItem('findit_dark') === 'true') document.body.classList.add('dark');
+  const dark = document.body.classList.contains('dark');
+
+  function goBack() {
+    location.href = 'my-posts.html';
+  }
+
+  const STATUS_CONFIG = {
+    open:     { color:'#2563EB', bg:'#EFF6FF', border:'rgba(37,99,235,.13)',  label:'Open',
+                msg:'Your report has been approved and is now visible to all users on campus.' },
+    pending:  { color:'#D97706', bg:'#FFFBEB', border:'rgba(217,119,6,.13)', label:'Pending',
+                msg:'This item is currently under verification. Please wait while ownership is confirmed.' },
+    resolved: { color:'#16A34A', bg:'#F0FDF4', border:'rgba(22,163,74,.13)', label:'Resolved',
+                msg:'Congratulations! This item has been successfully reunited with its owner.' },
+  };
+
+  function formatDate(value) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? String(value || 'Unknown date') : date.toLocaleDateString(undefined, { month:'short', day:'numeric', year:'numeric' });
+  }
+
+  function formatDateTime(value) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? String(value || 'Unknown date') : date.toLocaleString(undefined, {
+      month:'short', day:'numeric', year:'numeric', hour:'numeric', minute:'2-digit', hour12:true
+    });
+  }
+
+  async function loadReport() {
+    const reportId = new URLSearchParams(location.search).get('id');
+    if (!reportId) throw new Error('Report not found.');
+
+    const response = await fetch(`${window.API_BASE_URL || ''}/api/reports/${encodeURIComponent(reportId)}`);
+    const result = await response.json();
+    if (!response.ok) throw new Error(result.message || 'Unable to load report.');
+
+    const report = result.report;
+    const item = {
+      id: report._id,
+      type: result.type,
+      title: report.itemName,
+      location: report.location,
+      category: report.category,
+      description: report.description,
+      contactMethod: report.contactMethod,
+      date: formatDate(report.createdAt),
+      dateTime: report.dateTime,
+      status: report.status === 'resolved' ? 'resolved' : 'open',
+      image: report.photos && report.photos[0] ? report.photos[0] : ''
+    };
+    const sc = STATUS_CONFIG[item.status];
+
+  /* ── Populate header ── */
+  document.getElementById('header-sub').textContent = item.title;
+
+  /* ── Item card ── */
+  document.getElementById('item-thumb').src = item.image;
+  document.getElementById('item-name').textContent = item.title;
+  document.getElementById('item-loc-text').textContent = item.location;
+  document.getElementById('item-date').textContent = item.date;
+
+  const typeBadge = document.getElementById('type-badge');
+  typeBadge.textContent  = item.type === 'lost' ? 'Lost' : 'Found';
+  typeBadge.className    = `badge badge-${item.type}`;
+
+  /* ── Status banner ── */
+  const banner = document.getElementById('status-banner');
+  banner.style.background = sc.bg;
+  banner.style.border     = `1.5px solid ${sc.border}`;
+
+  const iconWrap = document.getElementById('banner-icon-wrap');
+  iconWrap.style.background = sc.color + '18';
+
+  const iconSvgs = {
+    open: `<svg width="19" height="19" fill="none" stroke="${sc.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
+    pending: `<svg width="19" height="19" fill="none" stroke="${sc.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+    resolved: `<svg width="19" height="19" fill="none" stroke="${sc.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+  };
+  document.getElementById('banner-icon').innerHTML = iconSvgs[item.status];
+  document.getElementById('banner-label').textContent = sc.label;
+  document.getElementById('banner-label').style.background = sc.color;
+  document.getElementById('banner-msg').textContent  = sc.msg;
+  document.getElementById('banner-msg').style.color  = sc.color;
+
+  /* ── Resolved success card ── */
+  if (item.status === 'resolved') {
+    document.getElementById('resolved-card').style.display = 'block';
+    document.getElementById('resolved-date').textContent = item.date;
+    document.getElementById('resolved-contact').textContent = item.contactMethod;
+  }
+
+  /* ── Timeline ── */
+  const timelineSteps = [
+    { en:'Report Submitted', time:item.date },
+    { en:`Current Status: ${sc.label}`, time:formatDateTime(item.dateTime || item.date) }
+  ];
+  const doneUntil  = item.status === 'resolved' ? 1 : 0;
+  const activeStep = item.status === 'resolved' ? -1 : 1;
+  const tl = document.getElementById('timeline');
+
+  timelineSteps.forEach((step, i) => {
+    const isDone   = i <= doneUntil;
+    const isActive = i === activeStep;
+    const lineBlue = i < doneUntil;
+
+    const row = document.createElement('div');
+    row.className = 'timeline-row';
+
+    // left column: circle + line
+    let circleBg, circleBorder, circleContent;
+    if (isDone) {
+      circleBg     = 'linear-gradient(135deg,#2563EB,#14B8A6)';
+      circleBorder = 'none';
+      circleContent = `<svg width="12" height="12" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>`;
+    } else if (isActive) {
+      circleBg     = '#FFF7ED';
+      circleBorder = '2px solid #F97316';
+      circleContent = `<div style="width:10px;height:10px;border-radius:50%;background:#FB923C"></div>`;
+    } else {
+      circleBg     = dark ? '#1E293B' : '#F1F5F9';
+      circleBorder = `2px solid ${dark ? '#334155' : '#E2E8F0'}`;
+      circleContent = `<div style="width:8px;height:8px;border-radius:50%;background:${dark?'#334155':'#CBD5E1'}"></div>`;
+    }
+
+    const activeClass = isActive ? ' active' : '';
+    const lineColor   = lineBlue ? '#2563EB' : (dark ? '#1E293B' : '#E2E8F0');
+    const nameColor   = (isDone || isActive) ? 'var(--tc)' : 'var(--mc)';
+    const boxShadow   = isDone ? '0 2px 8px rgba(37,99,235,.25)' : isActive ? '0 0 0 5px rgba(249,115,22,.12)' : 'none';
+
+    const lineHtml = i < timelineSteps.length - 1
+      ? `<div class="tl-line" style="background:${lineColor}"></div>` : '';
+
+    row.innerHTML = `
+      <div class="tl-col">
+        <div class="tl-circle${activeClass}" style="background:${circleBg};border:${circleBorder};box-shadow:${boxShadow}">
+          ${circleContent}
+        </div>
+        ${lineHtml}
+      </div>
+      <div class="tl-content">
+        <p class="tl-name" style="color:${nameColor}">${step.en}</p>
+        ${(isDone || isActive) ? `<p class="tl-time">${step.time}</p>` : ''}
+      </div>`;
+    tl.appendChild(row);
+  });
+
+  /* ── Status Details ── */
+  const detailStatus = document.getElementById('detail-status');
+  detailStatus.textContent = sc.label;
+  detailStatus.className   = `badge badge-${item.status}`;
+  document.getElementById('detail-updated').textContent = item.date;
+  document.getElementById('detail-category').textContent = item.category;
+  document.getElementById('detail-date').textContent = formatDateTime(item.dateTime || item.date);
+  document.getElementById('detail-contact').textContent = item.contactMethod;
+  document.getElementById('detail-description').textContent = item.description;
+
+  /* ── History list ── */
+  const histList = document.getElementById('history-list');
+  const history = [
+    { en:'Report Submitted', time:item.date },
+    ...(item.status === 'resolved' ? [{ en:'Status Changed to Resolved', time:item.date }] : [])
+  ];
+  history.forEach((h, i) => {
+    const isLast   = i === history.length - 1;
+    const dotColor = isLast ? '#2563EB' : '#CBD5E1';
+    const row      = document.createElement('div');
+    row.className  = 'hist-row';
+    row.innerHTML  = `
+      <div class="hist-col">
+        <div class="hist-dot" style="background:${dotColor}"></div>
+        ${!isLast ? '<div class="hist-line"></div>' : ''}
+      </div>
+      <div class="hist-content">
+        <p class="hist-event">${h.en}</p>
+        <p class="hist-time">${h.time}</p>
+      </div>`;
+    histList.appendChild(row);
+  });
+  }
+
+  loadReport().catch(error => {
+    document.getElementById('header-sub').textContent = 'Unable to load report';
+    document.querySelector('.body').innerHTML = `<div class="card" style="padding:20px;color:var(--mc);font-size:13px">${error.message}</div>`;
+  });
+</script>
+</body>
+</html>

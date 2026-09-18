@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>FindIt — My Posts</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="config.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:   #F8FAFC;
+      --cb:   #ffffff;
+      --tc:   #0F172A;
+      --mc:   #64748B;
+      --ib:   #F1F5F9;
+      --div:  #F1F5F9;
+    }
+    body.dark {
+      --bg:   #0F172A;
+      --cb:   #1E293B;
+      --tc:   #F1F5F9;
+      --mc:   #94A3B8;
+      --ib:   #1E293B;
+      --div:  #1E293B;
+    }
+
+    html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; }
+    body { display: flex; align-items: center; justify-content: center; background: #dfe6ef; }
+
+    .screen {
+      width: min(100vw, 400px); height: 100dvh; max-height: 100dvh;
+      display: flex; flex-direction: column; background: var(--bg);
+      border-radius: 28px; overflow: hidden;
+      box-shadow: 0 18px 45px rgba(15,23,42,.18);
+    }
+
+    @media (max-width: 600px) {
+      body { background: var(--bg); }
+      .screen {
+        width: 100vw;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+
+    /* ── Header ── */
+    .header { padding: 28px 20px 0; flex-shrink: 0; }
+    .header-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .back-btn {
+      width: 40px; height: 40px; border-radius: 16px;
+      background: var(--ib); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .screen-title { font-family: 'Poppins', sans-serif; font-size: 20px; font-weight: 700; color: var(--tc); }
+
+    /* ── Summary stat tiles ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 16px; }
+    .stat-tile {
+      padding: 10px; border-radius: 16px; text-align: center;
+      border: none; cursor: pointer; transition: transform .1s;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    }
+    .stat-tile:active { transform: scale(.95); }
+    .stat-tile.active-filter { outline: 2px solid #2563EB; outline-offset: 1px; }
+    .stat-num { font-family: 'Poppins', sans-serif; font-size: 18px; font-weight: 800; }
+    .stat-lbl { font-size: 9px; font-weight: 500; color: var(--mc); font-family: 'Inter', sans-serif; margin-top: 1px; }
+
+    /* ── Filter chips ── */
+    .chips-row {
+      display: flex; gap: 8px; overflow-x: auto; padding-bottom: 12px;
+      scrollbar-width: none;
+    }
+    .chips-row::-webkit-scrollbar { display: none; }
+    .chip {
+      flex-shrink: 0; padding: 6px 12px; border-radius: 99px;
+      font-size: 12px; font-weight: 600; font-family: 'Inter', sans-serif;
+      background: var(--ib); color: var(--mc);
+      border: none; cursor: pointer; transition: all .15s;
+    }
+    .chip.active { background: #2563EB; color: white; }
+
+    /* ── Scroll area ── */
+    .scroll-area {
+      flex: 1; overflow-y: auto; overflow-x: hidden;
+      padding: 12px 20px 16px;
+      display: flex; flex-direction: column; gap: 12px;
+      scrollbar-width: none;
+    }
+    .scroll-area::-webkit-scrollbar { display: none; }
+    .activity-section { display:none; margin-bottom:4px; }
+    .activity-title { color:var(--tc); font:700 16px 'Poppins', sans-serif; margin-bottom:8px; }
+    .activity-card { padding:12px; margin-bottom:8px; border-radius:14px; background:var(--cb); box-shadow:0 2px 10px rgba(0,0,0,.07); }
+    .activity-head { display:flex; justify-content:space-between; gap:8px; color:var(--tc); font-size:12px; font-weight:600; }
+    .activity-type { color:#2563EB; font-size:10px; font-weight:700; text-transform:uppercase; }
+    .activity-message { margin-top:6px; color:var(--mc); font-size:12px; line-height:1.45; }
+    .activity-date { margin-top:7px; color:var(--mc); font-size:10px; }
+
+    /* ── Post card ── */
+    .post-card {
+      background: var(--cb);
+      box-shadow: 0 2px 14px rgba(0,0,0,.09);
+      border-radius: 20px; overflow: hidden;
+    }
+    .status-stripe { height: 3px; }
+
+    .card-main { display: flex; gap: 12px; padding: 12px 14px 10px; }
+    .thumb-wrap { position: relative; flex-shrink: 0; width: 72px; height: 72px; }
+    .thumb-wrap img {
+      width: 72px; height: 72px; border-radius: 14px;
+      object-fit: cover; display: block; background: #E2E8F0;
+    }
+    .type-badge {
+      position: absolute; top: 6px; left: 6px; z-index: 10;
+      color: white; font-weight: 700;
+      font-size: 9px; padding: 2px 7px; border-radius: 8px;
+      font-family: 'Inter', sans-serif; letter-spacing: .04em;
+      box-shadow: 0 1px 4px rgba(0,0,0,.25);
+    }
+    .card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+    .card-title {
+      font-family: 'Poppins', sans-serif; font-weight: 700; font-size: 13px;
+      color: var(--tc); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .card-loc { display: flex; align-items: center; gap: 4px; }
+    .card-loc span { font-size: 11px; color: var(--mc); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .card-status-row { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+    .status-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 10px; font-weight: 600; font-family: 'Inter', sans-serif;
+      padding: 2px 8px; border-radius: 20px;
+    }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .card-date { font-size: 10px; color: var(--mc); font-family: 'Inter', sans-serif; }
+
+    /* divider */
+    .card-div { height: 1px; background: var(--div); margin: 0 14px; }
+
+    /* meta + buttons */
+    .card-foot { padding: 8px 14px 14px; }
+    .card-meta { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .meta-item { font-size: 10px; color: var(--mc); display: flex; align-items: center; gap: 3px; }
+    .meta-updated { font-size: 10px; color: var(--mc); margin-left: auto; }
+    .card-btns { display: flex; gap: 8px; }
+    .btn-view {
+      flex: 1; height: 36px; border-radius: 12px; border: none; cursor: pointer;
+      background: #EFF6FF; color: #2563EB;
+      font-family: 'Inter', sans-serif; font-weight: 700; font-size: 11px;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      transition: opacity .1s;
+    }
+    body.dark .btn-view { background: rgba(37,99,235,.18); }
+    .btn-view:active { opacity: .7; }
+    .btn-track {
+      flex: 1; height: 36px; border-radius: 12px; border: none; cursor: pointer;
+      background: linear-gradient(135deg, #2563EB, #14B8A6); color: white;
+      font-family: 'Inter', sans-serif; font-weight: 700; font-size: 11px;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      box-shadow: 0 3px 10px rgba(37,99,235,.3);
+      transition: opacity .1s;
+    }
+    .btn-track:active { opacity: .8; }
+
+    /* empty state */
+    .empty {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 64px 0; gap: 12px;
+    }
+    .empty-icon {
+      width: 56px; height: 56px; border-radius: 16px;
+      background: var(--ib);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .empty-lbl { font-size: 14px; font-weight: 500; color: var(--mc); }
+
+    /* ── Bottom nav ── */
+    .bottom-nav {
+      display: flex; align-items: flex-end; justify-content: space-around;
+      padding: 8px 8px 12px; background: var(--cb);
+      border-top: 1px solid var(--div); flex-shrink: 0;
+    }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 1; background: none; border: none; cursor: pointer; }
+    .nav-icon-wrap { padding: 6px; border-radius: 12px; }
+    .nav-icon-wrap.active { background: #EFF6FF; }
+    .nav-label { font-size: 10px; font-weight: 500; color: var(--mc); font-family: 'Inter', sans-serif; }
+    .nav-label.active { color: #2563EB; }
+    .nav-add-bubble {
+      width: 48px; height: 48px; border-radius: 16px;
+      background: linear-gradient(135deg, #2563EB, #14B8A6);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px; box-shadow: 0 4px 16px rgba(37,99,235,.4);
+    }
+  </style>
+</head>
+<body>
+<div class="screen">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-row">
+      <button class="back-btn" onclick="location.href='home.html'">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--tc)">
+          <path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>
+        </svg>
+      </button>
+      <h2 class="screen-title">My Posts</h2>
+    </div>
+
+    <!-- Summary tiles -->
+    <div class="stats-grid" id="stats-grid"></div>
+
+    <!-- Filter chips -->
+    <div class="chips-row" id="chips-row"></div>
+  </div>
+
+  <!-- Posts list -->
+  <div class="scroll-area">
+    <section class="activity-section" id="activity-section">
+      <h2 class="activity-title">Claims & Messages</h2>
+      <div id="activity-list"></div>
+    </section>
+    <div id="posts-list"></div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <button class="nav-item" onclick="location.href='home.html'">
+      <div class="nav-icon-wrap">
+        <svg width="20" height="20" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <span class="nav-label">Home</span>
+    </button>
+    <button class="nav-item" onclick="location.href='search.html'">
+      <div class="nav-icon-wrap">
+        <svg width="20" height="20" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </div>
+      <span class="nav-label">Search</span>
+    </button>
+    <button class="nav-item" onclick="location.href='report-lost.html'">
+      <div class="nav-add-bubble">
+        <svg width="22" height="22" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+    </button>
+    <button class="nav-item" onclick="location.href='notifications.html'">
+      <div class="nav-icon-wrap">
+        <svg width="20" height="20" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </div>
+      <span class="nav-label">Alerts</span>
+    </button>
+    <button class="nav-item" onclick="location.href='profile.html'">
+      <div class="nav-icon-wrap active">
+        <svg width="20" height="20" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <span class="nav-label active">Profile</span>
+    </button>
+  </nav>
+
+</div>
+
+<script>
+  if (localStorage.getItem('findit_dark') === 'true') document.body.classList.add('dark');
+  const dark = document.body.classList.contains('dark');
+
+  const FALLBACK_IMAGE = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120"><rect width="160" height="120" fill="#E2E8F0"/><path d="M45 78l22-24 17 18 12-13 26 29H45z" fill="#94A3B8"/><circle cx="103" cy="43" r="10" fill="#CBD5E1"/></svg>');
+  let ITEMS = [];
+
+  const STATUS_COLOR = { open:'#2563EB', pending:'#D97706', resolved:'#16A34A' };
+  const STATUS_BG    = { open:'#EFF6FF', pending:'#FFFBEB', resolved:'#F0FDF4' };
+  const STATUS_DARK_BG = { open:'rgba(37,99,235,.13)', pending:'rgba(217,119,6,.13)', resolved:'rgba(22,163,74,.13)' };
+
+  const FILTERS = [
+    { id:'all',      label:'All' },
+    { id:'open',     label:'Open' },
+    { id:'pending',  label:'Pending' },
+    { id:'resolved', label:'Resolved' },
+    { id:'lost',     label:'Lost' },
+    { id:'found',    label:'Found' },
+    { id:'newest',   label:'Newest' },
+    { id:'oldest',   label:'Oldest' },
+  ];
+
+  let activeFilter = 'all';
+
+  /* ── Stats tiles ── */
+  function renderStats() {
+    const tiles = [
+      { label:'Total',    value: ITEMS.length,                                     color:'#64748B', bg: dark ? '#1E293B' : '#F8FAFC', filterId:'all' },
+      { label:'Open',     value: ITEMS.filter(i=>i.status==='open').length,     color:'#2563EB', bg: dark ? '#1E293B' : '#EFF6FF', filterId:'open' },
+      { label:'Pending',  value: ITEMS.filter(i=>i.status==='pending').length,  color:'#D97706', bg: dark ? '#1E293B' : '#FFFBEB', filterId:'pending' },
+      { label:'Resolved', value: ITEMS.filter(i=>i.status==='resolved').length, color:'#16A34A', bg: dark ? '#1E293B' : '#F0FDF4', filterId:'resolved' },
+    ];
+    const grid = document.getElementById('stats-grid');
+    grid.innerHTML = '';
+    tiles.forEach(t => {
+      const btn = document.createElement('button');
+      btn.className = 'stat-tile' + (activeFilter === t.filterId ? ' active-filter' : '');
+      btn.style.background = t.bg;
+      btn.innerHTML = `<p class="stat-num" style="color:${t.color}">${t.value}</p><p class="stat-lbl">${t.label}</p>`;
+      btn.onclick = () => { activeFilter = t.filterId; render(); };
+      grid.appendChild(btn);
+    });
+  }
+
+  /* ── Chips ── */
+  function renderChips() {
+    const row = document.getElementById('chips-row');
+    row.innerHTML = '';
+    FILTERS.forEach(f => {
+      const btn = document.createElement('button');
+      btn.className = 'chip' + (activeFilter === f.id ? ' active' : '');
+      btn.textContent = f.label;
+      btn.onclick = () => { activeFilter = f.id; render(); };
+      row.appendChild(btn);
+    });
+  }
+
+  /* ── Posts ── */
+  function getFiltered() {
+    let items = [...ITEMS];
+    if (activeFilter === 'open')     items = items.filter(i => i.status === 'open');
+    if (activeFilter === 'pending')  items = items.filter(i => i.status === 'pending');
+    if (activeFilter === 'resolved') items = items.filter(i => i.status === 'resolved');
+    if (activeFilter === 'lost')     items = items.filter(i => i.type === 'lost');
+    if (activeFilter === 'found')    items = items.filter(i => i.type === 'found');
+    if (activeFilter === 'oldest')   items = items.reverse();
+    return items;
+  }
+
+  function renderPosts() {
+    const list = document.getElementById('posts-list');
+    list.innerHTML = '';
+    const items = getFiltered();
+
+    if (items.length === 0) {
+      list.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">
+            <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--mc)">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+            </svg>
+          </div>
+          <p class="empty-lbl">No posts found</p>
+        </div>`;
+      return;
+    }
+
+    items.forEach(item => {
+      const sc  = STATUS_COLOR[item.status];
+      const sbg = dark ? STATUS_DARK_BG[item.status] : STATUS_BG[item.status];
+      const tc  = item.type === 'lost' ? '#EF4444' : '#10B981';
+      const tl  = item.type === 'lost' ? 'Lost' : 'Found';
+      const sl  = { open:'Open', pending:'Pending', resolved:'Resolved' }[item.status];
+
+      const card = document.createElement('div');
+      card.className = 'post-card';
+      card.innerHTML = `
+        <!-- status stripe -->
+        <div class="status-stripe" style="background:linear-gradient(90deg,${sc},${sc}55)"></div>
+
+        <!-- main row -->
+        <div class="card-main">
+          <div class="thumb-wrap">
+            <img src="${item.image}" alt="${escapeHtml(item.title)}" loading="lazy" onerror="this.src=FALLBACK_IMAGE">
+            <span class="type-badge" style="background:${tc}">${tl}</span>
+          </div>
+          <div class="card-info">
+            <p class="card-title">${escapeHtml(item.title)}</p>
+            <div class="card-loc">
+              <svg width="10" height="10" fill="none" stroke="#94A3B8" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+              <span>${escapeHtml(item.location)}</span>
+            </div>
+            <div class="card-status-row">
+              <span class="status-pill" style="background:${sbg};color:${sc}">
+                <span class="status-dot" style="background:${sc}"></span>
+                ${sl}
+              </span>
+              <span class="card-date">${item.date}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- divider -->
+        <div class="card-div"></div>
+
+        <!-- meta + buttons -->
+        <div class="card-foot">
+          <div class="card-meta">
+            <span class="meta-item">
+              <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              ${item.description ? escapeHtml(item.description.slice(0, 34)) : 'No description'}
+            </span>
+            <span class="meta-item">
+              <svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              ${item.category}
+            </span>
+            <span class="meta-updated">Posted ${item.date}</span>
+          </div>
+          <div class="card-btns">
+            <button class="btn-view" onclick="location.href='viewdetails.html?id=${encodeURIComponent(item.id)}&from=my-posts'">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              View Details
+            </button>
+            <button class="btn-track" onclick="location.href='track-status.html?id=${encodeURIComponent(item.id)}'">
+              <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Track Status
+            </button>
+          </div>
+        </div>`;
+      list.appendChild(card);
+    });
+  }
+
+  function render() {
+    renderStats();
+    renderChips();
+    renderPosts();
+  }
+
+  function escapeHtml(value) {
+    return String(value || '').replace(/[&<>'"]/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[character]));
+  }
+
+  function formatDate(value) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? String(value || 'Unknown date') : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function renderActivity(result) {
+    const section = document.getElementById('activity-section');
+    const list = document.getElementById('activity-list');
+    const claims = (result.claims || []).map(item => ({ ...item, activityType:'Claim' }));
+    const messages = (result.messages || []).map(item => ({ ...item, activityType:'Message', senderId:item.senderId }));
+    const activity = [...claims, ...messages].sort((first, second) => new Date(second.createdAt) - new Date(first.createdAt));
+    if (!activity.length) { section.style.display = 'none'; return; }
+
+    section.style.display = 'block';
+    list.innerHTML = activity.map(item => {
+      const person = item.activityType === 'Claim' ? item.claimantId : item.senderId;
+      const name = person && person.fullName ? person.fullName : 'Unknown user';
+      const text = item.message || item.body || '';
+      return `<article class="activity-card">
+        <div class="activity-head"><span>${escapeHtml(name)} · ${escapeHtml(item.itemName)}</span><span class="activity-type">${item.activityType}</span></div>
+        <p class="activity-message">${escapeHtml(text)}</p>
+        <p class="activity-date">${formatDate(item.createdAt)}</p>
+      </article>`;
+    }).join('');
+  }
+
+  function normalizeReports(result) {
+    const lost = (result.lostReports || []).map(report => ({ ...report, id: report._id, type: 'lost' }));
+    const found = (result.foundReports || []).map(report => ({ ...report, id: report._id, type: 'found' }));
+    return [...lost, ...found]
+      .map(report => ({
+        ...report,
+        title: report.itemName,
+        location: report.location,
+        date: formatDate(report.createdAt),
+        image: report.photos && report.photos[0] ? report.photos[0] : FALLBACK_IMAGE,
+        status: report.status === 'resolved' ? 'resolved' : 'open'
+      }))
+      .sort((first, second) => new Date(second.createdAt) - new Date(first.createdAt));
+  }
+
+  async function loadReports() {
+    const storedUser = JSON.parse(localStorage.getItem('findit_user') || sessionStorage.getItem('findit_user') || 'null');
+    if (!storedUser || !storedUser.id) {
+      location.replace('login.html');
+      return;
+    }
+
+    try {
+      const response = await fetch(`${window.API_BASE_URL || ''}/api/users/${storedUser.id}/reports`);
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || 'Unable to load your posts.');
+      ITEMS = normalizeReports(result);
+      render();
+      const activityResponse = await fetch(`${window.API_BASE_URL || ''}/api/users/${storedUser.id}/activity`);
+      const activityResult = await activityResponse.json();
+      if (activityResponse.ok) renderActivity(activityResult);
+    } catch (error) {
+      document.getElementById('posts-list').innerHTML = `<div class="empty"><p class="empty-lbl">${escapeHtml(error.message)}</p></div>`;
+    }
+  }
+
+  render();
+  loadReports();
+</script>
+</body>
+</html>

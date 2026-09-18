@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>FindIt — Smart Match</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="config.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:   #F8FAFC;
+      --cb:   #ffffff;
+      --tc:   #0F172A;
+      --mc:   #64748B;
+      --ib:   #F1F5F9;
+      --div:  #F1F5F9;
+      --border:#E2E8F0;
+    }
+    body.dark {
+      --bg:   #0F172A;
+      --cb:   #1E293B;
+      --tc:   #F1F5F9;
+      --mc:   #94A3B8;
+      --ib:   #2D3B4E;
+      --div:  #2D3B4E;
+      --border:#334155;
+    }
+
+    html, body { height: 100%; overflow: hidden; background: #dfe6ef; font-family: 'Inter', sans-serif; display: flex; justify-content: center; }
+
+    .screen {
+      width: min(100vw, 420px); height: 100%;
+      overflow-y: auto; overflow-x: hidden;
+      background: var(--bg); scrollbar-width: none;
+    }
+    .screen::-webkit-scrollbar { display: none; }
+
+    /* ── Header ── */
+    .header { padding: 48px 20px 16px; }
+    .header-row { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .back-btn {
+      width: 40px; height: 40px; border-radius: 16px;
+      background: var(--ib); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .header-text { flex: 1; }
+    .screen-title {
+      font-family: 'Poppins', sans-serif; font-size: 20px; font-weight: 700;
+      color: var(--tc);
+    }
+    .screen-sub { font-size: 12px; color: var(--mc); margin-top: 1px; }
+    .live-pill {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 12px; border-radius: 99px;
+      background: var(--ib);
+    }
+    .live-dot { width: 8px; height: 8px; border-radius: 50%; background: #10B981; animation: pulse 1.8s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .live-lbl { font-size: 12px; font-weight: 700; color: #2563EB; }
+
+    /* Lost item selector */
+    .selector-card {
+      margin: 0 20px 16px; padding: 12px 14px; border-radius: 16px;
+      background: var(--cb); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    }
+    .selector-lbl { font-size: 11.5px; font-weight: 600; color: var(--mc); }
+    .selector-dropdown {
+      flex: 1; max-width: 65%; padding: 6px 8px; border-radius: 10px;
+      background: var(--ib); color: var(--tc); border: 1px solid var(--border);
+      font-size: 12px; font-weight: 600; font-family: 'Inter', sans-serif; outline: none;
+    }
+
+    /* ── Banner card ── */
+    .banner {
+      margin: 0 20px 20px;
+      border-radius: 24px; padding: 20px;
+      background: linear-gradient(135deg, #1e40af, #2563EB 55%, #14B8A6);
+      box-shadow: 0 8px 28px rgba(37,99,235,.32);
+      position: relative; overflow: hidden;
+    }
+    .banner-ring {
+      position: absolute; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.10);
+      right: -25px; pointer-events: none;
+    }
+    .banner-sub  { color: rgba(255,255,255,.85); font-size: 12px; margin-bottom: 4px; }
+    .banner-count {
+      font-family: 'Poppins', sans-serif; font-size: 26px; font-weight: 700;
+      color: white;
+    }
+    .banner-updated { color: rgba(255,255,255,.7); font-size: 11.5px; margin-top: 4px; }
+
+    /* ── Match cards ── */
+    .cards-body { padding: 0 20px 32px; display: flex; flex-direction: column; gap: 16px; }
+
+    .match-card {
+      border-radius: 18px; overflow: hidden;
+      background: var(--cb);
+      box-shadow: 0 2px 12px rgba(0,0,0,.06);
+      border: 1px solid var(--border);
+      transition: all .2s;
+    }
+    .match-card.perfect {
+      border: 2px solid #10B981;
+    }
+
+    /* card inner row */
+    .card-row { display: flex; gap: 12px; padding: 16px; align-items: center; }
+    .card-thumb {
+      width: 68px; height: 68px; border-radius: 14px;
+      object-fit: cover; flex-shrink: 0; background: #E2E8F0;
+    }
+    .card-info { flex: 1; min-width: 0; }
+    .card-title {
+      font-family: 'Poppins', sans-serif; font-size: 14.5px; font-weight: 700;
+      color: var(--tc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .card-loc { font-size: 12px; color: var(--mc); margin-top: 3px; display: flex; align-items: center; gap: 4px; }
+    .card-reason {
+      display: inline-block;
+      font-size: 11px; font-weight: 600; color: #2563EB;
+      background: rgba(37,99,235,0.08); padding: 4px 8px; border-radius: 8px;
+      margin-top: 6px; line-height: 1.35;
+    }
+    .card-reason.perfect {
+      color: #059669; background: rgba(16,185,129,0.12);
+    }
+
+    /* score ring */
+    .score-wrap { position: relative; width: 56px; height: 56px; flex-shrink: 0; }
+    .score-wrap svg { transform: rotate(-90deg); }
+    .score-label {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 800; font-family: 'Poppins', sans-serif;
+    }
+
+    /* action buttons */
+    .card-btns {
+      display: flex; gap: 8px;
+      padding: 0 16px 14px;
+    }
+    .btn-reject {
+      flex: 1; padding: 10px;
+      border-radius: 12px; border: none; cursor: pointer;
+      background: var(--ib); color: var(--mc);
+      font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 600;
+    }
+    .btn-accept {
+      flex: 1.6; padding: 10px;
+      border-radius: 12px; border: none; cursor: pointer;
+      background: linear-gradient(135deg, #2563EB, #14B8A6);
+      color: white;
+      font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 600;
+      box-shadow: 0 4px 12px rgba(37,99,235,0.25);
+    }
+
+    /* ── Empty state ── */
+    .empty {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 48px 16px; gap: 12px;
+    }
+    .empty-icon {
+      width: 64px; height: 64px; border-radius: 50%;
+      background: #EFF6FF;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .empty-title {
+      font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700;
+      color: var(--tc); text-align: center;
+    }
+    .empty-sub { font-size: 13.5px; color: var(--mc); text-align: center; padding: 0 16px; line-height: 1.5; }
+    .btn-report {
+      margin-top: 10px; padding: 12px 24px; border-radius: 14px; border: none;
+      background: linear-gradient(135deg, #EF4444, #DC2626); color: white;
+      font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer;
+      box-shadow: 0 4px 14px rgba(239,68,68,0.3);
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; top: 16px; left: 16px; right: 16px; z-index: 999;
+      padding: 12px 16px; border-radius: 16px;
+      display: flex; align-items: center; gap: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,.2);
+      animation: slideDown .25s ease; pointer-events: none;
+    }
+    .toast span { color: white; font-size: 14px; font-weight: 500; font-family: 'Inter', sans-serif; }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+<div class="screen">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-row">
+      <button class="back-btn" onclick="history.back()">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--tc)">
+          <path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>
+        </svg>
+      </button>
+      <div class="header-text">
+        <h2 class="screen-title">Smart Match</h2>
+        <p class="screen-sub">AI Item Matching Engine</p>
+      </div>
+      <div class="live-pill">
+        <div class="live-dot"></div>
+        <span class="live-lbl">Live AI</span>
+      </div>
+    </div>
+
+    <!-- Lost Item Selector -->
+    <div class="selector-card" id="selector-wrapper" style="display:none;">
+      <span class="selector-lbl">Matching for:</span>
+      <select class="selector-dropdown" id="lost-select" onchange="changeSelectedLost(this.value)"></select>
+    </div>
+
+    <!-- Banner -->
+    <div class="banner">
+      <div class="banner-ring" style="width:80px;height:80px;top:-20px"></div>
+      <div class="banner-ring" style="width:130px;height:130px;top:-20px"></div>
+      <div class="banner-ring" style="width:180px;height:180px;top:-20px"></div>
+      <p class="banner-sub" id="banner-target">AI Smart Analysis</p>
+      <h3 class="banner-count" id="banner-count">Loading matches...</h3>
+      <p class="banner-updated">Analyzed found reports across UIU campus</p>
+    </div>
+  </div>
+
+  <!-- Match cards -->
+  <div class="cards-body" id="cards-body"></div>
+
+</div>
+
+<script>
+  if (localStorage.getItem('findit_dark') === 'true') document.body.classList.add('dark');
+  const dark = document.body.classList.contains('dark');
+
+  const CIRC = 138.2;
+  let activeMatches = [];
+  let userLostReports = [];
+  let currentLostId = null;
+
+  function scoreColor(s) {
+    return s >= 90 ? '#10B981' : s >= 70 ? '#059669' : s >= 50 ? '#F97316' : '#2563EB';
+  }
+
+  function getStoredUser() {
+    return JSON.parse(localStorage.getItem('findit_user') || sessionStorage.getItem('findit_user') || 'null');
+  }
+
+  function handleReject(id) {
+    activeMatches = activeMatches.filter(m => m.id !== id);
+    const el = document.querySelector(`[data-match="${id}"]`);
+    if (el) el.remove();
+    updateBanner();
+    showToast('Match dismissed', '#64748B');
+    if (activeMatches.length === 0) renderEmptyMatches();
+  }
+
+  function handleViewAndClaim(foundReportId) {
+    location.href = `viewdetails.html?id=${encodeURIComponent(foundReportId)}&from=smart-match`;
+  }
+
+  function updateBanner() {
+    const n = activeMatches.length;
+    document.getElementById('banner-count').textContent =
+      n + (n === 1 ? ' Match Found' : ' Matches Found');
+  }
+
+  function renderMatches() {
+    const body = document.getElementById('cards-body');
+    body.innerHTML = '';
+
+    if (activeMatches.length === 0) {
+      renderEmptyMatches();
+      return;
+    }
+
+    activeMatches.forEach(m => {
+      const isPerfect = m.score === 100;
+      const sc = scoreColor(m.score);
+      const trackLen = (m.score / 100) * CIRC;
+      const card = document.createElement('div');
+      card.className = 'match-card' + (isPerfect ? ' perfect' : '');
+      card.dataset.match = m.id;
+
+      card.innerHTML = `
+        <div class="card-row">
+          <img class="card-thumb" src="${m.image || 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=200&h=200&fit=crop'}" alt="${escapeHtml(m.title)}" onerror="this.src='https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=200&h=200&fit=crop'">
+          <div class="card-info">
+            <p class="card-title">${escapeHtml(m.title)}</p>
+            <p class="card-loc">
+              <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+              <span>${escapeHtml(m.location)}</span>
+            </p>
+            <div class="card-reason ${isPerfect ? 'perfect' : ''}">
+              ${isPerfect ? '🎯 ' : '🤖 '}${escapeHtml(m.reason)}
+            </div>
+          </div>
+          <div class="score-wrap">
+            <svg width="56" height="56" viewBox="0 0 56 56">
+              <circle cx="28" cy="28" r="22" fill="none"
+                stroke="${dark ? '#2D3B4E' : '#E2E8F0'}" stroke-width="4"/>
+              <circle cx="28" cy="28" r="22" fill="none"
+                stroke="${sc}" stroke-width="4" stroke-linecap="round"
+                stroke-dasharray="${trackLen} ${CIRC}"/>
+            </svg>
+            <div class="score-label" style="color:${sc}">${m.score}%</div>
+          </div>
+        </div>
+        <div class="card-btns">
+          <button type="button" class="btn-reject" onclick="handleReject('${m.id}')">Dismiss</button>
+          <button type="button" class="btn-accept" onclick="handleViewAndClaim('${m.foundReportId}')">View & Claim Item</button>
+        </div>`;
+      body.appendChild(card);
+    });
+
+    updateBanner();
+  }
+
+  function renderEmptyMatches() {
+    const body = document.getElementById('cards-body');
+    body.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">
+          <svg width="32" height="32" fill="none" stroke="#2563EB" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+          </svg>
+        </div>
+        <p class="empty-title">No matches found right now</p>
+        <p class="empty-sub">Our AI matching engine scans every newly reported found item automatically. We will alert you the moment a matching item is found!</p>
+      </div>`;
+    document.getElementById('banner-count').textContent = '0 Matches';
+  }
+
+  function renderNoLostReports() {
+    document.getElementById('selector-wrapper').style.display = 'none';
+    document.getElementById('banner-target').textContent = 'AI Smart Matching';
+    document.getElementById('banner-count').textContent = 'No Lost Reports';
+    const body = document.getElementById('cards-body');
+    body.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon" style="background:#FEF2F2;">
+          <svg width="32" height="32" fill="none" stroke="#EF4444" stroke-width="2" viewBox="0 0 24 24">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <p class="empty-title">You haven't posted any lost items</p>
+        <p class="empty-sub">Post a report for your lost item first so our AI engine can find matching found items across campus.</p>
+        <button type="button" class="btn-report" onclick="location.href='report-lost.html'">+ Report Lost Item</button>
+      </div>`;
+  }
+
+  function changeSelectedLost(lostId) {
+    currentLostId = lostId;
+    loadMatches(lostId);
+  }
+
+  async function loadMatches(targetLostId) {
+    const user = getStoredUser();
+    if (!user || !user.id) {
+      location.replace('login.html');
+      return;
+    }
+
+    try {
+      const url = `${window.API_BASE_URL || ''}/api/smart-match?userId=${encodeURIComponent(user.id)}${targetLostId ? `&lostReportId=${encodeURIComponent(targetLostId)}` : ''}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Unable to load matches');
+
+      if (!data.lostReports || data.lostReports.length === 0) {
+        renderNoLostReports();
+        return;
+      }
+
+      // Populate dropdown selector
+      const selectorWrapper = document.getElementById('selector-wrapper');
+      const select = document.getElementById('lost-select');
+      select.innerHTML = '';
+      data.lostReports.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r._id;
+        opt.textContent = `${r.itemName} (${r.category})`;
+        if (data.selectedLostReport && data.selectedLostReport._id === r._id) opt.selected = true;
+        select.appendChild(opt);
+      });
+      selectorWrapper.style.display = 'flex';
+
+      if (data.selectedLostReport) {
+        document.getElementById('banner-target').textContent = `Matches for "${data.selectedLostReport.itemName}"`;
+      }
+
+      activeMatches = data.matches || [];
+      renderMatches();
+    } catch (error) {
+      console.error('Smart match error:', error);
+      document.getElementById('cards-body').innerHTML = `<div class="empty"><p class="empty-sub">${escapeHtml(error.message)}</p></div>`;
+    }
+  }
+
+  function escapeHtml(value) {
+    return String(value || '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  }
+
+  function showToast(msg, color) {
+    const old = document.querySelector('.toast');
+    if (old) old.remove();
+    const t = document.createElement('div');
+    t.className = 'toast';
+    t.style.background = color;
+    t.innerHTML = `
+      <svg width="18" height="18" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <span>${msg}</span>`;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2500);
+  }
+
+  loadMatches();
+</script>
+</body>
+</html>

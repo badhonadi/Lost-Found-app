@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>FindIt — Notification Settings</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:  #F8FAFC;
+      --cb:  #ffffff;
+      --tc:  #0F172A;
+      --mc:  #64748B;
+      --ib:  #F1F5F9;
+      --div: #F1F5F9;
+      --tog-off: #CBD5E1;
+    }
+    body.dark {
+      --bg:  #0F172A;
+      --cb:  #1E293B;
+      --tc:  #F1F5F9;
+      --mc:  #94A3B8;
+      --ib:  #1E293B;
+      --div: #2D3B4E;
+      --tog-off: #2D3B4E;
+    }
+
+    html, body { height: 100%; overflow: hidden; background: var(--bg); font-family: 'Inter', sans-serif; }
+
+    .screen {
+      position: absolute; inset: 0;
+      overflow-y: auto; overflow-x: hidden;
+      background: var(--bg); scrollbar-width: none;
+    }
+    .screen::-webkit-scrollbar { display: none; }
+
+    /* ── Header ── */
+    .header { padding: 48px 20px 24px; }
+    .header-row { display: flex; align-items: center; gap: 12px; }
+    .back-btn {
+      width: 40px; height: 40px; border-radius: 16px;
+      background: var(--ib); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .screen-title {
+      font-family: 'Poppins', sans-serif; font-size: 20px; font-weight: 700;
+      color: var(--tc);
+    }
+    .screen-sub { font-size: 12px; color: var(--mc); margin-top: 1px; }
+
+    /* ── Settings card ── */
+    .settings-card {
+      margin: 0 20px 40px;
+      border-radius: 16px; overflow: hidden;
+      background: var(--cb);
+    }
+
+    .setting-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 16px;
+      border-bottom: 1px solid var(--div);
+    }
+    .setting-row:last-child { border-bottom: none; }
+
+    .setting-text { flex: 1; min-width: 0; }
+    .setting-label {
+      font-size: 14px; font-weight: 600;
+      color: var(--tc); font-family: 'Inter', sans-serif;
+    }
+    .setting-sub {
+      font-size: 12px; color: var(--mc);
+      margin-top: 2px; line-height: 1.4;
+    }
+
+    /* ── Toggle switch ── */
+    .toggle {
+      position: relative; width: 48px; height: 24px;
+      border-radius: 99px; border: none; cursor: pointer;
+      flex-shrink: 0; transition: background .2s;
+    }
+    .toggle-thumb {
+      position: absolute; top: 2px;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: white;
+      box-shadow: 0 1px 4px rgba(0,0,0,.2);
+      transition: left .2s;
+    }
+    .toggle.on  { background: #2563EB; }
+    .toggle.off { background: var(--tog-off); }
+    .toggle.on  .toggle-thumb { left: calc(100% - 22px); }
+    .toggle.off .toggle-thumb { left: 2px; }
+  </style>
+</head>
+<body>
+<div class="screen">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-row">
+      <button class="back-btn" onclick="history.back()">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--tc)">
+          <path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>
+        </svg>
+      </button>
+      <div>
+        <h2 class="screen-title">Notification Settings</h2>
+        <p class="screen-sub">Control what alerts you receive</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings rows -->
+  <div class="settings-card">
+
+    <!-- Match Found -->
+    <div class="setting-row">
+      <div class="setting-text">
+        <p class="setting-label">Match Found</p>
+        <p class="setting-sub">When AI finds a possible match for your item</p>
+      </div>
+      <button class="toggle on" id="tog-matchFound" onclick="toggleSetting('matchFound')">
+        <div class="toggle-thumb"></div>
+      </button>
+    </div>
+
+    <!-- Claim Request -->
+    <div class="setting-row">
+      <div class="setting-text">
+        <p class="setting-label">Claim Request</p>
+        <p class="setting-sub">Someone claims an item you posted as found</p>
+      </div>
+      <button class="toggle on" id="tog-claimRequest" onclick="toggleSetting('claimRequest')">
+        <div class="toggle-thumb"></div>
+      </button>
+    </div>
+
+    <!-- New Comment -->
+    <div class="setting-row">
+      <div class="setting-text">
+        <p class="setting-label">New Comment</p>
+        <p class="setting-sub">Activity on your posted items</p>
+      </div>
+      <button class="toggle on" id="tog-newComment" onclick="toggleSetting('newComment')">
+        <div class="toggle-thumb"></div>
+      </button>
+    </div>
+
+    <!-- Item Resolved -->
+    <div class="setting-row">
+      <div class="setting-text">
+        <p class="setting-label">Item Resolved</p>
+        <p class="setting-sub">Your item report is marked resolved</p>
+      </div>
+      <button class="toggle on" id="tog-itemResolved" onclick="toggleSetting('itemResolved')">
+        <div class="toggle-thumb"></div>
+      </button>
+    </div>
+
+    <!-- Admin Messages -->
+    <div class="setting-row">
+      <div class="setting-text">
+        <p class="setting-label">Admin Messages</p>
+        <p class="setting-sub">Platform updates and safety notices</p>
+      </div>
+      <button class="toggle off" id="tog-adminMessages" onclick="toggleSetting('adminMessages')">
+        <div class="toggle-thumb"></div>
+      </button>
+    </div>
+
+    <!-- Weekly Email Digest -->
+    <div class="setting-row">
+      <div class="setting-text">
+        <p class="setting-label">Weekly Email Digest</p>
+        <p class="setting-sub">Summary of your activity via email</p>
+      </div>
+      <button class="toggle off" id="tog-emailDigest" onclick="toggleSetting('emailDigest')">
+        <div class="toggle-thumb"></div>
+      </button>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  if (localStorage.getItem('findit_dark') === 'true') document.body.classList.add('dark');
+
+  // Initial state matches React defaults: first 4 on, last 2 off
+  const state = {
+    matchFound:    true,
+    claimRequest:  true,
+    newComment:    true,
+    itemResolved:  true,
+    adminMessages: false,
+    emailDigest:   false,
+  };
+
+  function toggleSetting(key) {
+    state[key] = !state[key];
+    const btn   = document.getElementById('tog-' + key);
+    btn.classList.toggle('on',  state[key]);
+    btn.classList.toggle('off', !state[key]);
+  }
+</script>
+</body>
+</html>

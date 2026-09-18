@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>FindIt — Alerts</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="config.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:     #F8FAFC;
+      --cb:     #ffffff;
+      --tc:     #0F172A;
+      --mc:     #64748B;
+      --ib:     #F1F5F9;
+      --border: #F1F5F9;
+    }
+    body.dark {
+      --bg:     #0F172A;
+      --cb:     #1E293B;
+      --tc:     #F1F5F9;
+      --mc:     #94A3B8;
+      --ib:     #1E293B;
+      --border: #1E293B;
+    }
+
+    html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; }
+    body { display:flex; align-items:center; justify-content:center; background:#dfe6ef; }
+
+    .screen {
+      width:min(100vw,400px); height:100dvh; max-height:100dvh;
+      display:flex; flex-direction:column; background:var(--bg);
+      border-radius:28px; overflow:hidden;
+      box-shadow:0 18px 45px rgba(15,23,42,.18);
+    }
+
+    @media (max-width:600px) {
+      body { background:var(--bg); }
+      .screen { width:100vw; border-radius:0; box-shadow:none; }
+    }
+
+    /* ── Header ── */
+    .header { padding: 28px 20px 16px; flex-shrink: 0; }
+    .header-row { display: flex; align-items: center; gap: 12px; }
+    .back-btn {
+      width: 40px; height: 40px; border-radius: 16px;
+      background: var(--ib); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .header-info { flex: 1; }
+    .header-title {
+      font-family: 'Poppins', sans-serif; font-size: 20px; font-weight: 700;
+      color: var(--tc);
+    }
+    .unread-count { font-size: 12px; color: #2563EB; margin-top: 1px; }
+
+    .mark-all-btn {
+      margin-left: auto; padding: 6px 12px; border-radius: 99px;
+      background: #EFF6FF; color: #2563EB;
+      font-size: 12px; font-weight: 600; font-family: 'Inter', sans-serif;
+      border: none; cursor: pointer; flex-shrink: 0;
+      transition: opacity .1s;
+    }
+    .mark-all-btn:active { opacity: .7; }
+
+    /* ── Scroll area ── */
+    .scroll-area {
+      flex: 1; overflow-y: auto; overflow-x: hidden;
+      padding: 0 20px 16px;
+      display: flex; flex-direction: column; gap: 12px;
+      scrollbar-width: none;
+    }
+    .scroll-area::-webkit-scrollbar { display: none; }
+
+    /* ── Notification row ── */
+    .notif-row {
+      display: flex; gap: 12px; padding: 12px;
+      border-radius: 16px; background: var(--cb);
+      cursor: pointer; transition: opacity .15s, transform .1s;
+    }
+    .notif-row.read {
+      opacity: .65;
+      box-shadow: none;
+    }
+    .notif-row:not(.read) {
+      box-shadow: 0 2px 10px rgba(0,0,0,.07);
+    }
+    .notif-row:active { transform: scale(.98); }
+
+    .notif-icon {
+      width: 44px; height: 44px; border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .notif-body { flex: 1; min-width: 0; }
+    .notif-title-row {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .notif-title {
+      flex: 1; font-family: 'Poppins', sans-serif;
+      font-size: 14px; font-weight: 600; color: var(--tc);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .unread-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #2563EB; flex-shrink: 0;
+    }
+    .notif-msg {
+      font-size: 12px; color: var(--mc); margin-top: 3px;
+      line-height: 1.5;
+    }
+    .notif-time { font-size: 12px; color: var(--mc); margin-top: 4px; display: block; }
+
+    /* ── Bottom nav ── */
+    .bottom-nav {
+      display: flex; align-items: flex-end; justify-content: space-around;
+      padding: 8px 8px 12px; background: var(--cb);
+      border-top: 1px solid var(--border); flex-shrink: 0;
+    }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 1; background: none; border: none; cursor: pointer; }
+    .nav-icon-wrap { padding: 6px; border-radius: 12px; }
+    .nav-icon-wrap.active { background: #EFF6FF; }
+    .nav-label { font-size: 10px; font-weight: 500; color: var(--mc); font-family: 'Inter', sans-serif; }
+    .nav-label.active { color: #2563EB; }
+    .nav-add-bubble {
+      width: 48px; height: 48px; border-radius: 16px;
+      background: linear-gradient(135deg, #2563EB, #14B8A6);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px; box-shadow: 0 4px 16px rgba(37,99,235,.4);
+    }
+  </style>
+</head>
+<body>
+<div class="screen">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-row">
+      <button class="back-btn" onclick="history.back()">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--tc)">
+          <path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>
+        </svg>
+      </button>
+      <div class="header-info">
+        <h2 class="header-title">Alerts</h2>
+        <p class="unread-count" id="unread-count" style="display:none"></p>
+      </div>
+      <button class="mark-all-btn" id="mark-all-btn" onclick="markAllRead()" style="display:none">
+        Mark all read
+      </button>
+    </div>
+  </div>
+
+  <!-- Notifications list -->
+  <div class="scroll-area" id="notif-list"></div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <button class="nav-item" onclick="location.href='home.html'">
+      <div class="nav-icon-wrap">
+        <svg width="20" height="20" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <span class="nav-label">Home</span>
+    </button>
+    <button class="nav-item" onclick="location.href='search.html'">
+      <div class="nav-icon-wrap">
+        <svg width="20" height="20" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </div>
+      <span class="nav-label">Search</span>
+    </button>
+    <button class="nav-item" onclick="location.href='report-lost.html'">
+      <div class="nav-add-bubble">
+        <svg width="22" height="22" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+    </button>
+    <button class="nav-item">
+      <div class="nav-icon-wrap active">
+        <svg width="20" height="20" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </div>
+      <span class="nav-label active">Alerts</span>
+    </button>
+    <button class="nav-item" onclick="location.href='profile.html'">
+      <div class="nav-icon-wrap">
+        <svg width="20" height="20" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <span class="nav-label">Profile</span>
+    </button>
+  </nav>
+
+</div>
+
+<script>
+  if (localStorage.getItem('findit_dark') === 'true') document.body.classList.add('dark');
+  const dark = document.body.classList.contains('dark');
+
+  let NOTIFS = [];
+  let currentUser = null;
+
+  /* icon config per type */
+  const ICON_CFG = {
+    match: {
+      color: '#2563EB', ibg: '#EFF6FF',
+      svg: `<svg width="20" height="20" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+    },
+    claim: {
+      color: '#F97316', ibg: '#FFF7ED',
+      svg: `<svg width="20" height="20" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>`,
+    },
+    comment: {
+      color: '#7C3AED', ibg: '#F5F3FF',
+      svg: `<svg width="20" height="20" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`,
+    },
+    resolved: {
+      color: '#10B981', ibg: '#ECFDF5',
+      svg: `<svg width="20" height="20" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+    },
+    admin: {
+      color: '#64748B', ibg: dark ? '#1E293B' : '#F8FAFC',
+      svg: `<svg width="20" height="20" fill="none" stroke="#64748B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
+    },
+  };
+
+  function unreadCount() { return NOTIFS.filter(n => !n.read).length; }
+
+  function escapeHtml(value) {
+    return String(value || '').replace(/[&<>"']/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[character]));
+  }
+
+  function relativeTime(value) {
+    const seconds = Math.max(0, (Date.now() - new Date(value).getTime()) / 1000);
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)} hour${Math.floor(seconds / 3600) === 1 ? '' : 's'} ago`;
+    return `${Math.floor(seconds / 86400)} day${Math.floor(seconds / 86400) === 1 ? '' : 's'} ago`;
+  }
+
+  function updateHeader() {
+    const uc = unreadCount();
+    const countEl  = document.getElementById('unread-count');
+    const markBtn  = document.getElementById('mark-all-btn');
+    if (uc > 0) {
+      countEl.textContent = `${uc} unread`;
+      countEl.style.display = 'block';
+      markBtn.style.display = 'inline-block';
+    } else {
+      countEl.style.display = 'none';
+      markBtn.style.display = 'none';
+    }
+  }
+
+  async function markRead(id) {
+    const user = currentUser;
+    NOTIFS = NOTIFS.map(n => n._id === id ? { ...n, read: true } : n);
+    // update just that row's appearance
+    const el = document.querySelector(`[data-id="${id}"]`);
+    if (el) {
+      el.classList.add('read');
+      const dot = el.querySelector('.unread-dot');
+      if (dot) dot.remove();
+    }
+    updateHeader();
+    await fetch(`${window.API_BASE_URL || ''}/api/notifications/${encodeURIComponent(id)}/read`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id })
+    });
+  }
+
+  async function markAllRead() {
+    NOTIFS = NOTIFS.map(n => ({ ...n, read: true }));
+    document.querySelectorAll('.notif-row').forEach(el => {
+      el.classList.add('read');
+      const dot = el.querySelector('.unread-dot');
+      if (dot) dot.remove();
+    });
+    updateHeader();
+    await fetch(`${window.API_BASE_URL || ''}/api/users/${encodeURIComponent(currentUser.id)}/notifications/read-all`, { method: 'PATCH' });
+  }
+
+  function render() {
+    const list = document.getElementById('notif-list');
+    list.innerHTML = '';
+    NOTIFS.forEach(n => {
+      const cfg = ICON_CFG[n.type] || ICON_CFG.admin;
+      const row = document.createElement('div');
+      row.className = 'notif-row' + (n.read ? ' read' : '');
+      row.dataset.id = n._id;
+      row.onclick = () => markRead(n._id);
+      row.innerHTML = `
+        <div class="notif-icon" style="background:${cfg.ibg}">
+          ${cfg.svg}
+        </div>
+        <div class="notif-body">
+          <div class="notif-title-row">
+            <span class="notif-title">${escapeHtml(n.title)}</span>
+            ${!n.read ? '<div class="unread-dot"></div>' : ''}
+          </div>
+          <p class="notif-msg">${escapeHtml(n.body)}</p>
+          <span class="notif-time">${relativeTime(n.createdAt)}</span>
+        </div>`;
+      list.appendChild(row);
+    });
+    updateHeader();
+  }
+
+  async function loadNotifications() {
+    currentUser = JSON.parse(localStorage.getItem('findit_user') || sessionStorage.getItem('findit_user') || 'null');
+    if (!currentUser || !currentUser.id) { location.replace('login.html'); return; }
+    try {
+      const response = await fetch(`${window.API_BASE_URL || ''}/api/users/${encodeURIComponent(currentUser.id)}/notifications`);
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || 'Unable to load notifications.');
+      NOTIFS = result.notifications || [];
+      render();
+      if (!NOTIFS.length) document.getElementById('notif-list').innerHTML = '<p class="notif-msg" style="padding:24px;text-align:center">No notifications yet.</p>';
+    } catch (error) {
+      document.getElementById('notif-list').innerHTML = `<p class="notif-msg" style="padding:24px;text-align:center">${escapeHtml(error.message)}</p>`;
+    }
+  }
+
+  loadNotifications();
+</script>
+</body>
+</html>

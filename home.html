@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>FindIt — Home</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="config.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:  #F8FAFC;
+      --cb:  #ffffff;
+      --tc:  #0F172A;
+      --mc:  #64748B;
+      --border: #E2E8F0;
+    }
+    body.dark {
+      --bg:  #0F172A;
+      --cb:  #1E293B;
+      --tc:  #F1F5F9;
+      --mc:  #94A3B8;
+      --border: #1E293B;
+    }
+
+    body {
+      background: #dfe6ef;
+      font-family: 'Inter', sans-serif;
+      height: 100dvh; overflow: hidden;
+      display: flex; justify-content: center; align-items: center;
+      margin: 0;
+    }
+
+    .phone-shell {
+      width: min(100vw, 400px);
+      height: 100dvh;
+      max-height: 100dvh;
+      background: #edf2f7;
+      border-radius: 28px;
+      box-shadow: 0 18px 45px rgba(15, 23, 42, 0.18);
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 600px) {
+      body { background: var(--bg); }
+      .phone-shell {
+        width: 100vw;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+
+    /* ── Scroll area ── */
+    .scroll-area {
+      width: 100%;
+      flex: 1;
+      overflow-y: auto; overflow-x: hidden;
+      scrollbar-width: none;
+      background: var(--bg);
+      padding-bottom: 120px;
+    }
+    .scroll-area::-webkit-scrollbar { display: none; }
+
+    /* ── Header ── */
+    .header {
+      padding: 26px 20px 12px;
+      background: var(--bg);
+      flex-shrink: 0;
+    }
+    .header-row {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .greeting { font-size: 12px; color: var(--mc); }
+    .user-name {
+      font-family: 'Poppins', sans-serif;
+      font-size: 20px; font-weight: 700;
+      color: var(--tc); margin-top: 1px;
+    }
+    .header-right { display: flex; align-items: center; gap: 8px; }
+
+    .notif-btn {
+      width: 40px; height: 40px; border-radius: 16px;
+      background: var(--cb); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+    }
+    .notif-btn svg { color: var(--tc); }
+    .notif-dot {
+      position: absolute; top: 6px; right: 6px;
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #EF4444;
+      border: 2px solid var(--bg);
+    }
+
+    .avatar-btn {
+      width: 40px; height: 40px; border-radius: 50%; overflow: hidden;
+      border: 2px solid #2563EB; cursor: pointer;
+      flex-shrink: 0;
+    }
+    .avatar-btn img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    /* ── Search bar ── */
+    .search-bar {
+      display: flex; align-items: center; gap: 12px;
+      margin-top: 16px;
+      background: var(--cb); height: 54px;
+      border-radius: 18px; padding: 0 16px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.06);
+      cursor: pointer;
+    }
+    .search-bar svg { color: var(--mc); flex-shrink: 0; }
+    .search-placeholder {
+      flex: 1; font-size: 14px; color: var(--mc);
+    }
+    .search-filter-btn {
+      width: 32px; height: 32px; border-radius: 12px;
+      background: #2563EB;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ── Section header ── */
+    .section-head {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 15px; font-weight: 700;
+      color: var(--tc);
+    }
+    .see-all {
+      font-size: 12px; font-weight: 600; color: #2563EB;
+      background: none; border: none; cursor: pointer;
+    }
+
+    /* ── Quick actions ── */
+    .quick-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      padding: 0 20px; margin-bottom: 20px;
+    }
+    .quick-btn {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 10px; padding: 12px 8px;
+      border-radius: 16px; border: none; cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+      transition: transform .12s;
+      min-height: 110px;
+    }
+    .quick-btn:active { transform: scale(.93); }
+    .quick-icon {
+      width: 42px; height: 42px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,.8);
+    }
+    .quick-label {
+      font-size: 10px; font-weight: 500;
+      text-align: center; line-height: 1.3;
+      color: #334155; font-family: 'Inter', sans-serif;
+    }
+    body.dark .quick-label { color: #CBD5E1; }
+
+    /* ── My Reports tiles ── */
+    .reports-section { padding: 0 20px; margin-bottom: 20px; }
+    .reports-grid {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+    .report-tile {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center;
+      min-height: 104px; padding: 12px 4px; border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+      cursor: pointer; border: none;
+      transition: transform .12s;
+    }
+    .report-tile:active { transform: scale(.94); }
+    .tile-num {
+      font-family: 'Poppins', sans-serif;
+      font-size: 21px; font-weight: 800;
+    }
+    .tile-lbl {
+      font-size: 9px; font-weight: 500;
+      color: var(--mc); font-family: 'Inter', sans-serif;
+      text-align: center; margin-top: 1px;
+    }
+
+    /* ── Smart Match banner ── */
+    .sm-banner {
+      margin: 0 20px 20px;
+      border-radius: 18px; padding: 16px 18px;
+      background: linear-gradient(135deg, #2563EB, #14B8A6);
+      box-shadow: 0 4px 18px rgba(37,99,235,.32);
+      cursor: pointer; position: relative; overflow: hidden;
+      transition: transform .12s;
+      min-height: 94px;
+    }
+    .sm-banner:active { transform: scale(.98); }
+
+    /* decorative rings inside banner */
+    .sm-ring {
+      position: absolute; border-radius: 50%;
+      border: 2px solid rgba(255,255,255,.18);
+      pointer-events: none;
+    }
+    .sm-ring-1 { width:70px;  height:70px;  right:-14px; top:-18px; }
+    .sm-ring-2 { width:110px; height:110px; right:-14px; top:-25px; }
+    .sm-ring-3 { width:150px; height:150px; right:-14px; top:-30px; }
+
+    .sm-row1 {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 4px;
+    }
+    .sm-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 14px; font-weight: 700; color: white;
+    }
+    .sm-ai-chip {
+      margin-left: auto;
+      font-size: 11px; font-weight: 600; color: white;
+      background: rgba(255,255,255,.2); padding: 2px 8px;
+      border-radius: 99px;
+    }
+    .sm-sub { font-size: 12px; color: rgba(255,255,255,.75); }
+
+    /* ── Categories ── */
+    .cats-section { margin-bottom: 20px; }
+    .cats-scroll {
+      display: flex; gap: 12px;
+      padding: 0 20px; overflow-x: auto;
+      scrollbar-width: none; padding-bottom: 4px;
+      padding-top: 8px;
+    }
+    .cats-scroll::-webkit-scrollbar { display: none; }
+    .cat-btn {
+      display: flex; flex-direction: column; align-items: center;
+      gap: 6px; flex-shrink: 0; background: none; border: none; cursor: pointer;
+    }
+    .cat-icon {
+      width: 48px; height: 48px; border-radius: 16px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,.05);
+    }
+    .cat-label {
+      font-size: 10px; font-weight: 500;
+      color: var(--mc); font-family: 'Inter', sans-serif;
+    }
+
+    /* ── Item cards ── */
+    .recent-section { padding: 0 20px; margin-bottom: 20px; }
+    .items-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .item-card {
+      border-radius: 16px; overflow: hidden; cursor: pointer;
+      background: var(--cb);
+      box-shadow: 0 2px 10px rgba(0,0,0,.07);
+      transition: transform .12s;
+    }
+    .item-card:active { transform: scale(.97); }
+    .item-thumb {
+      width: 100%; height: 144px;
+      object-fit: cover; display: block;
+      background: #E2E8F0;
+    }
+    .item-img-wrap { position: relative; height: 144px; overflow: hidden; }
+    .item-badge-tl { position: absolute; top: 8px; left: 8px; }
+    .item-reward   { position: absolute; top: 8px; right: 8px; }
+    .item-body { padding: 10px 12px 12px; }
+    .item-title {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px; font-weight: 600;
+      color: var(--tc);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .item-loc {
+      display: flex; align-items: center; gap: 4px;
+      margin-top: 4px;
+    }
+    .item-loc span { font-size: 11px; color: var(--mc); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .item-foot {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 8px;
+    }
+    .item-date { font-size: 11px; color: var(--mc); }
+
+    /* ── Status badge ── */
+    .badge {
+      font-size: 11px; font-weight: 600;
+      padding: 2px 10px; border-radius: 99px;
+      display: inline-block;
+    }
+    .badge-lost     { background: #FEF2F2; color: #DC2626; }
+    .badge-found    { background: #ECFDF5; color: #059669; }
+    .badge-open     { background: #EFF6FF; color: #2563EB; }
+    .badge-pending  { background: #FFFBEB; color: #D97706; }
+    .badge-resolved { background: #F0FDF4; color: #16A34A; }
+
+    /* ── Reward chip ── */
+    .reward-chip {
+      font-size: 11px; font-weight: 700;
+      padding: 2px 8px; border-radius: 99px;
+      background: #F97316; color: white;
+    }
+
+    /* ── Recommended matches ── */
+    .matches-section { padding: 0 20px; margin-bottom: 24px; }
+    .match-row {
+      display: flex; gap: 12px; padding: 12px;
+      border-radius: 16px; background: var(--cb);
+      box-shadow: 0 2px 8px rgba(0,0,0,.05);
+      cursor: pointer; margin-bottom: 12px;
+      transition: transform .12s;
+    }
+    .match-row:active { transform: scale(.98); }
+    .match-thumb {
+      width: 56px; height: 56px; border-radius: 12px;
+      object-fit: cover; flex-shrink: 0; background: #E2E8F0;
+    }
+    .match-info { flex: 1; min-width: 0; }
+    .match-title-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .match-name {
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px; font-weight: 600;
+      color: var(--tc);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .match-pct { font-size: 12px; font-weight: 700; color: #14B8A6; flex-shrink: 0; }
+    .match-loc {
+      display: flex; align-items: center; gap: 4px;
+      margin-top: 2px;
+    }
+    .match-loc span { font-size: 11px; color: var(--mc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* ── Bottom nav ── */
+    .bottom-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      gap: 8px;
+      padding: 10px 12px 14px;
+      background: rgba(255,255,255,0.96);
+      border-top: 1px solid rgba(148, 163, 184, 0.18);
+      flex-shrink: 0;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 -8px 18px rgba(15, 23, 42, 0.04);
+      position: relative;
+      z-index: 5;
+    }
+    .nav-item {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center;
+      gap: 6px; flex: 1; background: none; border: none; cursor: pointer;
+      padding: 4px 0 2px; color: var(--mc); transition: transform .15s ease;
+      font-family: 'Inter', sans-serif;
+    }
+    .nav-item:active {
+      transform: scale(0.96);
+    }
+    .nav-icon-wrap {
+      width: 42px; height: 42px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      background: transparent;
+      transition: all .15s ease;
+    }
+    .nav-item.active .nav-icon-wrap {
+      background: #EAF3FF;
+      box-shadow: inset 0 0 0 1px rgba(37,99,235,.08);
+    }
+    .nav-item.active .nav-icon-wrap svg {
+      stroke: #2563EB;
+    }
+    .nav-label {
+      font-size: 10px; font-weight: 600;
+      color: var(--mc); font-family: 'Inter', sans-serif;
+      letter-spacing: 0.02em;
+    }
+    .nav-item.active .nav-label { color: #2563EB; }
+
+    /* ── Add FAB ── */
+    .nav-item.center {
+      flex: 0.9;
+      margin-top: -16px;
+      padding-bottom: 8px;
+    }
+    .nav-add-bubble {
+      width: 54px; height: 54px; border-radius: 18px;
+      background: linear-gradient(135deg, #2563EB, #14B8A6);
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 10px 20px rgba(37, 99, 235, 0.28);
+      border: none;
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .nav-item.center:active .nav-add-bubble {
+      transform: scale(0.96);
+      box-shadow: 0 7px 16px rgba(37, 99, 235, 0.2);
+    }
+
+    .report-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.25);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      padding: 18px 14px 20px;
+      z-index: 50;
+    }
+    .report-modal.show {
+      display: flex;
+    }
+    .report-sheet {
+      width: min(100%, 360px);
+      background: var(--cb);
+      border-radius: 22px 22px 16px 16px;
+      box-shadow: 0 16px 36px rgba(15, 23, 42, 0.18);
+      padding: 18px 16px 14px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+    }
+    .report-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--tc);
+      margin-bottom: 14px;
+      text-align: center;
+      font-family: 'Poppins', sans-serif;
+    }
+    .report-choice {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      color: var(--tc);
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .report-choice .left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .report-choice .icon-bubble {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .report-choice.lost .icon-bubble {
+      background: #FEF2F2;
+    }
+    .report-choice.found .icon-bubble {
+      background: #ECFDF5;
+    }
+    .report-cancel {
+      width: 100%;
+      border: none;
+      background: transparent;
+      color: var(--mc);
+      font-size: 13px;
+      font-weight: 600;
+      padding: 12px 8px 4px;
+      cursor: pointer;
+    }
+
+    .toast {
+      position: fixed; top: 20px; left: 50%; z-index: 20;
+      width: min(calc(100% - 32px), 368px); padding: 14px 18px;
+      border-radius: 14px; color: white; background: #172018;
+      box-shadow: 0 8px 24px rgba(15,23,42,.22);
+      font-size: 14px; text-align: center;
+      transform: translate(-50%, -140%); opacity: 0;
+      transition: transform .25s ease, opacity .25s ease;
+    }
+    .toast.show { transform: translate(-50%, 0); opacity: 1; }
+  </style>
+</head>
+<body>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <div class="phone-shell">
+    <!-- ── Header ─────────────────────────────── -->
+    <div class="header">
+      <div class="header-row">
+        <div>
+          <p class="greeting" id="greeting-text">Good morning,</p>
+          <h2 class="user-name" id="user-name">User</h2>
+        </div>
+        <div class="header-right">
+          <button class="notif-btn" onclick="location.href='../notifications.html'">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            <span class="notif-dot"></span>
+          </button>
+          <button class="avatar-btn" onclick="goToProfilePage()" aria-label="Open profile">
+            <img id="header-avatar" src="" alt="Profile">
+          </button>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="search-bar" onclick="location.href='../search.html'">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <span class="search-placeholder">Search lost or found items...</span>
+        <div class="search-filter-btn">
+          <svg width="14" height="14" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Scroll body ─────────────────────────── -->
+    <div class="scroll-area">
+
+    <!-- Quick Actions -->
+    <div style="padding:16px 20px 0 20px">
+      <div class="quick-grid" style="padding:0; margin-bottom:0">
+        <!-- Report Lost -->
+        <button class="quick-btn" style="background:#FEF2F2" onclick="location.href='report-lost.html'">
+          <div class="quick-icon" style="background:#fff">
+            <svg width="20" height="20" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <span class="quick-label">Report Lost Item</span>
+        </button>
+        <!-- Report Found -->
+        <button class="quick-btn" style="background:#ECFDF5" onclick="location.href='report-found.html'">
+          <div class="quick-icon" style="background:#fff">
+            <svg width="20" height="20" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+          <span class="quick-label">Report Found Item</span>
+        </button>
+        <!-- Smart Match -->
+        <button class="quick-btn" style="background:#FFF7ED" onclick="location.href='smart-match.html'">
+          <div class="quick-icon" style="background:#fff">
+            <svg width="20" height="20" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </div>
+          <span class="quick-label">Smart Match</span>
+        </button>
+        <!-- Campus Map -->
+        <button class="quick-btn" style="background:#EFF6FF" onclick="location.href='campus-map.html'">
+          <div class="quick-icon" style="background:#fff">
+            <svg width="20" height="20" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/>
+            </svg>
+          </div>
+          <span class="quick-label">Campus Map</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- My Reports -->
+    <div class="reports-section" style="margin-top:20px">
+      <div class="section-head">
+        <span class="section-title">My Reports</span>
+        <button class="see-all" onclick="location.href='my-posts.html'">View All</button>
+      </div>
+      <div class="reports-grid">
+        <!-- Open -->
+        <button class="report-tile" style="background:#EFF6FF" onclick="location.href='my-posts.html'">
+          <span class="tile-num" id="dashboard-open-count" style="color:#2563EB">0</span>
+          <span class="tile-lbl">Open</span>
+        </button>
+        <!-- Pending -->
+        <button class="report-tile" style="background:#FFFBEB" onclick="location.href='my-posts.html'">
+          <span class="tile-num" id="dashboard-pending-count" style="color:#D97706">0</span>
+          <span class="tile-lbl">Pending</span>
+        </button>
+        <!-- Resolved -->
+        <button class="report-tile" style="background:#F0FDF4" onclick="location.href='my-posts.html'">
+          <span class="tile-num" id="dashboard-resolved-count" style="color:#16A34A">0</span>
+          <span class="tile-lbl">Resolved</span>
+        </button>
+        <!-- Total -->
+        <button class="report-tile" style="background:#F8FAFC" onclick="location.href='my-posts.html'">
+          <span class="tile-num" id="dashboard-total-count" style="color:#64748B">0</span>
+          <span class="tile-lbl">Total</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Smart Match Banner -->
+    <div class="sm-banner" id="home-smart-banner" onclick="location.href='smart-match.html'" style="display:none">
+      <div class="sm-ring sm-ring-1"></div>
+      <div class="sm-ring sm-ring-2"></div>
+      <div class="sm-ring sm-ring-3"></div>
+      <div class="sm-row1">
+        <svg width="16" height="16" fill="none" stroke="#FDE047" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        <span class="sm-title">Smart Match</span>
+        <span class="sm-ai-chip">AI</span>
+      </div>
+      <p class="sm-sub" id="home-smart-sub">Possible matches found for your reports</p>
+    </div>
+
+    <!-- Categories -->
+    <div class="cats-section" style="margin-top:0">
+      <div class="section-head" style="padding:0 20px">
+        <span class="section-title">Categories</span>
+      </div>
+      <div class="cats-scroll">
+        <button class="cat-btn" onclick="location.href='search.html?q=Electronics'">
+          <div class="cat-icon" style="background:#2563EB18">
+            <svg width="22" height="22" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          </div>
+          <span class="cat-label">Electronics</span>
+        </button>
+        <button class="cat-btn" onclick="location.href='../search.html?q=Wallet'">
+          <div class="cat-icon" style="background:#7C3AED18">
+            <svg width="22" height="22" fill="none" stroke="#7C3AED" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4"/><path d="M4 6v12c0 1.1.9 2 2 2h14v-4"/><path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z"/></svg>
+          </div>
+          <span class="cat-label">Wallet</span>
+        </button>
+        <button class="cat-btn" onclick="location.href='../search.html?q=Phone'">
+          <div class="cat-icon" style="background:#DB277718">
+            <svg width="22" height="22" fill="none" stroke="#DB2777" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+          </div>
+          <span class="cat-label">Phone</span>
+        </button>
+        <button class="cat-btn" onclick="location.href='../search.html?q=Keys'">
+          <div class="cat-icon" style="background:#F9731618">
+            <svg width="22" height="22" fill="none" stroke="#F97316" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>
+          </div>
+          <span class="cat-label">Keys</span>
+        </button>
+        <button class="cat-btn" onclick="location.href='../search.html?q=ID+Card'">
+          <div class="cat-icon" style="background:#14B8A618">
+            <svg width="22" height="22" fill="none" stroke="#14B8A6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          </div>
+          <span class="cat-label">ID Card</span>
+        </button>
+        <button class="cat-btn" onclick="location.href='../search.html?q=Bags'">
+          <div class="cat-icon" style="background:#DC262618">
+            <svg width="22" height="22" fill="none" stroke="#DC2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          </div>
+          <span class="cat-label">Bags</span>
+        </button>
+        <button class="cat-btn" onclick="location.href='../search.html?q=Clothing'">
+          <div class="cat-icon" style="background:#65A30D18">
+            <svg width="22" height="22" fill="none" stroke="#65A30D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.57a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.57a2 2 0 0 0-1.34-2.23z"/></svg>
+          </div>
+          <span class="cat-label">Clothing</span>
+        </button>
+        <button class="cat-btn" onclick="location.href='../search.html'">
+          <div class="cat-icon" style="background:#6B728018">
+            <svg width="22" height="22" fill="none" stroke="#6B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          </div>
+          <span class="cat-label">Others</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Recent Listings -->
+    <div class="recent-section">
+      <div class="section-head">
+        <span class="section-title">Recent Listings</span>
+        <button class="see-all" onclick="location.href='../search.html'">See all</button>
+      </div>
+      <div class="items-grid" id="items-grid"></div>
+    </div>
+
+    <!-- Recommended Matches -->
+    <div class="matches-section">
+      <div class="section-head">
+        <span class="section-title">Recommended Matches</span>
+      </div>
+      <div id="matches-list"></div>
+    </div>
+
+    </div><!-- /scroll-area -->
+
+    <!-- ── Bottom Nav ───────────────────────────── -->
+    <nav class="bottom-nav">
+      <!-- Home -->
+      <button class="nav-item active" onclick="location.href='home.html'">
+        <div class="nav-icon-wrap">
+          <svg width="20" height="20" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <span class="nav-label">Home</span>
+      </button>
+      <!-- Search -->
+      <button class="nav-item" onclick="location.href='../search.html'">
+        <div class="nav-icon-wrap">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--mc)"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        </div>
+        <span class="nav-label">Search</span>
+      </button>
+      <!-- Add FAB -->
+      <button class="nav-item center" onclick="openReportModal()">
+        <div class="nav-add-bubble">
+          <svg width="22" height="22" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </div>
+      </button>
+      <!-- Notifications -->
+      <button class="nav-item" onclick="location.href='../notifications.html'">
+        <div class="nav-icon-wrap">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--mc)"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </div>
+        <span class="nav-label">Alerts</span>
+      </button>
+      <!-- Profile -->
+      <button class="nav-item" onclick="goToProfilePage()">
+        <div class="nav-icon-wrap">
+          <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--mc)"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <span class="nav-label">Profile</span>
+      </button>
+    </nav>
+  </div>
+
+  <div class="report-modal" id="reportModal" onclick="closeReportModal()">
+    <div class="report-sheet" onclick="event.stopPropagation()">
+      <div class="report-title">Report an item</div>
+
+      <button class="report-choice lost" data-target="report-lost.html">
+        <span class="left">
+          <span class="icon-bubble">
+            <svg width="18" height="18" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </span>
+          Lost item
+        </span>
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+
+      <button class="report-choice found" data-target="report-found.html">
+        <span class="left">
+          <span class="icon-bubble">
+            <svg width="18" height="18" fill="none" stroke="#10B981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </span>
+          Found item
+        </span>
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+
+      <button class="report-cancel" onclick="closeReportModal()">Cancel</button>
+    </div>
+  </div>
+
+  <script>
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      window.setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    const dashboardToast = sessionStorage.getItem('findit_toast');
+    if (dashboardToast) {
+      sessionStorage.removeItem('findit_toast');
+      showToast(dashboardToast);
+    }
+
+    function getStoredUser() {
+      const localUser = JSON.parse(localStorage.getItem('findit_user') || 'null');
+      if (localUser && localUser.id) return localUser;
+      const sessionUser = JSON.parse(sessionStorage.getItem('findit_user') || 'null');
+      if (sessionUser && sessionUser.id) {
+        localStorage.setItem('findit_user', JSON.stringify(sessionUser));
+        return sessionUser;
+      }
+      return null;
+    }
+
+    function goToProfilePage() {
+      const storedUser = getStoredUser();
+      if (!storedUser || !storedUser.id) {
+        window.location.replace('login.html');
+        return;
+      }
+      window.location.href = 'profile.html';
+    }
+
+    function openReportModal() {
+      document.getElementById('reportModal').classList.add('show');
+    }
+
+    function closeReportModal() {
+      document.getElementById('reportModal').classList.remove('show');
+    }
+
+    document.querySelectorAll('.report-choice').forEach((btn) => {
+      btn.addEventListener('click', function () {
+        const target = this.dataset.target;
+        closeReportModal();
+        location.href = target;
+      });
+    });
+
+    // Apply saved dark mode
+    if (localStorage.getItem('findit_dark') === 'true') document.body.classList.add('dark');
+
+    // Greeting
+    const h = new Date().getHours();
+    const greetEl = document.getElementById('greeting-text');
+    if (h < 12) greetEl.textContent = 'Good morning,';
+    else if (h < 17) greetEl.textContent = 'Good afternoon,';
+    else greetEl.textContent = 'Good evening,';
+
+    (async function loadDashboard() {
+    const storedUser = getStoredUser();
+    if (!storedUser || !storedUser.id) {
+      window.location.replace('login.html');
+      throw new Error('Authentication required');
+    }
+
+    const baseUrl = window.API_BASE_URL || '';
+    const userResponse = await fetch(`${baseUrl}/api/users/${storedUser.id}`);
+    if (!userResponse.ok) {
+      localStorage.removeItem('findit_user');
+      sessionStorage.removeItem('findit_user');
+      window.location.replace('login.html');
+      throw new Error('User session expired');
+    }
+    const { user } = await userResponse.json();
+    localStorage.setItem('findit_user', JSON.stringify(user));
+    sessionStorage.setItem('findit_user', JSON.stringify(user));
+    document.getElementById('user-name').textContent = user.fullName;
+    const headerAvatar = document.getElementById('header-avatar');
+    const femaleAvatar = user.gender === 'female' || user.gender === 'others';
+    const avatarSkin = femaleAvatar ? '#F2C7A5' : '#D9A77A';
+    const avatarShirt = femaleAvatar ? '#E11D48' : '#2563EB';
+    const avatarHair = femaleAvatar ? '#7C2D12' : '#334155';
+    const avatarSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96"><rect width="96" height="96" rx="48" fill="#E2E8F0"/><path d="M19 96c2-22 15-32 29-32s27 10 29 32" fill="${avatarShirt}"/><circle cx="48" cy="40" r="20" fill="${avatarSkin}"/><path d="M28 39c0-18 9-27 21-27 14 0 22 10 20 27-5-8-12-12-21-12-7 0-13 4-20 12z" fill="${avatarHair}"/><circle cx="40" cy="42" r="2" fill="#334155"/><circle cx="56" cy="42" r="2" fill="#334155"/><path d="M43 51c3 2 7 2 10 0" fill="none" stroke="#9A5B45" stroke-width="2" stroke-linecap="round"/></svg>`;
+    const fallbackAvatar = `data:image/svg+xml,${encodeURIComponent(avatarSvg)}`;
+    headerAvatar.onerror = () => {
+      headerAvatar.onerror = null;
+      headerAvatar.src = fallbackAvatar;
+    };
+    headerAvatar.src = user.avatar || fallbackAvatar;
+
+    try {
+      const reportsResponse = await fetch(`${baseUrl}/api/users/${storedUser.id}/reports`);
+      if (reportsResponse.ok) {
+        const reportsResult = await reportsResponse.json();
+        const reports = [...(reportsResult.lostReports || []), ...(reportsResult.foundReports || [])];
+        const resolvedCount = reports.filter(report => report.status === 'resolved').length;
+        const pendingCount = reports.filter(report => report.status === 'pending').length;
+        document.getElementById('dashboard-open-count').textContent = reports.length - resolvedCount - pendingCount;
+        document.getElementById('dashboard-pending-count').textContent = pendingCount;
+        document.getElementById('dashboard-resolved-count').textContent = resolvedCount;
+        document.getElementById('dashboard-total-count').textContent = reports.length;
+      }
+    } catch (error) {
+      console.error('Unable to load report counts:', error);
+    }
+
+    try {
+      const activityResponse = await fetch(`${baseUrl}/api/users/${storedUser.id}/activity`);
+      if (activityResponse.ok) {
+        const activity = await activityResponse.json();
+        const latestClaim = (activity.claims || [])[0];
+        if (latestClaim && latestClaim._id && localStorage.getItem('findit_seen_claim') !== latestClaim._id) {
+          localStorage.setItem('findit_seen_claim', latestClaim._id);
+          showToast(`${latestClaim.claimantId.fullName} claimed this item: ${latestClaim.itemName}`);
+        }
+      }
+    } catch (error) {
+      console.error('Unable to load claim notifications:', error);
+    }
+
+    try {
+      const notificationResponse = await fetch(`${baseUrl}/api/users/${storedUser.id}/notifications`);
+      if (notificationResponse.ok) {
+        const notificationResult = await notificationResponse.json();
+        const notificationDot = document.querySelector('.notif-dot');
+        if (notificationDot) notificationDot.style.display = (notificationResult.notifications || []).some(item => !item.read) ? 'block' : 'none';
+      }
+    } catch (error) {
+      console.error('Unable to load notification status:', error);
+    }
+
+    // Smart Match live AI check
+    try {
+      const smResponse = await fetch(`${baseUrl}/api/smart-match?userId=${storedUser.id}`);
+      if (smResponse.ok) {
+        const smData = await smResponse.json();
+        const banner = document.getElementById('home-smart-banner');
+        const sub = document.getElementById('home-smart-sub');
+        if (banner && smData.totalMatches > 0) {
+          banner.style.display = 'block';
+          sub.textContent = `${smData.totalMatches} new possible AI match${smData.totalMatches > 1 ? 'es' : ''} found for your reports!`;
+        }
+        // Render top AI matches
+        const matchList = document.getElementById('matches-list');
+        if (matchList && smData.matches && smData.matches.length > 0) {
+          matchList.innerHTML = '';
+          smData.matches.slice(0, 3).forEach(item => {
+            matchList.insertAdjacentHTML('beforeend', `
+              <div class="match-row" onclick="location.href='viewdetails.html?id=${item.foundReportId}&from=home'">
+                <img class="match-thumb" src="${item.image || 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=200&h=200&fit=crop'}" alt="${item.title}" loading="lazy">
+                <div class="match-info">
+                  <div class="match-title-row">
+                    <span class="match-name">${item.title}</span>
+                    <span class="match-pct" style="color:#10B981; font-weight:700;">${item.score}%</span>
+                  </div>
+                  <div class="match-loc">
+                    <svg width="10" height="10" fill="none" stroke="#94A3B8" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                    <span>${item.location}</span>
+                  </div>
+                  <span class="badge" style="margin-top:6px;display:inline-block;background:#ECFDF5;color:#059669">Found</span>
+                </div>
+              </div>`);
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Unable to load smart match info:', error);
+    }
+
+    // Load recent reports for items grid
+    try {
+      const reportsResponse = await fetch(`${baseUrl}/api/reports`);
+      if (reportsResponse.ok) {
+        const reportsResult = await reportsResponse.json();
+        const lost = (reportsResult.lostReports || []).map(r => ({ ...r, type: 'lost', id: r._id, title: r.itemName, date: new Date(r.createdAt).toLocaleDateString(undefined, {month:'short', day:'numeric'}) }));
+        const found = (reportsResult.foundReports || []).map(r => ({ ...r, type: 'found', id: r._id, title: r.itemName, date: new Date(r.createdAt).toLocaleDateString(undefined, {month:'short', day:'numeric'}) }));
+        const allItems = [...lost, ...found].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 8);
+
+        const grid = document.getElementById('items-grid');
+        if (grid && allItems.length > 0) {
+          grid.innerHTML = '';
+          allItems.forEach(item => {
+            const tBg  = item.type === 'lost' ? '#FEF2F2' : '#ECFDF5';
+            const tTxt = item.type === 'lost' ? '#DC2626'  : '#059669';
+            const tLbl = item.type === 'lost' ? 'Lost' : 'Found';
+            const sBg  = {open:'#EFF6FF',pending:'#FFFBEB',resolved:'#F0FDF4'}[item.status || 'open'] || '#EFF6FF';
+            const sTxt = {open:'#2563EB',pending:'#D97706',resolved:'#16A34A'}[item.status || 'open'] || '#2563EB';
+            const sLbl = (item.status || 'open').charAt(0).toUpperCase() + (item.status || 'open').slice(1);
+            const img = (item.photos && item.photos[0]) ? item.photos[0] : 'https://images.unsplash.com/photo-1510557880182-3d4d3cba35a5?w=200&h=200&fit=crop';
+
+            grid.insertAdjacentHTML('beforeend', `
+              <div class="item-card" onclick="location.href='viewdetails.html?id=${item.id}&from=home'">
+                <div class="item-img-wrap">
+                  <img class="item-thumb" src="${img}" alt="${item.title}" loading="lazy">
+                  <span class="badge item-badge-tl" style="background:${tBg};color:${tTxt}">${tLbl}</span>
+                  ${item.reward ? `<span class="reward-chip item-reward">${item.reward}</span>` : ''}
+                </div>
+                <div class="item-body">
+                  <p class="item-title">${item.title}</p>
+                  <div class="item-loc">
+                    <svg width="11" height="11" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                    <span>${item.location}</span>
+                  </div>
+                  <div class="item-foot">
+                    <span class="item-date">${item.date}</span>
+                    <span class="badge" style="background:${sBg};color:${sTxt}">${sLbl}</span>
+                  </div>
+                </div>
+              </div>`);
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Unable to load home items:', error);
+    }
+
+    window.addEventListener('pageshow', async () => {
+      const latestResponse = await fetch(`${baseUrl}/api/users/${storedUser.id}/notifications`);
+      if (!latestResponse.ok) return;
+      const latestResult = await latestResponse.json();
+      const notificationDot = document.querySelector('.notif-dot');
+      if (notificationDot) notificationDot.style.display = (latestResult.notifications || []).some(item => !item.read) ? 'block' : 'none';
+    });
+      })();
+  </script>
+</body>
+</html>

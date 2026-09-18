@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>FindIt</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="config.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #F8FAFC;
+      --tc: #0F172A;
+      --mc: #64748B;
+    }
+    body.dark {
+      --bg: #0F172A;
+      --tc: #F1F5F9;
+      --mc: #94A3B8;
+    }
+
+    html, body {
+      height: 100%; overflow: hidden;
+      background: #dfe6ef;
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+    }
+
+    .screen {
+      position: relative;
+      width: min(100vw, 430px);
+      height: 100dvh;
+      display: flex; flex-direction: column;
+      background: var(--bg);
+      overflow: hidden;
+    }
+
+    /* ── Top image half ── */
+    .img-section {
+      position: relative;
+      height: 58%;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+    .hero-img {
+      width: 100%; height: 100%;
+      object-fit: cover; display: block;
+    }
+    .img-overlay {
+      position: absolute; inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(37,99,235,.25) 0%,
+        transparent 45%,
+        rgba(15,23,42,.75) 100%
+      );
+    }
+
+    /* top bar */
+    .topbar {
+      position: absolute; top: 0; left: 0; right: 0;
+      padding: 48px 20px 0;
+      display: flex; align-items: center; justify-content: space-between;
+      z-index: 2;
+    }
+    .logo-row { display: flex; align-items: center; gap: 10px; }
+    .logo-box {
+      width: 40px; height: 40px; border-radius: 16px;
+      background: rgba(255,255,255,.20);
+      backdrop-filter: blur(8px);
+      border: 1.5px solid rgba(255,255,255,.35);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo-name {
+      font-family: 'Poppins', sans-serif;
+      font-size: 18px; font-weight: 700; color: white;
+    }
+
+    .controls { display: flex; gap: 8px; }
+    .ctrl-btn {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,.20);
+      backdrop-filter: blur(8px);
+      border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      color: white; font-family: 'Poppins', sans-serif;
+      font-size: 11px; font-weight: 700;
+      transition: background .15s;
+    }
+    .ctrl-btn:active { background: rgba(255,255,255,.35); }
+
+    /* decorative rings */
+    .ring {
+      position: absolute; border-radius: 50%;
+      border: 1px solid rgba(255,255,255,.18);
+      pointer-events: none;
+      animation: ring-drift 8s ease-in-out infinite;
+    }
+    .ring:nth-child(1) { width:100px; height:100px; left:5%;  top:25%; animation-duration:6s; }
+    .ring:nth-child(2) { width:160px; height:160px; left:55%; top:12%; animation-duration:8s; }
+    .ring:nth-child(3) { width:220px; height:220px; left:28%; top:48%; animation-duration:10s; }
+
+    @keyframes ring-drift {
+      0%,100% { transform: scale(1) rotate(0deg); }
+      50%      { transform: scale(1.1) rotate(10deg); }
+    }
+
+    /* ── Bottom content card ── */
+    .content-card {
+      flex: 1;
+      margin-top: -24px;
+      position: relative; z-index: 10;
+      border-radius: 24px 24px 0 0;
+      background: var(--bg);
+      padding: 28px 24px 32px;
+      display: flex; flex-direction: column; justify-content: space-between;
+    }
+
+    .tagline {
+      font-family: 'Poppins', sans-serif;
+      font-size: 28px; font-weight: 700; line-height: 1.25;
+      color: var(--tc);
+    }
+    .subtitle {
+      margin-top: 8px;
+      font-size: 14px; line-height: 1.6;
+      color: var(--mc);
+      font-family: 'Inter', sans-serif;
+    }
+
+    .btn-group {
+      display: flex; flex-direction: column; gap: 12px;
+      margin-top: 20px;
+    }
+
+    .btn-login {
+      width: 100%; padding: 14px;
+      border-radius: 16px; border: none;
+      background: linear-gradient(135deg, #2563EB, #1d4ed8);
+      color: white; font-family: 'Poppins', sans-serif;
+      font-size: 15px; font-weight: 600;
+      box-shadow: 0 4px 18px rgba(37,99,235,.38);
+      cursor: pointer;
+      transition: transform .1s;
+    }
+    .btn-login:active { transform: scale(.97); }
+
+    .btn-signup {
+      width: 100%; padding: 14px;
+      border-radius: 16px;
+      background: transparent; color: #2563EB;
+      font-family: 'Poppins', sans-serif;
+      font-size: 15px; font-weight: 600;
+      border: 2px solid #2563EB;
+      cursor: pointer;
+      transition: transform .1s;
+    }
+    body:not(.dark) .btn-signup { background: white; }
+    .btn-signup:active { transform: scale(.97); }
+  </style>
+</head>
+<body>
+  <div class="screen">
+
+    <!-- Image section -->
+    <div class="img-section">
+      <img class="hero-img"
+        src="https://images.unsplash.com/photo-1521791136064-7986c2920216?w=600&h=700&fit=crop&auto=format"
+        alt="People reuniting">
+      <div class="img-overlay"></div>
+
+      <!-- Decorative rings -->
+      <div class="ring"></div>
+      <div class="ring"></div>
+      <div class="ring"></div>
+
+      <!-- Top bar -->
+      <div class="topbar">
+        <div class="logo-row">
+          <div class="logo-box">
+            <!-- Pin + search SVG (white mode) -->
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="white" fill-opacity=".9"/>
+              <circle cx="12" cy="9" r="2.5" fill="rgba(255,255,255,.5)"/>
+              <circle cx="17.2" cy="17.2" r="2.8" fill="none" stroke="white" stroke-width="1.6"/>
+              <line x1="19.2" y1="19.2" x2="21" y2="21" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <span class="logo-name">FindIt</span>
+        </div>
+
+        <div class="controls">
+          <!-- Language toggle -->
+          <button class="ctrl-btn" id="lang-btn" onclick="toggleLang()">বা</button>
+          <!-- Dark/light toggle -->
+          <button class="ctrl-btn" id="theme-btn" onclick="toggleTheme()">
+            <!-- Moon icon (shown in light mode) -->
+            <svg id="icon-moon" width="16" height="16" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+            <!-- Sun icon (shown in dark mode) -->
+            <svg id="icon-sun" width="16" height="16" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="display:none">
+              <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/>
+              <line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/>
+              <line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content card -->
+    <div class="content-card">
+      <div>
+        <h1 class="tagline" id="tagline-text">Find What Matters.</h1>
+        <p class="subtitle" id="subtitle-text">Helping people reconnect with their lost belongings safely and quickly.</p>
+      </div>
+      <div class="btn-group">
+        <button class="btn-login" id="btn-login" onclick="location.href='login.html'">Login</button>
+        <button class="btn-signup" id="btn-signup" onclick="location.href='signup.html'">Create Account</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ── Translations ──
+    const TR = {
+      en: {
+        tagline: "Find What Matters.",
+        subtitle: "Helping people reconnect with their lost belongings safely and quickly.",
+        login: "Login",
+        createAccount: "Create Account",
+        langLabel: "বা",
+      },
+      bn: {
+        tagline: "হারানো জিনিস খুঁজে পাও।",
+        subtitle: "হারানো জিনিস সহজে ও নিরাপদে ফিরে পেতে সাহায্য করে।",
+        login: "লগইন",
+        createAccount: "অ্যাকাউন্ট তৈরি করুন",
+        langLabel: "EN",
+      },
+    };
+
+    let lang = localStorage.getItem('findit_lang') || 'en';
+    let dark = localStorage.getItem('findit_dark') === 'true';
+
+    function applyLang() {
+      const t = TR[lang];
+      document.getElementById('tagline-text').textContent   = t.tagline;
+      document.getElementById('subtitle-text').textContent  = t.subtitle;
+      document.getElementById('btn-login').textContent      = t.login;
+      document.getElementById('btn-signup').textContent     = t.createAccount;
+      document.getElementById('lang-btn').textContent       = t.langLabel;
+    }
+
+    function applyTheme() {
+      if (dark) {
+        document.body.classList.add('dark');
+        document.getElementById('icon-moon').style.display = 'none';
+        document.getElementById('icon-sun').style.display  = 'block';
+      } else {
+        document.body.classList.remove('dark');
+        document.getElementById('icon-moon').style.display = 'block';
+        document.getElementById('icon-sun').style.display  = 'none';
+      }
+    }
+
+    function toggleLang() {
+      lang = lang === 'en' ? 'bn' : 'en';
+      localStorage.setItem('findit_lang', lang);
+      applyLang();
+    }
+
+    function toggleTheme() {
+      dark = !dark;
+      localStorage.setItem('findit_dark', dark);
+      applyTheme();
+    }
+
+    // Init
+    applyLang();
+    applyTheme();
+  </script>
+</body>
+</html>

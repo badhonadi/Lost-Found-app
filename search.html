@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>FindIt — Search</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="config.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:  #F8FAFC;
+      --cb:  #ffffff;
+      --tc:  #0F172A;
+      --mc:  #64748B;
+      --ib:  #F1F5F9;
+      --border: #F1F5F9;
+    }
+    body.dark {
+      --bg:  #0F172A;
+      --cb:  #1E293B;
+      --tc:  #F1F5F9;
+      --mc:  #94A3B8;
+      --ib:  #1E293B;
+      --border: #1E293B;
+    }
+
+    html, body { height: 100%; overflow: hidden; font-family: 'Inter', sans-serif; }
+
+    body { display: flex; align-items: center; justify-content: center; background: #dfe6ef; }
+    .screen {
+      width: min(100vw, 400px); height: 100dvh; max-height: 100dvh;
+      display: flex; flex-direction: column; background: var(--bg);
+      border-radius: 28px; overflow: hidden;
+      box-shadow: 0 18px 45px rgba(15,23,42,.18);
+    }
+
+    @media (max-width: 600px) {
+      body { background: var(--bg); }
+      .screen {
+        width: 100vw;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+
+    /* ── Top bar ── */
+    .topbar { padding: 28px 16px 8px; flex-shrink: 0; }
+
+    .search-row {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 12px;
+    }
+    .icon-btn {
+      width: 40px; height: 40px; border-radius: 16px;
+      background: var(--cb); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    }
+    .search-box {
+      flex: 1; display: flex; align-items: center; gap: 8px;
+      background: var(--cb); height: 46px; border-radius: 16px;
+      padding: 0 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
+    }
+    .search-box input {
+      flex: 1; background: transparent; border: none; outline: none;
+      font-size: 14px; color: var(--tc); font-family: 'Inter', sans-serif;
+    }
+    .search-box input::placeholder { color: var(--mc); }
+    .clear-btn { background: none; border: none; cursor: pointer; display: flex; align-items: center; }
+
+    /* ── Filter chips ── */
+    .chips-row {
+      display: flex; gap: 8px; overflow-x: auto;
+      padding-bottom: 4px; scrollbar-width: none;
+    }
+    .chips-row::-webkit-scrollbar { display: none; }
+    .chip {
+      flex-shrink: 0; padding: 6px 14px; border-radius: 99px;
+      font-size: 12px; font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      background: var(--ib); color: var(--mc);
+      border: none; cursor: pointer; transition: all .15s;
+    }
+    .chip.active { background: #2563EB; color: white; }
+
+    /* ── Results meta row ── */
+    .results-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 8px 0 4px;
+    }
+    .results-count { font-size: 12px; font-weight: 500; color: var(--mc); }
+    .sort-btn {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 12px; font-weight: 600; color: #2563EB;
+      background: none; border: none; cursor: pointer;
+    }
+
+    /* ── Scroll area ── */
+    .scroll-area {
+      flex: 1; overflow-y: auto; overflow-x: hidden;
+      padding: 0 16px 16px;
+      scrollbar-width: none;
+    }
+    .scroll-area::-webkit-scrollbar { display: none; }
+
+    /* ── Grid view (2-col item cards) ── */
+    .grid-view { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .item-card {
+      border-radius: 16px; overflow: hidden;
+      background: var(--cb);
+      box-shadow: 0 2px 10px rgba(0,0,0,.07);
+      cursor: pointer; transition: transform .1s;
+    }
+    .item-card:active { transform: scale(.97); }
+    .item-img-wrap { position: relative; height: 144px; overflow: hidden; }
+    .item-img-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; background: #E2E8F0; }
+    .badge-tl { position: absolute; top: 8px; left: 8px; }
+    .reward-chip {
+      position: absolute; top: 8px; right: 8px;
+      font-size: 11px; font-weight: 700; padding: 2px 8px;
+      border-radius: 99px; background: #F97316; color: white;
+    }
+    .item-body { padding: 10px 12px 12px; }
+    .item-title {
+      font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 600;
+      color: var(--tc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .item-loc { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+    .item-loc span { font-size: 11px; color: var(--mc); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .item-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+    .item-date { font-size: 11px; color: var(--mc); }
+
+    /* ── List view ── */
+    .list-view { display: flex; flex-direction: column; gap: 12px; }
+    .list-row {
+      display: flex; gap: 12px; padding: 12px;
+      border-radius: 16px; background: var(--cb);
+      cursor: pointer; transition: transform .1s;
+    }
+    .list-row:active { transform: scale(.98); }
+    .list-thumb {
+      width: 80px; height: 80px; border-radius: 12px;
+      object-fit: cover; flex-shrink: 0; background: #E2E8F0;
+    }
+    .list-info { flex: 1; min-width: 0; }
+    .list-title {
+      font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 600;
+      color: var(--tc);
+    }
+    .list-loc { display: flex; align-items: center; gap: 4px; margin-top: 2px; }
+    .list-loc span { font-size: 11px; color: var(--mc); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .list-desc {
+      font-size: 12px; color: var(--mc); margin-top: 4px;
+      display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .badge-row { display: flex; gap: 6px; margin-top: 6px; }
+
+    /* ── Shared badge ── */
+    .badge {
+      display: inline-block; font-size: 11px; font-weight: 600;
+      padding: 2px 10px; border-radius: 99px;
+    }
+    .badge-lost     { background: #FEF2F2; color: #DC2626; }
+    .badge-found    { background: #ECFDF5; color: #059669; }
+    .badge-open     { background: #EFF6FF; color: #2563EB; }
+    .badge-pending  { background: #FFFBEB; color: #D97706; }
+    .badge-resolved { background: #F0FDF4; color: #16A34A; }
+
+    /* ── Empty state ── */
+    .empty {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 80px 0; gap: 12px;
+    }
+    .empty-icon {
+      width: 56px; height: 56px; border-radius: 16px;
+      background: var(--ib); display: flex; align-items: center; justify-content: center;
+    }
+    .empty-lbl { font-size: 14px; font-weight: 500; color: var(--mc); }
+
+    /* ── Bottom nav ── */
+    .bottom-nav {
+      display: flex; align-items: flex-end; justify-content: space-around;
+      padding: 8px 8px 12px; background: var(--cb);
+      border-top: 1px solid var(--border); flex-shrink: 0;
+    }
+    .nav-item { display: flex; flex-direction: column; align-items: center; gap: 2px; flex: 1; background: none; border: none; cursor: pointer; }
+    .nav-icon-wrap { padding: 6px; border-radius: 12px; }
+    .nav-icon-wrap.active { background: #EFF6FF; }
+    .nav-label { font-size: 10px; font-weight: 500; color: var(--mc); font-family: 'Inter', sans-serif; }
+    .nav-label.active { color: #2563EB; }
+    .nav-add-bubble {
+      width: 48px; height: 48px; border-radius: 16px;
+      background: linear-gradient(135deg, #2563EB, #14B8A6);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px; box-shadow: 0 4px 16px rgba(37,99,235,.4);
+    }
+  </style>
+</head>
+<body>
+<div class="screen">
+
+  <!-- Top bar -->
+  <div class="topbar">
+    <div class="search-row">
+      <!-- Back -->
+      <button class="icon-btn" onclick="location.href='home.html'">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--tc)">
+          <path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>
+        </svg>
+      </button>
+
+      <!-- Search input -->
+      <div class="search-box">
+        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--mc);flex-shrink:0">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" id="search-input" placeholder="Search lost or found items..." autofocus oninput="onSearch(this.value)">
+        <button class="clear-btn" id="clear-btn" onclick="clearSearch()" style="display:none">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24" style="color:var(--mc)">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Grid / List toggle -->
+      <button class="icon-btn" id="view-toggle" onclick="toggleView()">
+        <!-- list icon (shown when grid is active) -->
+        <svg id="icon-list" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--tc)">
+          <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+        <!-- grid icon (shown when list is active) -->
+        <svg id="icon-grid" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--tc);display:none">
+          <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Filter chips -->
+    <div class="chips-row" id="chips-row"></div>
+  </div>
+
+  <!-- Scroll body -->
+  <div class="scroll-area">
+    <div class="results-bar">
+      <span class="results-count" id="results-count">6 results</span>
+      <button class="sort-btn">
+        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+        </svg>
+        Sort
+      </button>
+    </div>
+    <div id="results-container"></div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <button class="nav-item" onclick="location.href='home.html'">
+      <div class="nav-icon-wrap">
+        <svg width="20" height="20" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <span class="nav-label">Home</span>
+    </button>
+    <button class="nav-item">
+      <div class="nav-icon-wrap active">
+        <svg width="20" height="20" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </div>
+      <span class="nav-label active">Search</span>
+    </button>
+    <button class="nav-item" onclick="location.href='report-lost.html'">
+      <div class="nav-add-bubble">
+        <svg width="22" height="22" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+    </button>
+    <button class="nav-item" onclick="location.href='notifications.html'">
+      <div class="nav-icon-wrap">
+        <svg width="20" height="20" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </div>
+      <span class="nav-label">Alerts</span>
+    </button>
+    <button class="nav-item" onclick="location.href='profile.html'">
+      <div class="nav-icon-wrap">
+        <svg width="20" height="20" fill="none" stroke="#94A3B8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      </div>
+      <span class="nav-label">Profile</span>
+    </button>
+  </nav>
+
+</div>
+
+<script>
+  if (localStorage.getItem('findit_dark') === 'true') document.body.classList.add('dark');
+  const dark = document.body.classList.contains('dark');
+
+  const FALLBACK_IMAGE = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120"><rect width="160" height="120" fill="#E2E8F0"/><path d="M45 78l22-24 17 18 12-13 26 29H45z" fill="#94A3B8"/><circle cx="103" cy="43" r="10" fill="#CBD5E1"/></svg>');
+  let ITEMS = [];
+
+  const CHIPS = [
+    { id:'all',         label:'All' },
+    { id:'lost',        label:'Lost' },
+    { id:'found',       label:'Found' },
+    { id:'Electronics', label:'Electronics' },
+    { id:'Wallet',      label:'Wallet' },
+    { id:'Keys',        label:'Keys' },
+    { id:'ID Card',     label:'ID Card' },
+  ];
+
+  let activeFilter = 'all';
+  let searchQ      = '';
+  let gridView     = true;
+
+  // pre-fill from URL param ?q=...
+  const urlQ = new URLSearchParams(location.search).get('q') || '';
+  if (urlQ) {
+    searchQ = urlQ;
+    document.getElementById('search-input').value = urlQ;
+    document.getElementById('clear-btn').style.display = 'flex';
+    // if URL param matches a chip id, activate it
+    const match = CHIPS.find(c => c.id.toLowerCase() === urlQ.toLowerCase());
+    if (match) activeFilter = match.id;
+  }
+
+  /* badges */
+  function badgeHtml(type, status) {
+    const typeMap = { lost:'badge-lost', found:'badge-found' };
+    const statMap = { open:'badge-open', pending:'badge-pending', resolved:'badge-resolved' };
+    const typeLabel = { lost:'Lost', found:'Found' };
+    const statLabel = { open:'Open', pending:'Pending', resolved:'Resolved' };
+    return `<span class="badge ${typeMap[type]}">${typeLabel[type]}</span>
+            <span class="badge ${statMap[status]}">${statLabel[status]}</span>`;
+  }
+
+  /* filter */
+  function getFiltered() {
+    return ITEMS.filter(i =>
+      (activeFilter === 'all' || i.type === activeFilter || i.category === activeFilter) &&
+      (searchQ === '' || [i.title, i.category, i.description, i.location]
+        .some(value => String(value || '').toLowerCase().includes(searchQ.toLowerCase())))
+    );
+  }
+
+  function escapeHtml(value) {
+    return String(value || '').replace(/[&<>'"]/g, character => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', "'":'&#39;', '"':'&quot;' }[character]));
+  }
+
+  function formatDate(value) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? String(value || 'Unknown date') : date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function normalizeReports(result) {
+    const lost = (result.lostReports || []).map(report => ({ ...report, id: report._id, type: 'lost' }));
+    const found = (result.foundReports || []).map(report => ({ ...report, id: report._id, type: 'found' }));
+    return [...lost, ...found]
+      .map(report => ({
+        ...report,
+        title: report.itemName,
+        image: report.photos && report.photos[0] ? report.photos[0] : FALLBACK_IMAGE,
+        date: formatDate(report.createdAt),
+        status: report.status === 'resolved' ? 'resolved' : 'open'
+      }))
+      .sort((first, second) => new Date(second.createdAt) - new Date(first.createdAt));
+  }
+
+  /* render chips */
+  function renderChips() {
+    const row = document.getElementById('chips-row');
+    row.innerHTML = '';
+    CHIPS.forEach(c => {
+      const btn = document.createElement('button');
+      btn.className = 'chip' + (activeFilter === c.id ? ' active' : '');
+      btn.textContent = c.label;
+      btn.onclick = () => { activeFilter = c.id; render(); };
+      row.appendChild(btn);
+    });
+  }
+
+  /* render grid */
+  function renderGrid(items) {
+    if (!items.length) return emptyHtml();
+    const wrap = document.createElement('div');
+    wrap.className = 'grid-view';
+    items.forEach(item => {
+      const tBg  = item.type === 'lost' ? '#FEF2F2' : '#ECFDF5';
+      const tTxt = item.type === 'lost' ? '#DC2626'  : '#059669';
+      const tLbl = item.type === 'lost' ? 'Lost'     : 'Found';
+      const sBg  = {open:'#EFF6FF',pending:'#FFFBEB',resolved:'#F0FDF4'}[item.status];
+      const sTxt = {open:'#2563EB',pending:'#D97706',resolved:'#16A34A'}[item.status];
+      const sLbl = {open:'Open',pending:'Pending',resolved:'Resolved'}[item.status];
+      const div = document.createElement('div');
+      div.className = 'item-card';
+      div.onclick = () => location.href = `viewdetails.html?id=${encodeURIComponent(item.id)}&from=search`;
+      div.innerHTML = `
+        <div class="item-img-wrap">
+          <img src="${item.image}" alt="${escapeHtml(item.title)}" loading="lazy" onerror="this.src=FALLBACK_IMAGE">
+          <span class="badge badge-tl" style="background:${tBg};color:${tTxt}">${tLbl}</span>
+          ${item.reward ? `<span class="reward-chip">${item.reward}</span>` : ''}
+        </div>
+        <div class="item-body">
+          <p class="item-title">${escapeHtml(item.title)}</p>
+          <div class="item-loc">
+            <svg width="11" height="11" fill="none" stroke="#94A3B8" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+            <span>${escapeHtml(item.location)}</span>
+          </div>
+          <div class="item-foot">
+            <span class="item-date">${item.date}</span>
+            <span class="badge" style="background:${sBg};color:${sTxt}">${sLbl}</span>
+          </div>
+        </div>`;
+      wrap.appendChild(div);
+    });
+    return wrap;
+  }
+
+  /* render list */
+  function renderList(items) {
+    if (!items.length) return emptyHtml();
+    const wrap = document.createElement('div');
+    wrap.className = 'list-view';
+    items.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'list-row';
+      row.onclick = () => location.href = `viewdetails.html?id=${encodeURIComponent(item.id)}&from=search`;
+      row.innerHTML = `
+        <img class="list-thumb" src="${item.image}" alt="${escapeHtml(item.title)}" loading="lazy" onerror="this.src=FALLBACK_IMAGE">
+        <div class="list-info">
+          <p class="list-title">${escapeHtml(item.title)}</p>
+          <div class="list-loc">
+            <svg width="10" height="10" fill="none" stroke="#94A3B8" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
+            <span>${escapeHtml(item.location)}</span>
+          </div>
+          <p class="list-desc">${escapeHtml(item.description)}</p>
+          <div class="badge-row">${badgeHtml(item.type, item.status)}</div>
+        </div>`;
+      wrap.appendChild(row);
+    });
+    return wrap;
+  }
+
+  function emptyHtml() {
+    const div = document.createElement('div');
+    div.className = 'empty';
+    div.innerHTML = `
+      <div class="empty-icon">
+        <svg width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--mc)">
+          <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+        </svg>
+      </div>
+      <p class="empty-lbl">No results found</p>`;
+    return div;
+  }
+
+  function render() {
+    renderChips();
+    const items = getFiltered();
+    document.getElementById('results-count').textContent = `${items.length} result${items.length !== 1 ? 's' : ''}`;
+    const container = document.getElementById('results-container');
+    container.innerHTML = '';
+    container.appendChild(gridView ? renderGrid(items) : renderList(items));
+  }
+
+  function onSearch(val) {
+    searchQ = val;
+    document.getElementById('clear-btn').style.display = val ? 'flex' : 'none';
+    render();
+  }
+
+  function clearSearch() {
+    searchQ = '';
+    document.getElementById('search-input').value = '';
+    document.getElementById('clear-btn').style.display = 'none';
+    render();
+  }
+
+  function toggleView() {
+    gridView = !gridView;
+    document.getElementById('icon-list').style.display = gridView  ? 'block' : 'none';
+    document.getElementById('icon-grid').style.display = gridView  ? 'none'  : 'block';
+    render();
+  }
+
+  async function loadReports() {
+    try {
+      const response = await fetch(`${window.API_BASE_URL || ''}/api/reports`);
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.message || 'Unable to load reports.');
+      ITEMS = normalizeReports(result);
+      render();
+    } catch (error) {
+      document.getElementById('results-count').textContent = '0 results';
+      document.getElementById('results-container').innerHTML = `<div class="empty"><p class="empty-lbl">${escapeHtml(error.message)}</p></div>`;
+    }
+  }
+
+  render();
+  loadReports();
+</script>
+</body>
+</html>
