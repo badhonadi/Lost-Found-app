@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>FindIT Admin — Map Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<!-- Leaflet -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+button,input,select,textarea{font-family:inherit;}
+html,body{height:100%;overflow:hidden;}
+
+/* ══ TOKENS ══ */
+:root{
+  --bg:#0B0F1A;--card:#141928;--sidebar:#0D1120;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.04);
+  --primary:#6B8AFF;--primary-d:rgba(107,138,255,.14);--primary-g:rgba(107,138,255,.26);
+  --accent:#00D4AA;--fg:#E8EAF6;--muted:#8B93A9;
+  --muted-bg:rgba(255,255,255,.055);--muted-bg2:rgba(255,255,255,.035);
+  --danger:#EF4444;--danger-d:rgba(239,68,68,.12);
+  --amber:#F59E0B;--amber-d:rgba(245,158,11,.13);
+  --green:#4ade80;--green-d:rgba(74,222,128,.11);
+  --radius:16px;
+  --font-h:'Plus Jakarta Sans',sans-serif;
+  --font-b:'Inter',sans-serif;
+  --font-m:'JetBrains Mono',monospace;
+}
+[data-theme="light"]{
+  --bg:#EEF0F8;--card:#FFFFFF;--sidebar:#0D1120;
+  --border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.04);
+  --primary:#4F6EF7;--primary-d:rgba(79,110,247,.10);--primary-g:rgba(79,110,247,.20);
+  --accent:#00C49F;--fg:#0D1120;--muted:#6B7280;
+  --muted-bg:rgba(0,0,0,.05);--muted-bg2:rgba(0,0,0,.03);
+}
+body{font-family:var(--font-b);background:var(--bg);color:var(--fg);font-size:14px;display:flex;}
+.shell{display:flex;height:100vh;width:100%;}
+
+/* ══ SIDEBAR ══ */
+.sidebar{width:232px;height:100vh;display:flex;flex-direction:column;background:var(--sidebar);border-right:1px solid rgba(255,255,255,.05);flex-shrink:0;transition:width .25s;overflow:hidden;z-index:410;}
+.sidebar.collapsed{width:64px;}
+.sidebar-header{height:56px;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid rgba(255,255,255,.05);gap:10px;flex-shrink:0;}
+.logo-mark{width:32px;height:32px;border-radius:9px;flex-shrink:0;background:linear-gradient(135deg,#6B8AFF 0%,#4F6EF7 55%,#00D4AA 100%);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(107,138,255,.38);}
+.logo-mark svg{width:16px;height:16px;}
+.logo-text{overflow:hidden;white-space:nowrap;}
+.logo-name{font-family:var(--font-h);font-size:16px;font-weight:800;color:#fff;letter-spacing:-.3px;display:block;}
+.logo-sub{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.3);display:block;}
+.sidebar-nav{flex:1;overflow-y:auto;padding:12px 8px;display:flex;flex-direction:column;gap:2px;scrollbar-width:none;}
+.sidebar-nav::-webkit-scrollbar{display:none;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;font-size:12px;font-weight:500;color:rgba(255,255,255,.4);cursor:pointer;border:1px solid transparent;transition:all .15s;background:none;width:100%;text-align:left;white-space:nowrap;}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;color:rgba(255,255,255,.3);}
+.nav-item:hover{color:rgba(255,255,255,.75);background:rgba(255,255,255,.04);}
+.nav-item.active{background:rgba(107,138,255,.13);color:#9BAEFF;border-color:rgba(107,138,255,.22);}
+.nav-item.active svg{color:#6B8AFF;}
+.nav-label{overflow:hidden;}
+.sidebar.collapsed .nav-label{display:none;}
+.sidebar.collapsed .nav-item{justify-content:center;padding:10px;}
+.sidebar-footer{padding:12px 8px;border-top:1px solid rgba(255,255,255,.05);}
+.logout-btn{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;margin-bottom:6px;border:1px solid rgba(239,68,68,.18);border-radius:8px;background:rgba(239,68,68,.08);color:#f87171;cursor:pointer;font-size:12px;font-weight:600;}
+.logout-btn:hover{background:rgba(239,68,68,.15);}
+.logout-btn svg{width:14px;height:14px;flex-shrink:0;}
+.sidebar.collapsed .logout-btn{justify-content:center;padding:10px;}
+.sidebar.collapsed .logout-label{display:none;}
+.collapse-btn{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:7px 10px;border-radius:8px;border:none;background:none;color:rgba(255,255,255,.28);cursor:pointer;width:100%;font-size:11px;transition:all .15s;}
+.collapse-btn:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.55);}
+.sidebar.collapsed .collapse-btn{justify-content:center;}
+.collapse-btn svg{width:14px;height:14px;flex-shrink:0;transition:transform .25s;}
+.sidebar.collapsed .collapse-btn svg{transform:rotate(180deg);}
+.sidebar.collapsed .collapse-label{display:none;}
+
+/* ══ MAIN ══ */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+.topbar{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--border);background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(20px);flex-shrink:0;z-index:9;}
+.topbar-left h2{font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--fg);}
+.topbar-left p{font-size:10px;color:var(--muted);}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.icon-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--muted-bg);color:var(--fg);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;position:relative;}
+.icon-btn:hover{background:var(--muted-bg2);}
+.icon-btn svg{width:14px;height:14px;}
+.notif-dot{position:absolute;top:-3px;right:-3px;width:8px;height:8px;border-radius:50%;background:#EF4444;border:2px solid var(--bg);}
+.lang-btn{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;border:1px solid var(--border);background:var(--muted-bg);color:var(--fg);font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.lang-btn:hover{background:var(--muted-bg2);}
+.avatar-pill{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6B8AFF,#8B5CF6);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;}
+.live-badge{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:8px;background:rgba(0,212,170,.10);border:1px solid rgba(0,212,170,.2);font-size:10px;font-weight:700;color:var(--accent);}
+.pulse{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 1.8s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.78);}}
+
+/* ══ MAP AREA ══ */
+.map-wrap{flex:1;position:relative;display:flex;overflow:hidden;}
+#map{flex:1;z-index:1;}
+
+/* ══ FILTER PANEL (left overlay) ══ */
+.filter-panel{
+  position:absolute;top:12px;left:12px;z-index:400;
+  width:260px;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.35);
+}
+.fp-header{padding:13px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.fp-title{font-family:var(--font-h);font-size:13px;font-weight:800;color:var(--fg);}
+.fp-toggle{width:24px;height:24px;border-radius:7px;border:1px solid var(--border);background:var(--muted-bg);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.fp-toggle svg{width:12px;height:12px;}
+.fp-body{padding:12px 14px;display:flex;flex-direction:column;gap:10px;}
+
+/* type filter */
+.fp-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:5px;}
+.type-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.type-chip{padding:5px 10px;border-radius:8px;font-size:11px;font-weight:600;border:1px solid var(--border);background:var(--muted-bg);color:var(--muted);cursor:pointer;transition:all .15s;}
+.type-chip:hover{background:var(--muted-bg2);}
+.type-chip.active-lost{background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.3);color:#F59E0B;}
+.type-chip.active-found{background:rgba(0,212,170,.13);border-color:rgba(0,212,170,.28);color:#00D4AA;}
+.type-chip.active-match{background:rgba(107,138,255,.14);border-color:rgba(107,138,255,.28);color:#6B8AFF;}
+
+/* category filter */
+.cat-chips{display:flex;gap:5px;flex-wrap:wrap;}
+.cat-chip{padding:4px 8px;border-radius:7px;font-size:10px;font-weight:600;border:1px solid var(--border);background:var(--muted-bg);color:var(--muted);cursor:pointer;transition:all .15s;}
+.cat-chip.active{background:var(--primary-d);border-color:rgba(107,138,255,.28);color:var(--primary);}
+
+/* toggles */
+.fp-toggle-row{display:flex;align-items:center;justify-content:space-between;}
+.fp-toggle-label{font-size:12px;font-weight:600;color:var(--fg);display:flex;align-items:center;gap:6px;}
+.fp-toggle-label svg{width:12px;height:12px;color:var(--muted);}
+.mini-toggle{position:relative;width:36px;height:20px;cursor:pointer;flex-shrink:0;}
+.mini-track{width:36px;height:20px;border-radius:10px;transition:background .2s;}
+.mini-thumb{position:absolute;top:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);}
+
+/* radius slider */
+.fp-slider{width:100%;accent-color:var(--primary);cursor:pointer;}
+
+/* ══ STATS STRIP (bottom overlay) ══ */
+.stats-strip{
+  position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:400;
+  display:flex;gap:8px;background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:10px 16px;box-shadow:0 8px 32px rgba(0,0,0,.35);
+  white-space:nowrap;
+}
+.ss-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:0 10px;border-right:1px solid var(--border);}
+.ss-item:last-child{border-right:none;}
+.ss-val{font-family:var(--font-h);font-size:15px;font-weight:800;color:var(--fg);}
+.ss-key{font-size:9px;color:var(--muted);}
+.ss-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:3px;}
+
+/* ══ ACTIVITY FEED (right overlay) ══ */
+.activity-panel{
+  position:absolute;top:12px;right:12px;z-index:400;
+  width:252px;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;box-shadow:0 8px 32px rgba(0,0,0,.35);
+}
+.ap-header{padding:11px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.ap-title{font-size:12px;font-weight:800;color:var(--fg);font-family:var(--font-h);}
+.ap-body{max-height:320px;overflow-y:auto;scrollbar-width:none;}
+.ap-body::-webkit-scrollbar{display:none;}
+.act-item{display:flex;align-items:flex-start;gap:8px;padding:9px 13px;border-bottom:1px solid var(--border2);animation:actSlide .3s ease;}
+@keyframes actSlide{from{opacity:0;transform:translateY(-6px);}to{opacity:1;transform:translateY(0);}}
+.act-dot{width:26px;height:26px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.act-dot svg{width:11px;height:11px;}
+.act-info{flex:1;min-width:0;}
+.act-title{font-size:11px;font-weight:600;color:var(--fg);line-height:1.3;}
+.act-sub{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.act-time{font-size:10px;color:var(--muted);opacity:.6;white-space:nowrap;}
+.ap-clear{font-size:10px;font-weight:600;color:var(--primary);background:none;border:none;cursor:pointer;transition:opacity .15s;padding:9px 13px;width:100%;text-align:center;border-top:1px solid var(--border);}
+.ap-clear:hover{opacity:.75;}
+
+/* ══ MAP CONTROLS (top-right of map) ══ */
+.map-controls{position:absolute;top:12px;left:284px;z-index:400;display:flex;gap:6px;flex-wrap:wrap;}
+.mc-btn{display:flex;align-items:center;gap:5px;padding:6px 11px;border-radius:9px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s;box-shadow:0 2px 8px rgba(0,0,0,.18);}
+.mc-btn:hover{background:var(--muted-bg);color:var(--fg);}
+.mc-btn.active{background:var(--primary-d);border-color:rgba(107,138,255,.3);color:var(--primary);}
+.mc-btn svg{width:12px;height:12px;}
+
+/* ══ CITY POPUP (leaflet custom) ══ */
+.city-popup{min-width:190px;}
+.city-popup-name{font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:800;margin-bottom:6px;}
+.city-popup-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px;}
+.cpu-cell{background:rgba(255,255,255,.06);border-radius:7px;padding:5px 6px;text-align:center;}
+.cpu-val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;}
+.cpu-key{font-size:9px;color:#8B93A9;margin-top:1px;}
+.city-popup-btn{display:block;width:100%;padding:6px;border-radius:8px;border:none;background:rgba(107,138,255,.18);color:#6B8AFF;font-size:11px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;}
+
+/* leaflet popup override */
+.leaflet-popup-content-wrapper{background:var(--card)!important;border:1px solid var(--border)!important;border-radius:14px!important;box-shadow:0 12px 40px rgba(0,0,0,.4)!important;padding:0!important;}
+.leaflet-popup-content{margin:14px 14px!important;color:var(--fg)!important;}
+.leaflet-popup-tip-container{display:none!important;}
+.leaflet-popup-close-button{color:var(--muted)!important;top:10px!important;right:10px!important;font-size:16px!important;}
+
+/* toast */
+.toast-wrap{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:flex-end;pointer-events:none;}
+.toast{display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:12px;border:1px solid;font-size:12px;font-weight:600;box-shadow:0 12px 40px rgba(0,0,0,.35);pointer-events:all;animation:slideUp .22s ease;min-width:240px;max-width:320px;}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.toast svg{width:14px;height:14px;flex-shrink:0;}
+.toast.success{background:rgba(74,222,128,.11);border-color:rgba(74,222,128,.22);color:#4ade80;}
+.toast.info{background:rgba(107,138,255,.11);border-color:rgba(107,138,255,.22);color:var(--primary);}
+.toast.warning{background:rgba(245,158,11,.11);border-color:rgba(245,158,11,.22);color:#F59E0B;}
+body{font-size:15px;}
+.nav-item{font-size:13px;}
+.topbar-left h2{font-size:15px;}
+.topbar-left p{font-size:11px;}
+.section-title{font-size:16px;}
+.section-sub{font-size:12px;}
+.stat-label{font-size:12px;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
+        <circle cx="11" cy="11" r="4"/><line x1="14.5" y1="14.5" x2="19" y2="19"/>
+        <circle cx="11" cy="11" r="1.5" fill="#fff" stroke="none"/>
+      </svg>
+    </div>
+    <div class="logo-text">
+      <span class="logo-name">FindIT</span>
+      <span class="logo-sub">Admin</span>
+    </div>
+  </div>
+  <nav class="sidebar-nav" id="sidebar-nav"></nav>
+  <div class="sidebar-footer">
+    <button class="logout-btn" onclick="localStorage.removeItem('findit_admin_active');sessionStorage.removeItem('findit_admin_active');location.href='findit-otp.html'" title="Log out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1 2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/></svg><span class="logout-label">Logout</span></button>
+    <button class="collapse-btn" onclick="toggleSidebar()">
+      <span class="collapse-label">Collapse</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <h2>Map Dashboard</h2>
+      <p id="page-date"></p>
+    </div>
+    <div class="topbar-right">
+      <div class="live-badge"><div class="pulse"></div><span id="online-count">384 online</span></div>
+      <button class="lang-btn" onclick="toggleLang()" id="lang-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+        বাংলা
+      </button>
+      <button class="icon-btn" onclick="toggleTheme()" id="theme-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      </button>
+      <button class="icon-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span class="notif-dot"></span>
+      </button>
+      <button class="avatar-pill" onclick="location.href='findit-settings.html'" title="Admin profile">SA</button>
+    </div>
+  </header>
+
+  <!-- MAP CONTAINER -->
+  <div class="map-wrap">
+    <div id="map"></div>
+
+    <!-- FILTER PANEL -->
+    <div class="filter-panel" id="filter-panel">
+      <div class="fp-header">
+        <span class="fp-title">Filters</span>
+        <button class="fp-toggle" onclick="toggleFilterPanel()" title="Collapse">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
+      </div>
+      <div class="fp-body" id="fp-body">
+
+        <div>
+          <div class="fp-label">Report Type</div>
+          <div class="type-chips">
+            <div class="type-chip active-lost" id="chip-lost" onclick="toggleType('lost')">📦 Lost</div>
+            <div class="type-chip active-found" id="chip-found" onclick="toggleType('found')">✅ Found</div>
+            <div class="type-chip active-match" id="chip-match" onclick="toggleType('match')">🔗 Match</div>
+          </div>
+        </div>
+
+        <div>
+          <div class="fp-label">Category</div>
+          <div class="cat-chips" id="cat-chips"></div>
+        </div>
+
+        <div>
+          <div class="fp-label">Time Range</div>
+          <select style="width:100%;padding:7px 10px;border-radius:9px;border:1px solid var(--border);background:var(--muted-bg);color:var(--fg);font-size:11px;outline:none;cursor:pointer;" id="time-range" onchange="applyFilters()">
+            <option value="7">Last 7 days</option>
+            <option value="30" selected>Last 30 days</option>
+            <option value="90">Last 90 days</option>
+            <option value="365">Last 12 months</option>
+          </select>
+        </div>
+
+        <div>
+          <div class="fp-toggle-row">
+            <div class="fp-toggle-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Smart Match Lines
+            </div>
+            <div class="mini-toggle" onclick="toggleMatchLines()">
+              <div class="mini-track" id="match-track" style="background:#6B8AFF"></div>
+              <div class="mini-thumb" id="match-thumb" style="left:19px"></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="fp-toggle-row">
+            <div class="fp-toggle-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              Heatmap Overlay
+            </div>
+            <div class="mini-toggle" onclick="toggleHeatmap()">
+              <div class="mini-track" id="heat-track" style="background:rgba(139,147,169,.22)"></div>
+              <div class="mini-thumb" id="heat-thumb" style="left:3px"></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="fp-toggle-row">
+            <div class="fp-toggle-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Live Updates
+            </div>
+            <div class="mini-toggle" onclick="toggleLive()">
+              <div class="mini-track" id="live-track" style="background:#6B8AFF"></div>
+              <div class="mini-thumb" id="live-thumb" style="left:19px"></div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="fp-label" style="margin-bottom:6px;">Radius: <span id="radius-val" style="color:var(--fg);font-weight:700;">30 km</span></div>
+          <input type="range" class="fp-slider" min="5" max="100" value="30" id="radius-slider" oninput="updateRadius(this.value)"/>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- MAP CONTROLS -->
+    <div class="map-controls" id="map-controls">
+      <button class="mc-btn active" id="mc-cluster" onclick="toggleControl('cluster')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
+        Clusters
+      </button>
+      <button class="mc-btn" id="mc-density" onclick="toggleControl('density')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        Density
+      </button>
+      <button class="mc-btn" id="mc-satellite" onclick="toggleSatellite()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
+        Satellite
+      </button>
+      <button class="mc-btn" onclick="resetView()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+        Reset View
+      </button>
+    </div>
+
+    <!-- STATS STRIP -->
+    <div class="stats-strip" id="stats-strip">
+      <div class="ss-item">
+        <div class="ss-val" id="ss-total">7,316</div>
+        <div class="ss-key"><span class="ss-dot" style="background:#8B93A9"></span>Total Posts</div>
+      </div>
+      <div class="ss-item">
+        <div class="ss-val" style="color:#F59E0B" id="ss-lost">4,102</div>
+        <div class="ss-key"><span class="ss-dot" style="background:#F59E0B"></span>Lost</div>
+      </div>
+      <div class="ss-item">
+        <div class="ss-val" style="color:#00D4AA" id="ss-found">3,214</div>
+        <div class="ss-key"><span class="ss-dot" style="background:#00D4AA"></span>Found</div>
+      </div>
+      <div class="ss-item">
+        <div class="ss-val" style="color:#6B8AFF" id="ss-match">1,048</div>
+        <div class="ss-key"><span class="ss-dot" style="background:#6B8AFF"></span>Matches</div>
+      </div>
+      <div class="ss-item">
+        <div class="ss-val" style="color:#4ade80" id="ss-resolved">2,914</div>
+        <div class="ss-key"><span class="ss-dot" style="background:#4ade80"></span>Resolved</div>
+      </div>
+      <div class="ss-item">
+        <div class="ss-val" id="ss-cities">15</div>
+        <div class="ss-key"><span class="ss-dot" style="background:#A78BFA"></span>Cities</div>
+      </div>
+    </div>
+
+    <!-- ACTIVITY FEED -->
+    <div class="activity-panel" id="activity-panel">
+      <div class="ap-header">
+        <span class="ap-title">Live Activity</span>
+        <div class="pulse" style="flex-shrink:0;"></div>
+      </div>
+      <div class="ap-body" id="ap-body"></div>
+      <button class="ap-clear" onclick="clearActivity()">Clear feed</button>
+    </div>
+
+  </div><!-- /map-wrap -->
+</div><!-- /main -->
+</div><!-- /shell -->
+
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<script>
+/* ══════════ NAV ══════════ */
+const NAV=[
+  {key:'dashboard',label:'Dashboard',bn:'ড্যাশবোর্ড',icon:'<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'},
+  {key:'users',label:'User Management',bn:'ব্যবহারকারী',icon:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>'},
+  {key:'posts',label:'Post Moderation',bn:'পোস্ট মডারেশন',icon:'<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>'},
+  {key:'reports',label:'Reports & Complaints',bn:'রিপোর্ট',icon:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>'},
+  {key:'categories',label:'Categories',bn:'বিভাগ',icon:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>'},
+  {key:'notifications',label:'Notifications',bn:'বিজ্ঞপ্তি',icon:'<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>'},
+  {key:'analytics',label:'Analytics',bn:'বিশ্লেষণ',icon:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'},
+  {key:'map',label:'Map Dashboard',bn:'ম্যাপ ড্যাশবোর্ড',icon:'<polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/>'},
+  {key:'settings',label:'Settings',bn:'সেটিংস',icon:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06-.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>'},
+];
+
+/* ══════════ MARKERS DATA ══════════ */
+const CITIES=[
+  {name:'Dhaka',name_bn:'ঢাকা',lat:23.8103,lng:90.4125,lost:1842,found:1547,match:432,resolved:1201,category:'Electronics'},
+  {name:'Chattogram',name_bn:'চট্টগ্রাম',lat:22.3569,lng:91.7832,lost:612,found:498,match:143,resolved:421,category:'Wallet'},
+  {name:'Sylhet',name_bn:'সিলেট',lat:24.8949,lng:91.8687,lost:287,found:241,match:78,resolved:198,category:'Keys'},
+  {name:'Rajshahi',name_bn:'রাজশাহী',lat:24.3745,lng:88.6042,lost:198,found:162,match:54,resolved:141,category:'Documents'},
+  {name:'Khulna',name_bn:'খুলনা',lat:22.8456,lng:89.5403,lost:174,found:143,match:41,resolved:122,category:'Bags'},
+  {name:'Barishal',name_bn:'বরিশাল',lat:22.7010,lng:90.3535,lost:143,found:121,match:38,resolved:104,category:'Electronics'},
+  {name:'Mymensingh',name_bn:'ময়মনসিংহ',lat:24.7471,lng:90.4203,lost:132,found:108,match:32,resolved:97,category:'Phone'},
+  {name:'Rangpur',name_bn:'রংপুর',lat:25.7439,lng:89.2752,lost:118,found:96,match:28,resolved:87,category:'Wallet'},
+  {name:'Comilla',name_bn:'কুমিল্লা',lat:23.4607,lng:91.1809,lost:104,found:86,match:24,resolved:78,category:'Keys'},
+  {name:'Narayanganj',name_bn:'নারায়ণগঞ্জ',lat:23.6238,lng:90.4996,lost:98,found:81,match:21,resolved:71,category:'Documents'},
+  {name:'Gazipur',name_bn:'গাজীপুর',lat:23.9999,lng:90.4203,lost:87,found:72,match:18,resolved:64,category:'Electronics'},
+  {name:'Narsingdi',name_bn:'নরসিংদী',lat:23.9323,lng:90.7148,lost:76,found:62,match:15,resolved:55,category:'Bags'},
+  {name:'Cox\'s Bazar',name_bn:"কক্সবাজার",lat:21.4272,lng:92.0058,lost:94,found:77,match:22,resolved:68,category:'Phone'},
+  {name:'Bogura',name_bn:'বগুড়া',lat:24.8466,lng:89.3773,lost:71,found:58,match:14,resolved:52,category:'Wallet'},
+  {name:'Tangail',name_bn:'টাঙ্গাইল',lat:24.2513,lng:89.9167,lost:64,found:52,match:12,resolved:47,category:'Keys'},
+];
+
+/* Smart match pairs */
+const MATCH_PAIRS=[
+  [0,1],[0,2],[0,4],[1,6],[2,7],[3,8],[0,10],[4,5],[0,9],[1,12]
+];
+
+/* Live activity pool */
+const ACT_POOL=[
+  {type:'lost',title:'Lost: iPhone 14 Pro',sub:'Airport, Dhaka',col:'#F59E0B',bg:'rgba(245,158,11,.12)',icon:'<rect x="5" y="2" width="14" height="20" rx="2"/>'},
+  {type:'found',title:'Found: Leather Wallet',sub:'Bashundhara, Dhaka',col:'#00D4AA',bg:'rgba(0,212,170,.12)',icon:'<polyline points="20 6 9 17 4 12"/>'},
+  {type:'match',title:'Match 91% — MacBook',sub:'Sylhet Airport',col:'#6B8AFF',bg:'rgba(107,138,255,.12)',icon:'<path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8"/>'},
+  {type:'lost',title:'Lost: NID Card',sub:'Chattogram Station',col:'#F59E0B',bg:'rgba(245,158,11,.12)',icon:'<rect x="2" y="5" width="20" height="14" rx="2"/>'},
+  {type:'found',title:'Found: Gold Ring',sub:'Gulshan, Dhaka',col:'#00D4AA',bg:'rgba(0,212,170,.12)',icon:'<circle cx="12" cy="12" r="10"/>'},
+  {type:'match',title:'Match 88% — Samsung S24',sub:'Rajshahi Bus Stand',col:'#6B8AFF',bg:'rgba(107,138,255,.12)',icon:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'},
+  {type:'lost',title:'Lost: Backpack',sub:'Mymensingh University',col:'#F59E0B',bg:'rgba(245,158,11,.12)',icon:'<path d="M15 3a6 6 0 016 6v3H3V9a6 6 0 016-6h6z"/>'},
+  {type:'found',title:'Found: Glasses',sub:'Khulna Market',col:'#00D4AA',bg:'rgba(0,212,170,.12)',icon:'<circle cx="9" cy="12" r="4"/><circle cx="15" cy="12" r="4"/>'},
+  {type:'lost',title:'Lost: House Keys',sub:'Barishal Ferry Ghat',col:'#F59E0B',bg:'rgba(245,158,11,.12)',icon:'<path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777"/>'},
+  {type:'match',title:'Match 76% — Wallet',sub:'Comilla Cantonment',col:'#6B8AFF',bg:'rgba(107,138,255,.12)',icon:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'},
+];
+const CATS=['All','Electronics','Wallet','Keys','Documents','Bags','Phone','Jewelry'];
+
+/* ══════════ STATE ══════════ */
+let lang='en', theme='dark', collapsed=false;
+let map, tileLayer, markers=[], heatCircles=[], matchLines=[];
+let showMatchLines=true, showHeatmap=false, liveOn=true;
+let filterTypes=new Set(['lost','found','match']);
+let filterCat='All';
+let liveInterval=null;
+let activityItems=[];
+let satellite=false;
+
+/* ══════════ INIT ══════════ */
+window.addEventListener('DOMContentLoaded',()=>{
+  buildNav();
+  buildCatChips();
+  initMap();
+  renderActivity();
+  startLive();
+  document.getElementById('page-date').textContent=
+    new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+});
+
+function buildNav(){
+  document.getElementById('sidebar-nav').innerHTML=NAV.map(n=>`
+    <button class="nav-item${n.key==='map'?' active':''}" id="nav-${n.key}">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${n.icon}</svg>
+      <span class="nav-label">${lang==='en'?n.label:n.bn}</span>
+    </button>`).join('');
+}
+function toggleSidebar(){ collapsed=!collapsed; document.getElementById('sidebar').classList.toggle('collapsed',collapsed); setTimeout(()=>map&&map.invalidateSize(),300); }
+
+/* ══════════ THEME / LANG ══════════ */
+function toggleTheme(){
+  theme=theme==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',theme);
+  document.getElementById('theme-btn').innerHTML=theme==='dark'
+    ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>'
+    :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+  updateTile();
+}
+function toggleLang(){
+  lang=lang==='en'?'bn':'en';
+  document.getElementById('lang-btn').lastChild.textContent=' '+(lang==='en'?'বাংলা':'English');
+  buildNav();
+  redrawMarkers();
+}
+
+/* ══════════ MAP ══════════ */
+function getTileUrl(){
+  if(satellite) return 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+  return theme==='dark'
+    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+}
+function getTileAttr(){ return satellite?'Tiles &copy; Esri':'&copy; CartoDB'; }
+
+function initMap(){
+  map=L.map('map',{zoomControl:false,attributionControl:true}).setView([23.8,90.3],7);
+  tileLayer=L.tileLayer(getTileUrl(),{attribution:getTileAttr(),maxZoom:18}).addTo(map);
+  L.control.zoom({position:'bottomright'}).addTo(map);
+  redrawMarkers();
+  drawMatchLines();
+}
+
+function updateTile(){
+  if(map&&tileLayer){
+    map.removeLayer(tileLayer);
+    tileLayer=L.tileLayer(getTileUrl(),{attribution:getTileAttr(),maxZoom:18}).addTo(map);
+    tileLayer.bringToBack();
+  }
+}
+
+function toggleSatellite(){
+  satellite=!satellite;
+  document.getElementById('mc-satellite').classList.toggle('active',satellite);
+  updateTile();
+}
+
+function resetView(){ map&&map.setView([23.8,90.3],7); }
+
+/* ══════════ MARKERS ══════════ */
+function cityColor(c){
+  const ratio=c.found/(c.lost+c.found);
+  if(ratio>0.55) return '#00D4AA';
+  if(ratio>0.4) return '#6B8AFF';
+  return '#F59E0B';
+}
+function cityRadius(c){ return Math.max(8, Math.min(34, Math.sqrt(c.lost+c.found)*0.9)); }
+
+function redrawMarkers(){
+  markers.forEach(m=>map.removeLayer(m));
+  markers=[];
+  heatCircles.forEach(c=>map.removeLayer(c));
+  heatCircles=[];
+
+  const filteredCities = CITIES.filter(c => {
+    if (filterCat !== 'All') {
+      const matchCat = (c.category || '').toLowerCase() === filterCat.toLowerCase();
+      const matchPhone = (filterCat.toLowerCase() === 'phone' || filterCat.toLowerCase() === 'mobile') && 
+        (c.category === 'Electronics' || c.category === 'Phone');
+      if (!matchCat && !matchPhone) return false;
+    }
+    return true;
+  });
+
+  filteredCities.forEach(c=>{
+    const col=cityColor(c);
+    const r=cityRadius(c);
+    const circle=L.circleMarker([c.lat,c.lng],{
+      radius:r, fillColor:col, color:col, weight:2,
+      opacity:.9, fillOpacity:.35,
+    }).addTo(map);
+
+    const name=lang==='en'?c.name:c.name_bn;
+    const pct=Math.round((c.found/(c.lost+c.found))*100);
+    circle.bindPopup(`
+      <div class="city-popup">
+        <div class="city-popup-name">${name}</div>
+        <div class="city-popup-grid">
+          <div class="cpu-cell"><div class="cpu-val" style="color:#F59E0B">${c.lost}</div><div class="cpu-key">Lost</div></div>
+          <div class="cpu-cell"><div class="cpu-val" style="color:#00D4AA">${c.found}</div><div class="cpu-key">Found</div></div>
+          <div class="cpu-cell"><div class="cpu-val" style="color:#6B8AFF">${c.match}</div><div class="cpu-key">Match</div></div>
+          <div class="cpu-cell"><div class="cpu-val" style="color:#4ade80">${c.resolved}</div><div class="cpu-key">Resolved</div></div>
+          <div class="cpu-cell"><div class="cpu-val">${pct}%</div><div class="cpu-key">Found%</div></div>
+          <div class="cpu-cell"><div class="cpu-val" style="color:#A78BFA">${c.category}</div><div class="cpu-key">Top Cat</div></div>
+        </div>
+        <button class="city-popup-btn" onclick="showToast('Filtering to ${name}','info')">View all reports →</button>
+      </div>`,{maxWidth:220}
+    );
+
+    circle.on('mouseover',function(){ this.setStyle({fillOpacity:.7,weight:3}); });
+    circle.on('mouseout',function(){ this.setStyle({fillOpacity:.35,weight:2}); });
+    markers.push(circle);
+
+    /* heat ring */
+    if(showHeatmap){
+      const heat=L.circle([c.lat,c.lng],{
+        radius:(c.lost+c.found)*18,
+        color:'transparent',fillColor:col,fillOpacity:.06,
+      }).addTo(map);
+      heatCircles.push(heat);
+    }
+  });
+}
+
+/* ══════════ MATCH LINES ══════════ */
+function drawMatchLines(){
+  matchLines.forEach(l=>map.removeLayer(l));
+  matchLines=[];
+  if(!showMatchLines) return;
+  MATCH_PAIRS.forEach(([a,b])=>{
+    const ca=CITIES[a],cb=CITIES[b];
+    const conf=Math.round(70+Math.random()*25);
+    const line=L.polyline([[ca.lat,ca.lng],[cb.lat,cb.lng]],{
+      color:'#6B8AFF',weight:1.5,opacity:.45,dashArray:'6,6',
+    }).addTo(map);
+    line.bindTooltip(`Match ${conf}% · ${ca.name} ↔ ${cb.name}`,{className:'',permanent:false,sticky:true});
+    matchLines.push(line);
+  });
+}
+
+/* ══════════ FILTERS ══════════ */
+function buildCatChips(){
+  document.getElementById('cat-chips').innerHTML=CATS.map(c=>`
+    <div class="cat-chip${c===filterCat?' active':''}" onclick="pickCat('${c}')">${c}</div>`).join('');
+}
+function pickCat(c){ filterCat=c; buildCatChips(); applyFilters(); }
+
+function toggleType(t){
+  if(filterTypes.has(t)) filterTypes.delete(t); else filterTypes.add(t);
+  const el=document.getElementById('chip-'+t);
+  el.className='type-chip'+(filterTypes.has(t)?' active-'+t:'');
+  applyFilters();
+}
+
+function applyFilters(){
+  /* For this demo: just re-pulse stats and re-draw */
+  redrawMarkers();
+  showToast('Filters applied','info');
+}
+
+/* ══════════ TOGGLES ══════════ */
+function setToggle(trackId,thumbId,on){
+  document.getElementById(trackId).style.background=on?'#6B8AFF':'rgba(139,147,169,.22)';
+  document.getElementById(thumbId).style.left=on?'19px':'3px';
+}
+function toggleMatchLines(){
+  showMatchLines=!showMatchLines;
+  setToggle('match-track','match-thumb',showMatchLines);
+  drawMatchLines();
+}
+function toggleHeatmap(){
+  showHeatmap=!showHeatmap;
+  setToggle('heat-track','heat-thumb',showHeatmap);
+  redrawMarkers();
+  showToast(showHeatmap?'Heatmap enabled':'Heatmap disabled','info');
+}
+function toggleLive(){
+  liveOn=!liveOn;
+  setToggle('live-track','live-thumb',liveOn);
+  if(liveOn) startLive(); else { clearInterval(liveInterval); liveInterval=null; }
+}
+
+function toggleControl(key){
+  ['cluster','density'].forEach(k=>document.getElementById('mc-'+k).classList.toggle('active',k===key));
+  showToast(`${key.charAt(0).toUpperCase()+key.slice(1)} view active`,'info');
+}
+
+function toggleFilterPanel(){
+  const body=document.getElementById('fp-body');
+  const visible=body.style.display!=='none';
+  body.style.display=visible?'none':'flex';
+}
+
+function updateRadius(v){
+  document.getElementById('radius-val').textContent=v+' km';
+}
+
+/* ══════════ LIVE ACTIVITY ══════════ */
+let actIdx=0;
+function startLive(){
+  clearInterval(liveInterval);
+  liveInterval=setInterval(()=>{
+    if(!liveOn) return;
+    const a=ACT_POOL[actIdx%ACT_POOL.length]; actIdx++;
+    const city=CITIES[Math.floor(Math.random()*CITIES.length)];
+    const name=lang==='en'?city.name:city.name_bn;
+    const now=new Date();
+    const timeStr=now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    activityItems.unshift({...a,sub:a.sub.split(',')[0]+', '+name,time:timeStr});
+    if(activityItems.length>18) activityItems.pop();
+    renderActivity();
+    /* flash nearest marker */
+    if(markers[CITIES.indexOf(city)]){
+      const m=markers[CITIES.indexOf(city)];
+      m.setStyle({fillOpacity:.85,weight:4});
+      setTimeout(()=>m.setStyle({fillOpacity:.35,weight:2}),600);
+    }
+  },4500);
+}
+
+function renderActivity(){
+  document.getElementById('ap-body').innerHTML=activityItems.map(a=>`
+    <div class="act-item">
+      <div class="act-dot" style="background:${a.bg}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="${a.col}" stroke-width="2" stroke-linecap="round">${a.icon}</svg>
+      </div>
+      <div class="act-info">
+        <div class="act-title">${a.title}</div>
+        <div class="act-sub">${a.sub}</div>
+      </div>
+      <div class="act-time">${a.time}</div>
+    </div>`).join('');
+}
+
+function clearActivity(){ activityItems=[]; renderActivity(); }
+
+/* Seed initial feed */
+(function seedFeed(){
+  for(let i=0;i<6;i++){
+    const a=ACT_POOL[i%ACT_POOL.length];
+    const city=CITIES[i%CITIES.length];
+    const mins=i*3; const now=new Date(Date.now()-mins*60000);
+    const timeStr=now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    activityItems.push({...a,sub:a.sub,time:timeStr});
+  }
+})();
+
+/* ══════════ LIVE ONLINE COUNT ══════════ */
+setInterval(()=>{
+  const n=370+Math.floor(Math.random()*40);
+  document.getElementById('online-count').textContent=n+' online';
+},7000);
+
+/* ══════════ TOAST ══════════ */
+const TICONS={
+  success:'<polyline points="20 6 9 17 4 12"/>',
+  info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/>',
+  warning:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>',
+};
+function showToast(msg,type='info'){
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  el.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">${TICONS[type]||TICONS.info}</svg>${msg}`;
+  document.getElementById('toast-wrap').appendChild(el);
+  setTimeout(()=>el.remove(),3200);
+}
+</script>
+</body>
+</html>

@@ -490,6 +490,48 @@
       transition: transform .25s ease, opacity .25s ease;
     }
     .toast.show { transform: translate(-50%, 0); opacity: 1; }
+
+    /* Floating Messenger / Chat Button */
+    .floating-chat-btn {
+      position: absolute;
+      bottom: 84px;
+      right: 18px;
+      z-index: 40;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2563EB, #14B8A6);
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.42);
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .floating-chat-btn:hover {
+      transform: scale(1.08);
+      box-shadow: 0 8px 26px rgba(37, 99, 235, 0.55);
+    }
+    .floating-chat-btn:active {
+      transform: scale(0.92);
+    }
+    .floating-chat-badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      width: 18px;
+      height: 18px;
+      background: #EF4444;
+      border-radius: 50%;
+      font-size: 10px;
+      font-weight: 700;
+      color: white;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid white;
+    }
   </style>
 </head>
 <body>
@@ -504,7 +546,13 @@
           <h2 class="user-name" id="user-name">User</h2>
         </div>
         <div class="header-right">
-          <button class="notif-btn" onclick="location.href='../notifications.html'">
+          <button class="notif-btn" onclick="location.href='chat.html'" title="Messages" style="margin-right:2px">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            <span class="notif-dot" id="header-chat-dot" style="display:none; background:#10B981"></span>
+          </button>
+          <button class="notif-btn" onclick="location.href='notifications.html'">
             <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
             </svg>
@@ -579,26 +627,26 @@
     <div class="reports-section" style="margin-top:20px">
       <div class="section-head">
         <span class="section-title">My Reports</span>
-        <button class="see-all" onclick="location.href='my-posts.html'">View All</button>
+        <button class="see-all" onclick="location.href='my-posts.html?from=home'">View All</button>
       </div>
       <div class="reports-grid">
         <!-- Open -->
-        <button class="report-tile" style="background:#EFF6FF" onclick="location.href='my-posts.html'">
+        <button class="report-tile" style="background:#EFF6FF" onclick="location.href='my-posts.html?from=home'">
           <span class="tile-num" id="dashboard-open-count" style="color:#2563EB">0</span>
           <span class="tile-lbl">Open</span>
         </button>
         <!-- Pending -->
-        <button class="report-tile" style="background:#FFFBEB" onclick="location.href='my-posts.html'">
+        <button class="report-tile" style="background:#FFFBEB" onclick="location.href='my-posts.html?from=home'">
           <span class="tile-num" id="dashboard-pending-count" style="color:#D97706">0</span>
           <span class="tile-lbl">Pending</span>
         </button>
         <!-- Resolved -->
-        <button class="report-tile" style="background:#F0FDF4" onclick="location.href='my-posts.html'">
+        <button class="report-tile" style="background:#F0FDF4" onclick="location.href='my-posts.html?from=home'">
           <span class="tile-num" id="dashboard-resolved-count" style="color:#16A34A">0</span>
           <span class="tile-lbl">Resolved</span>
         </button>
         <!-- Total -->
-        <button class="report-tile" style="background:#F8FAFC" onclick="location.href='my-posts.html'">
+        <button class="report-tile" style="background:#F8FAFC" onclick="location.href='my-posts.html?from=home'">
           <span class="tile-num" id="dashboard-total-count" style="color:#64748B">0</span>
           <span class="tile-lbl">Total</span>
         </button>
@@ -625,7 +673,7 @@
       <div class="section-head" style="padding:0 20px">
         <span class="section-title">Categories</span>
       </div>
-      <div class="cats-scroll">
+      <div class="cats-scroll" id="home-categories">
         <button class="cat-btn" onclick="location.href='search.html?q=Electronics'">
           <div class="cat-icon" style="background:#2563EB18">
             <svg width="22" height="22" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
@@ -732,6 +780,16 @@
         </div>
         <span class="nav-label">Profile</span>
       </button>
+    <!-- Floating Messenger Chat Button -->
+    <button class="floating-chat-btn" id="home-floating-chat-btn" onclick="location.href='chat.html'" title="Messages & Chat">
+      <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+        <circle cx="14" cy="14" r="13" fill="white" fill-opacity="0.18"/>
+        <path d="M14 3C8.477 3 4 7.256 4 12.5c0 2.9 1.37 5.497 3.527 7.247V25l4.277-2.344C12.51 22.875 13.244 23 14 23c5.523 0 10-4.256 10-10.5S19.523 3 14 3z" fill="white"/>
+        <path d="M7.5 16.5l4-5.5 3 3.5 4-3.5" stroke="#2563EB" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span class="floating-chat-badge" id="chat-unread-badge"></span>
+    </button>
+
     </nav>
   </div>
 
@@ -826,6 +884,24 @@
     if (h < 12) greetEl.textContent = 'Good morning,';
     else if (h < 17) greetEl.textContent = 'Good afternoon,';
     else greetEl.textContent = 'Good evening,';
+
+    async function loadHomeCategories() {
+      try {
+        const res = await fetch(`${window.API_BASE_URL || ''}/api/categories`);
+        const data = await res.json();
+        if (!res.ok || !Array.isArray(data.categories)) throw new Error(data.message || 'Unable to load categories');
+        const wrap = document.getElementById('home-categories');
+        if (!wrap) return;
+        wrap.innerHTML = data.categories.map(category => `
+          <button class="cat-btn" onclick="location.href='search.html?q=${encodeURIComponent(category.name)}'">
+            <div class="cat-icon" style="background:#2563EB18;font-size:22px">${category.emoji || '📦'}</div>
+            <span class="cat-label">${category.name}</span>
+          </button>`).join('');
+      } catch (error) {
+        console.error('Failed to load categories from MongoDB:', error);
+      }
+    }
+    loadHomeCategories();
 
     (async function loadDashboard() {
     const storedUser = getStoredUser();
@@ -985,14 +1061,35 @@
       console.error('Unable to load home items:', error);
     }
 
+    async function checkUnreadChatCount() {
+      try {
+        const res = await fetch(`${baseUrl}/api/chat/conversations?userId=${storedUser.id}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const convs = data.conversations || [];
+        const totalUnread = convs.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
+        const badge = document.getElementById('chat-unread-badge');
+        const dot = document.getElementById('header-chat-dot');
+        if (totalUnread > 0) {
+          if (badge) { badge.textContent = Math.min(totalUnread, 99); badge.style.display = 'flex'; }
+          if (dot) { dot.style.display = 'block'; }
+        } else {
+          if (badge) badge.style.display = 'none';
+          if (dot) dot.style.display = 'none';
+        }
+      } catch (e) {}
+    }
+    checkUnreadChatCount();
+
     window.addEventListener('pageshow', async () => {
+      checkUnreadChatCount();
       const latestResponse = await fetch(`${baseUrl}/api/users/${storedUser.id}/notifications`);
       if (!latestResponse.ok) return;
       const latestResult = await latestResponse.json();
       const notificationDot = document.querySelector('.notif-dot');
       if (notificationDot) notificationDot.style.display = (latestResult.notifications || []).some(item => !item.read) ? 'block' : 'none';
     });
-      })();
+  })();
   </script>
 </body>
 </html>

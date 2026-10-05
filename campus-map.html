@@ -6,10 +6,6 @@
   <title>FindIt — UIU Campus Map</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   
-  <!-- Leaflet CSS & MarkerCluster CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
   <script src="config.js"></script>
 
   <style>
@@ -1033,17 +1029,16 @@
 
       <!-- Filter Chips -->
       <div class="filter-chips-scroll" id="filter-chips">
-        <button class="chip-btn active" data-filter="all" onclick="filterMarkers('all', this)">All Items</button>
-        <button class="chip-btn" data-filter="lost" onclick="filterMarkers('lost', this)"><span class="chip-dot" style="background:#EF4444"></span>Lost</button>
-        <button class="chip-btn" data-filter="found" onclick="filterMarkers('found', this)"><span class="chip-dot" style="background:#10B981"></span>Found</button>
-        <button class="chip-btn" data-filter="smart" onclick="filterMarkers('smart', this)"><span class="chip-dot" style="background:#8B5CF6"></span>Smart Match</button>
-        <button class="chip-btn" data-filter="pending" onclick="filterMarkers('pending', this)"><span class="chip-dot" style="background:#F59E0B"></span>Pending</button>
-        <button class="chip-btn" data-filter="resolved" onclick="filterMarkers('resolved', this)"><span class="chip-dot" style="background:#64748B"></span>Resolved</button>
-        <button class="chip-btn" data-filter="cat-Electronics" onclick="filterCategory('Electronics', this)">Electronics</button>
-        <button class="chip-btn" data-filter="cat-Wallet" onclick="filterCategory('Wallet', this)">Wallet</button>
-        <button class="chip-btn" data-filter="cat-Phone" onclick="filterCategory('Phone', this)">Phone</button>
-        <button class="chip-btn" data-filter="cat-Keys" onclick="filterCategory('Keys', this)">Keys</button>
-        <button class="chip-btn" data-filter="cat-ID Card" onclick="filterCategory('ID Card', this)">ID Card</button>
+        <button class="chip-btn active" data-filter="all" onclick="filterMarkers('all', this)">📍 All Items</button>
+        <button class="chip-btn" data-filter="cat-Phone" onclick="filterCategory('Phone', this)">📱 Mobile / Phone</button>
+        <button class="chip-btn" data-filter="cat-Watch" onclick="filterCategory('Watch', this)">⌚ Smart Watch</button>
+        <button class="chip-btn" data-filter="cat-Electronics" onclick="filterCategory('Electronics', this)">💻 Electronics</button>
+        <button class="chip-btn" data-filter="cat-Wallet" onclick="filterCategory('Wallet', this)">💳 Wallet</button>
+        <button class="chip-btn" data-filter="cat-Keys" onclick="filterCategory('Keys', this)">🔑 Keys</button>
+        <button class="chip-btn" data-filter="cat-Bag" onclick="filterCategory('Bag', this)">🎒 Bags</button>
+        <button class="chip-btn" data-filter="cat-ID Card" onclick="filterCategory('ID Card', this)">🪪 ID Card</button>
+        <button class="chip-btn" data-filter="lost" onclick="filterMarkers('lost', this)"><span class="chip-dot" style="background:#EF4444"></span>Lost Only</button>
+        <button class="chip-btn" data-filter="found" onclick="filterMarkers('found', this)"><span class="chip-dot" style="background:#10B981"></span>Found Only</button>
       </div>
 
     </div>
@@ -1214,11 +1209,30 @@
 
   </div>
 
-  <!-- Leaflet & MarkerCluster JS -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-
   <script>
+    const googleMapsPromise = fetch('/api/client-config')
+      .then(response => {
+        if (!response.ok) throw new Error('Unable to load map configuration.');
+        return response.json();
+      })
+      .then(({ googleMapsApiKey }) => {
+        if (!googleMapsApiKey) {
+          throw new Error('Google Maps API key is not configured. Add GOOGLE_MAPS_API_KEY to .env.');
+        }
+        return new Promise((resolve, reject) => {
+          window.__googleMapsResolve = resolve;
+          const script = document.createElement('script');
+          script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleMapsApiKey)}&v=weekly&callback=__googleMapsReady`;
+          script.async = true;
+          script.defer = true;
+          script.onerror = () => reject(new Error('Google Maps JavaScript API failed to load.'));
+          document.head.appendChild(script);
+        });
+      });
+    window.__googleMapsReady = () => {
+      if (window.__googleMapsResolve) window.__googleMapsResolve();
+    };
+
     /* ── Dark mode initialization ── */
     if (localStorage.getItem('findit_dark') === 'true') {
       document.body.classList.add('dark');
@@ -1388,30 +1402,151 @@
     let currentFilter = 'all';
     let currentCategory = null;
     let isBangla = false;
+    let ALL_MAP_ITEMS = [...SAMPLE_ITEMS];
 
-    /* ── Tile Layer Definitions ── */
-    const TILE_LAYERS = {
-      standard: L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&key=YOUR_GOOGLE_MAPS_API_KEY', {
-        maxZoom: 20,
-        attribution: '© Google Maps'
-      }),
-      satellite: L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}&key=YOUR_GOOGLE_MAPS_API_KEY', {
-        maxZoom: 20,
-        attribution: '© Google Satellite / UIU'
-      }),
-      terrain: L.tileLayer('https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
-        maxZoom: 20,
-        attribution: '© Google Terrain'
-      }),
-      dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
-        maxZoom: 20,
-        attribution: '© CartoDB / UIU'
-      }),
-      light: L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&key=YOUR_GOOGLE_MAPS_API_KEY', {
-        maxZoom: 20,
-        attribution: '© Google Maps'
-      })
+    function createGoogleMapAdapter() {
+      const darkStyles = [
+        { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
+        { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
+        { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
+        { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#38414e' }] },
+        { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#17263c' }] }
+      ];
+      const mapTypeIds = {
+        standard: 'roadmap',
+        satellite: 'satellite',
+        terrain: 'terrain',
+        light: 'roadmap',
+        dark: 'findit-dark'
+      };
+
+      google.maps.MapTypeId.FINDIT_DARK = 'findit-dark';
+      const mapTypes = {};
+      mapTypes['findit-dark'] = new google.maps.StyledMapType(darkStyles, { name: 'Dark' });
+
+      const adapter = {
+        map: null,
+        setView(center, zoom) {
+          this.map.setCenter({ lat: center[0], lng: center[1] });
+          this.map.setZoom(zoom);
+          return this;
+        },
+        zoomIn() { this.map.setZoom((this.map.getZoom() || 0) + 1); },
+        zoomOut() { this.map.setZoom((this.map.getZoom() || 0) - 1); },
+        flyTo(center, zoom) { this.map.panTo({ lat: center[0], lng: center[1] }); this.map.setZoom(zoom); },
+        fitBounds(bounds) { this.map.fitBounds(bounds); },
+        addLayer(layer) { layer.addTo(this); },
+        removeLayer(layer) { layer.remove(); },
+        invalidateSize() {},
+        setMapType(layerName) {
+          const typeId = mapTypeIds[layerName] || 'roadmap';
+          this.map.setMapTypeId(typeId);
+        }
+      };
+      adapter.map = new google.maps.Map(document.getElementById('map-container'), {
+        center: { lat: UIU_LAT, lng: UIU_LNG },
+        zoom: 17,
+        mapTypeId: localStorage.getItem('findit_dark') === 'true' ? 'findit-dark' : 'roadmap',
+        mapTypeControl: false,
+        streetViewControl: false,
+        fullscreenControl: false,
+        zoomControl: false,
+        styles: []
+      });
+      Object.keys(mapTypes).forEach(typeId => adapter.map.mapTypes.set(typeId, mapTypes[typeId]));
+      adapter.on = (event, handler) => {
+        if (event === 'click') adapter.map.addListener('click', handler);
+      };
+      targetMap = adapter;
+      return adapter;
+    }
+
+    const TILE_LAYERS = ['standard', 'satellite', 'terrain', 'dark', 'light']
+      .reduce((layers, name) => {
+        layers[name] = {
+          name,
+          addTo() { map.setMapType(name); return this; },
+          remove() {}
+        };
+        return layers;
+      }, {});
+
+    const L = {
+      map() { return createGoogleMapAdapter(); },
+      latLngBounds() {
+        const bounds = new google.maps.LatLngBounds();
+        const extend = bounds.extend.bind(bounds);
+        bounds.extend = value => {
+          if (Array.isArray(value)) return extend({ lat: value[0], lng: value[1] });
+          return extend(value);
+        };
+        return bounds;
+      },
+      markerClusterGroup() {
+        const markers = [];
+        const cluster = {
+          addTo(target) {
+            markers.forEach(marker => marker.setMap(target.map));
+            return cluster;
+          },
+          addLayer(marker) { markers.push(marker); marker.setMap(map.map); },
+          clearLayers() { markers.splice(0).forEach(marker => marker.setMap(null)); },
+          remove() { markers.forEach(marker => marker.setMap(null)); }
+        };
+        return cluster;
+      },
+      divIcon(options) { return options; },
+      marker(position, options = {}) {
+        const marker = new google.maps.Marker({
+          position: { lat: position[0], lng: position[1] },
+          map: null,
+          icon: options.icon && {
+            url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(options.icon.html)}`,
+            scaledSize: options.icon.iconSize ? new google.maps.Size(options.icon.iconSize[0], options.icon.iconSize[1]) : undefined
+          }
+        });
+        marker.addTo = target => { marker.setMap(target.map); return marker; };
+        marker.bindTooltip = text => { marker.__tooltip = new google.maps.InfoWindow({ content: text }); };
+        marker.bindPopup = content => { marker.__popup = new google.maps.InfoWindow({ content }); };
+        marker.openPopup = () => {
+          if (marker.__popup) marker.__popup.open({ map: targetMap.map, anchor: marker });
+        };
+        marker.on = (event, handler) => {
+          if (event === 'click') marker.addListener('click', handler);
+          return marker;
+        };
+        return marker;
+      },
+      popup() {
+        const popup = { info: new google.maps.InfoWindow() };
+        popup.setLatLng = latlng => { popup.position = { lat: latlng.lat, lng: latlng.lng }; return popup; };
+        popup.setContent = content => { popup.content = content; return popup; };
+        popup.openOn = target => {
+          popup.info.setPosition(popup.position);
+          popup.info.setContent(popup.content);
+          popup.info.open({ map: target.map });
+        };
+        return popup;
+      },
+      polyline(latlngs, options = {}) {
+        const line = new google.maps.Polyline({
+          path: latlngs.map(point => ({ lat: point[0], lng: point[1] })),
+          strokeColor: options.color,
+          strokeOpacity: options.opacity,
+          strokeWeight: options.weight,
+          map: null
+        });
+        line.addTo = target => { line.setMap(target.map); return line; };
+        line.remove = () => line.setMap(null);
+        line.getBounds = () => {
+          const bounds = new google.maps.LatLngBounds();
+          line.getPath().forEach(point => bounds.extend(point));
+          return bounds;
+        };
+        return line;
+      }
     };
+    let targetMap;
 
     /* ── Initialize Leaflet Map ── */
     function initMap() {
@@ -1422,7 +1557,7 @@
         attributionControl: false
       });
 
-      activeLayer = TILE_LAYERS.standard;
+      activeLayer = TILE_LAYERS[localStorage.getItem('findit_dark') === 'true' ? 'dark' : 'standard'];
       activeLayer.addTo(map);
 
       markerClusterGroup = L.markerClusterGroup({
@@ -1434,15 +1569,16 @@
       map.addLayer(markerClusterGroup);
 
       renderMarkers();
-      renderBottomSheetItems([]);
+      loadLiveReportsForMap();
       document.getElementById('bottom-sheet').style.display = 'none';
 
       // Close dropdown if user clicks map
       map.on('click', (e) => {
         document.getElementById('search-dropdown').classList.remove('show');
-        const nearestSpot = getNearestLandmark(e.latlng.lat, e.latlng.lng);
+        const clicked = e.latLng.toJSON();
+        const nearestSpot = getNearestLandmark(clicked.lat, clicked.lng);
         L.popup()
-          .setLatLng(e.latlng)
+          .setLatLng(clicked)
           .setContent(`<div style="font-weight:700; font-size:13px; padding:4px;">📍 ${nearestSpot}</div>`)
           .openOn(map);
       });
@@ -1489,10 +1625,231 @@
       map.flyTo([UIU_LAT, UIU_LNG], 17, { duration: 1 });
     }
 
+    /* ── UIU Landmark Coordinate Mapping ── */
+    const UIU_COORDINATES = {
+      cafeteria: { lat: 23.7975, lng: 90.4498, name: 'UIU Cafeteria & Food Court' },
+      library: { lat: 23.7979, lng: 90.4494, name: 'Shahid Irfan Bhuiyan Library (3rd Floor)' },
+      study: { lat: 23.7978, lng: 90.4495, name: 'Study Room 2 (Academic Bldg)' },
+      sports: { lat: 23.7972, lng: 90.4506, name: 'Playground & Sports Zone' },
+      playground: { lat: 23.7972, lng: 90.4506, name: 'Playground & Sports Zone' },
+      gym: { lat: 23.7970, lng: 90.4502, name: 'Gymnasium & Fitness Center' },
+      auditorium: { lat: 23.7974, lng: 90.4497, name: 'Auditorium Hall (Room 402)' },
+      lab: { lat: 23.7982, lng: 90.4497, name: 'Computer Labs (4th Floor)' },
+      gate: { lat: 23.7971, lng: 90.4489, name: 'Main Campus Gate Security' },
+      bus: { lat: 23.7988, lng: 90.4485, name: 'Madani Avenue UIU Bus Stop' },
+      lounge: { lat: 23.7976, lng: 90.4498, name: 'Student Lounge & Games Zone' },
+      parking: { lat: 23.7969, lng: 90.4492, name: 'Car & Bike Parking Area' }
+    };
+
+    function getCoordsForLocation(locStr) {
+      const s = String(locStr || '').toLowerCase();
+      for (const [key, val] of Object.entries(UIU_COORDINATES)) {
+        if (s.includes(key)) {
+          const jitterLat = (Math.random() - 0.5) * 0.00018;
+          const jitterLng = (Math.random() - 0.5) * 0.00018;
+          return { lat: val.lat + jitterLat, lng: val.lng + jitterLng, name: val.name };
+        }
+      }
+      return { lat: 23.7977 + (Math.random() - 0.5) * 0.0002, lng: 90.4497 + (Math.random() - 0.5) * 0.0002, name: locStr || 'UIU Campus' };
+    }
+
+    function getCategoryIcon(item) {
+      const cat = (item.category || '').toLowerCase();
+      const title = (item.title || item.itemName || '').toLowerCase();
+      if (cat.includes('phone') || title.includes('iphone') || title.includes('samsung') || title.includes('phone') || title.includes('mobile') || title.includes('pixel') || title.includes('galaxy')) return '📱';
+      if (title.includes('watch') || cat.includes('watch')) return '⌚';
+      if (cat.includes('wallet') || title.includes('wallet') || title.includes('cash')) return '💳';
+      if (cat.includes('key') || title.includes('key')) return '🔑';
+      if (cat.includes('bag') || title.includes('bag') || title.includes('backpack')) return '🎒';
+      if (cat.includes('id') || title.includes('card') || title.includes('id') || title.includes('nid')) return '🪪';
+      if (cat.includes('electron') || title.includes('laptop') || title.includes('macbook') || title.includes('charger') || title.includes('airpods') || title.includes('earbuds') || title.includes('calculator')) return '💻';
+      return '📦';
+    }
+
+    function normalizeDbReport(r, type) {
+      const coords = getCoordsForLocation(r.location);
+      const isLost = type === 'lost';
+      return {
+        id: String(r._id),
+        title: r.itemName,
+        status: isLost ? 'lost' : 'found',
+        category: r.category || 'Other',
+        locationName: r.location || coords.name,
+        lat: coords.lat,
+        lng: coords.lng,
+        time: r.dateTime || 'Recently',
+        date: r.dateTime || 'Recently',
+        dist: 'Campus',
+        img: (r.photos && r.photos[0]) ? r.photos[0] : (isLost ? 'https://images.unsplash.com/photo-1678685888221-cda773a3dcdb?w=300' : 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300'),
+        desc: r.description || '',
+        aiMatch: isLost ? 95 : 92,
+        badge: isLost ? 'Lost' : 'Found'
+      };
+    }
+
+    async function loadLiveReportsForMap() {
+      try {
+        const res = await fetch(`${window.API_BASE_URL || ''}/api/reports`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const lost = (data.lostReports || []).map(r => normalizeDbReport(r, 'lost'));
+        const found = (data.foundReports || []).map(r => normalizeDbReport(r, 'found'));
+        if (lost.length || found.length) {
+          ALL_MAP_ITEMS = [...lost, ...found, ...SAMPLE_ITEMS];
+          renderMarkers();
+        }
+      } catch (err) {
+        console.error('Error loading live map reports:', err);
+      }
+    }
+
     /* ── Render Markers on Map ── */
     function renderMarkers() {
+      if (!map || !markerClusterGroup) return;
       markerClusterGroup.clearLayers();
+
+      const filtered = ALL_MAP_ITEMS.filter(item => {
+        // 1. Status Filter
+        if (currentFilter === 'lost' && item.status !== 'lost') return false;
+        if (currentFilter === 'found' && item.status !== 'found') return false;
+        if (currentFilter === 'smart' && item.status !== 'smart' && (item.aiMatch || 0) < 90) return false;
+        if (currentFilter === 'pending' && item.status !== 'pending') return false;
+        if (currentFilter === 'resolved' && item.status !== 'resolved') return false;
+
+        // 2. Category Filter (Phone, Watch, Electronics, Wallet, etc.)
+        if (currentCategory && currentCategory !== 'all') {
+          const cat = (item.category || '').toLowerCase();
+          const title = (item.title || item.itemName || '').toLowerCase();
+          const targetCat = currentCategory.toLowerCase();
+
+          if (targetCat === 'phone' || targetCat === 'mobile') {
+            const isPhone = cat.includes('phone') || cat.includes('mobile') ||
+              title.includes('iphone') || title.includes('samsung') || title.includes('galaxy') ||
+              title.includes('pixel') || title.includes('mobile') || title.includes('phone') ||
+              title.includes('redmi') || title.includes('realme') || title.includes('oneplus');
+            if (!isPhone) return false;
+          } else if (targetCat === 'watch') {
+            const isWatch = cat.includes('watch') || title.includes('watch') || title.includes('smartwatch');
+            if (!isWatch) return false;
+          } else if (targetCat === 'electronics') {
+            const isElec = cat.includes('electronics') || cat.includes('phone') || title.includes('charger') ||
+              title.includes('laptop') || title.includes('earbuds') || title.includes('calculator') ||
+              title.includes('macbook') || title.includes('watch');
+            if (!isElec) return false;
+          } else if (targetCat === 'wallet') {
+            const isWallet = cat.includes('wallet') || title.includes('wallet') || title.includes('cash') || title.includes('money');
+            if (!isWallet) return false;
+          } else if (targetCat === 'keys') {
+            const isKeys = cat.includes('key') || title.includes('key');
+            if (!isKeys) return false;
+          } else if (targetCat === 'bag') {
+            const isBag = cat.includes('bag') || title.includes('bag') || title.includes('backpack');
+            if (!isBag) return false;
+          } else if (targetCat === 'id card') {
+            const isId = cat.includes('id') || title.includes('id') || title.includes('card');
+            if (!isId) return false;
+          } else {
+            if (!cat.includes(targetCat) && !title.includes(targetCat)) return false;
+          }
+        }
+
+        return true;
+      });
+
+      // Update header counts
+      const lostCount = filtered.filter(i => i.status === 'lost').length;
+      const foundCount = filtered.filter(i => i.status === 'found').length;
+      const countLostEl = document.getElementById('count-lost');
+      const countFoundEl = document.getElementById('count-found');
+      if (countLostEl) countLostEl.textContent = lostCount;
+      if (countFoundEl) countFoundEl.textContent = foundCount;
+
+      const summaryTitle = document.getElementById('lbl-campus-summary');
+      if (summaryTitle) {
+        if (currentCategory && currentCategory !== 'all') {
+          summaryTitle.textContent = `${currentCategory} (${filtered.length})`;
+        } else if (currentFilter !== 'all') {
+          summaryTitle.textContent = `${currentFilter.toUpperCase()} (${filtered.length})`;
+        } else {
+          summaryTitle.textContent = isBangla ? 'ইউআইইউ ক্যাম্পাস লাইভ' : 'UIU Campus Live';
+        }
+      }
+
+      const bounds = L.latLngBounds();
+
+      filtered.forEach(item => {
+        const iconEmoji = getCategoryIcon(item);
+        const pinClass = item.status === 'lost' ? 'pin-lost' : (item.status === 'found' ? 'pin-found' : 'pin-smart');
+        const badgeText = item.status === 'lost' ? 'Lost' : (item.status === 'found' ? 'Found' : 'Smart Match');
+        const badgeColor = item.status === 'lost' ? '#EF4444' : (item.status === 'found' ? '#10B981' : '#8B5CF6');
+
+        const pinHtml = `
+          <div class="custom-map-pin ${pinClass}" title="${escapeHtml(item.title)}">
+            <span style="font-size:16px;">${iconEmoji}</span>
+          </div>`;
+
+        const customIcon = L.divIcon({
+          className: 'custom-pin-wrap',
+          html: pinHtml,
+          iconSize: [36, 36],
+          iconAnchor: [18, 18],
+          popupAnchor: [0, -20]
+        });
+
+        const marker = L.marker([item.lat, item.lng], { icon: customIcon });
+
+        const popupContent = `
+          <div style="min-width:190px; max-width:230px; font-family:'Inter',sans-serif; padding:4px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:6px; margin-bottom:6px;">
+              <span style="font-size:9.5px; font-weight:800; text-transform:uppercase; background:${badgeColor}; color:#fff; padding:2px 7px; border-radius:99px;">
+                ${badgeText}
+              </span>
+              <span style="font-size:10px; color:#64748B; font-weight:600;">${item.category || 'Item'}</span>
+            </div>
+            ${item.img ? `<img src="${item.img}" style="width:100%; height:95px; object-fit:cover; border-radius:10px; margin-bottom:6px; background:#E2E8F0;" onerror="this.style.display='none'">` : ''}
+            <div style="font-family:'Poppins',sans-serif; font-size:12.5px; font-weight:700; color:#0F172A; line-height:1.3; margin-bottom:3px;">
+              ${item.title}
+            </div>
+            <div style="font-size:11px; color:#64748B; display:flex; align-items:center; gap:4px; margin-bottom:8px;">
+              📍 <span>${item.locationName}</span>
+            </div>
+            <button style="width:100%; padding:7px 0; border:none; border-radius:8px; background:#2563EB; color:#fff; font-size:11px; font-weight:700; cursor:pointer;" onclick="openDetailModalFromMap('${item.id}')">
+              View Details & Claim →
+            </button>
+          </div>`;
+
+        marker.bindPopup(popupContent);
+        marker.on('click', () => {
+          openDetailModal(item);
+        });
+
+        markerClusterGroup.addLayer(marker);
+        bounds.extend([item.lat, item.lng]);
+      });
+
+      renderBottomSheetItems(filtered);
+      const bottomSheet = document.getElementById('bottom-sheet');
+      if (bottomSheet) {
+        if (filtered.length > 0) {
+          bottomSheet.style.display = 'flex';
+          bottomSheet.classList.remove('half', 'full');
+          bottomSheet.classList.add('collapsed');
+          const countEl = document.getElementById('sheet-count-lbl');
+          if (countEl) countEl.textContent = `${filtered.length} item${filtered.length > 1 ? 's' : ''}`;
+        } else {
+          bottomSheet.style.display = 'none';
+        }
+      }
+
+      if (filtered.length > 0 && currentCategory && currentCategory !== 'all') {
+        map.fitBounds(bounds, { padding: [50, 50], maxZoom: 18 });
+      }
     }
+
+    window.openDetailModalFromMap = function(itemId) {
+      const item = ALL_MAP_ITEMS.find(i => i.id === itemId);
+      if (item) openDetailModal(item);
+    };
 
     /* ── Search Input & Autocomplete Functionality ── */
     function handleSearchInput(query) {
@@ -1506,7 +1863,7 @@
       }
 
       const locMatches = UIU_LOCATIONS.filter(l => l.name.toLowerCase().includes(query) || l.category.toLowerCase().includes(query));
-      const itemMatches = SAMPLE_ITEMS.filter(i => i.title.toLowerCase().includes(query) || i.locationName.toLowerCase().includes(query) || i.category.toLowerCase().includes(query));
+      const itemMatches = ALL_MAP_ITEMS.filter(i => (i.title || '').toLowerCase().includes(query) || (i.locationName || '').toLowerCase().includes(query) || (i.category || '').toLowerCase().includes(query));
 
       let html = '';
 
@@ -1525,7 +1882,7 @@
       itemMatches.forEach(item => {
         html += `
           <div class="search-result-item" onclick="selectSearchResult('item', ${item.lat}, ${item.lng}, '${escapeHtml(item.title)}', '${item.id}')">
-            <div class="result-icon">📦</div>
+            <div class="result-icon">${getCategoryIcon(item)}</div>
             <div class="result-info">
               <div class="result-title">${item.title}</div>
               <div class="result-sub">📍 ${item.locationName}</div>
@@ -1549,7 +1906,7 @@
       map.flyTo([lat, lng], 19, { duration: 1.4 });
 
       if (type === 'item' && itemId) {
-        const target = SAMPLE_ITEMS.find(i => i.id === itemId);
+        const target = ALL_MAP_ITEMS.find(i => i.id === itemId);
         if (target) openDetailModal(target);
       } else {
         L.popup()
@@ -1560,7 +1917,7 @@
     }
 
     function escapeHtml(str) {
-      return str.replace(/'/g, "\\'");
+      return String(str || '').replace(/'/g, "\\'");
     }
 
     function triggerVoiceSearch() {
@@ -1577,7 +1934,7 @@
 
     function filterMarkers(filterType, btnEl) {
       document.querySelectorAll('#filter-chips .chip-btn').forEach(b => b.classList.remove('active'));
-      btnEl.classList.add('active');
+      if (btnEl) btnEl.classList.add('active');
 
       currentFilter = filterType;
       currentCategory = null;
@@ -1586,7 +1943,7 @@
 
     function filterCategory(catName, btnEl) {
       document.querySelectorAll('#filter-chips .chip-btn').forEach(b => b.classList.remove('active'));
-      btnEl.classList.add('active');
+      if (btnEl) btnEl.classList.add('active');
 
       currentCategory = catName;
       currentFilter = 'all';
@@ -1771,7 +2128,15 @@
       }
     }
 
-    window.addEventListener('DOMContentLoaded', initMap);
+    window.addEventListener('DOMContentLoaded', () => {
+      googleMapsPromise
+        .then(initMap)
+        .catch(error => {
+          console.error(error);
+          const container = document.getElementById('map-container');
+          container.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;height:100%;padding:24px;text-align:center;color:#991B1B;background:#FEF2F2;font:600 14px Inter,sans-serif;">${error.message}</div>`;
+        });
+    });
   </script>
 </body>
 </html>

@@ -131,8 +131,52 @@
     }
     .item-loc { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
     .item-loc span { font-size: 11px; color: var(--mc); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .item-poster { font-size: 10px; color: var(--mc); margin-top: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .item-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
     .item-date { font-size: 11px; color: var(--mc); }
+
+    /* ── Smart Match Badges ── */
+    .smart-match-badge {
+      position: absolute; bottom: 8px; right: 8px;
+      font-size: 11px; font-weight: 700; font-family: 'Poppins', sans-serif;
+      padding: 3px 8px; border-radius: 99px;
+      display: inline-flex; align-items: center; gap: 4px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.25);
+      z-index: 2;
+    }
+    .score-perfect {
+      background: linear-gradient(135deg, #059669, #10B981);
+      color: #ffffff;
+      border: 1.5px solid rgba(255,255,255,.4);
+      box-shadow: 0 0 12px rgba(16,185,129,.5);
+    }
+    .score-high {
+      background: linear-gradient(135deg, #059669, #34D399);
+      color: #ffffff;
+    }
+    .score-med {
+      background: linear-gradient(135deg, #2563EB, #38BDF8);
+      color: #ffffff;
+    }
+    .score-fair {
+      background: #475569;
+      color: #F8FAFC;
+    }
+    .item-match-reason {
+      font-size: 10.5px; font-weight: 600;
+      color: #059669; background: rgba(16,185,129,0.10);
+      padding: 2px 6px; border-radius: 6px; margin-top: 5px;
+      display: block; line-height: 1.3;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    body.dark .item-match-reason {
+      color: #34D399; background: rgba(52,211,153,0.12);
+    }
+    .list-match-pill {
+      font-size: 10.5px; font-weight: 700; font-family: 'Poppins', sans-serif;
+      padding: 2px 8px; border-radius: 99px;
+      display: inline-flex; align-items: center; gap: 3px;
+    }
 
     /* ── List view ── */
     .list-view { display: flex; flex-direction: column; gap: 12px; }
@@ -299,7 +343,7 @@
   const FALLBACK_IMAGE = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 120"><rect width="160" height="120" fill="#E2E8F0"/><path d="M45 78l22-24 17 18 12-13 26 29H45z" fill="#94A3B8"/><circle cx="103" cy="43" r="10" fill="#CBD5E1"/></svg>');
   let ITEMS = [];
 
-  const CHIPS = [
+  let CHIPS = [
     { id:'all',         label:'All' },
     { id:'lost',        label:'Lost' },
     { id:'found',       label:'Found' },
@@ -308,6 +352,25 @@
     { id:'Keys',        label:'Keys' },
     { id:'ID Card',     label:'ID Card' },
   ];
+
+  async function loadSearchCategories() {
+    try {
+      const res = await fetch(`${window.API_BASE_URL || ''}/api/categories`);
+      const data = await res.json();
+      if (!res.ok || !Array.isArray(data.categories)) throw new Error(data.message || 'Unable to load categories');
+      CHIPS = [
+        { id:'all', label:'All' },
+        { id:'lost', label:'Lost' },
+        { id:'found', label:'Found' },
+        ...data.categories.map(category => ({ id:category.name, label:category.name }))
+      ];
+      if (!CHIPS.some(chip => chip.id === activeFilter)) activeFilter = 'all';
+      renderChips();
+      render();
+    } catch (error) {
+      console.error('Failed to load search categories from MongoDB:', error);
+    }
+  }
 
   let activeFilter = 'all';
   let searchQ      = '';
@@ -334,13 +397,25 @@
             <span class="badge ${statMap[status]}">${statLabel[status]}</span>`;
   }
 
-  /* filter */
+  /* Filter by the entered text without scoring or match explanations. */
   function getFiltered() {
-    return ITEMS.filter(i =>
-      (activeFilter === 'all' || i.type === activeFilter || i.category === activeFilter) &&
-      (searchQ === '' || [i.title, i.category, i.description, i.location]
-        .some(value => String(value || '').toLowerCase().includes(searchQ.toLowerCase())))
-    );
+    const q = searchQ.trim();
+    if (!q) {
+      return ITEMS.filter(i => activeFilter === 'all' || i.type === activeFilter || i.category === activeFilter);
+    }
+
+    const query = q.toLowerCase();
+    return ITEMS.filter(item => {
+      if (activeFilter !== 'all' && item.type !== activeFilter && item.category !== activeFilter) return false;
+      const searchableText = [
+        item.title,
+        item.category,
+        item.description,
+        item.location,
+        item.poster && item.poster.name
+      ].join(' ').toLowerCase();
+      return searchableText.includes(query);
+    });
   }
 
   function escapeHtml(value) {
@@ -378,6 +453,7 @@
       row.appendChild(btn);
     });
   }
+  loadSearchCategories();
 
   /* render grid */
   function renderGrid(items) {
@@ -391,6 +467,7 @@
       const sBg  = {open:'#EFF6FF',pending:'#FFFBEB',resolved:'#F0FDF4'}[item.status];
       const sTxt = {open:'#2563EB',pending:'#D97706',resolved:'#16A34A'}[item.status];
       const sLbl = {open:'Open',pending:'Pending',resolved:'Resolved'}[item.status];
+
       const div = document.createElement('div');
       div.className = 'item-card';
       div.onclick = () => location.href = `viewdetails.html?id=${encodeURIComponent(item.id)}&from=search`;
@@ -406,6 +483,7 @@
             <svg width="11" height="11" fill="none" stroke="#94A3B8" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
             <span>${escapeHtml(item.location)}</span>
           </div>
+          <p class="item-poster">Posted by ${escapeHtml(item.poster && item.poster.name || 'Anonymous User')}</p>
           <div class="item-foot">
             <span class="item-date">${item.date}</span>
             <span class="badge" style="background:${sBg};color:${sTxt}">${sLbl}</span>
@@ -428,11 +506,14 @@
       row.innerHTML = `
         <img class="list-thumb" src="${item.image}" alt="${escapeHtml(item.title)}" loading="lazy" onerror="this.src=FALLBACK_IMAGE">
         <div class="list-info">
-          <p class="list-title">${escapeHtml(item.title)}</p>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+            <p class="list-title">${escapeHtml(item.title)}</p>
+          </div>
           <div class="list-loc">
             <svg width="10" height="10" fill="none" stroke="#94A3B8" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>
             <span>${escapeHtml(item.location)}</span>
           </div>
+          <p class="item-poster">Posted by ${escapeHtml(item.poster && item.poster.name || 'Anonymous User')}</p>
           <p class="list-desc">${escapeHtml(item.description)}</p>
           <div class="badge-row">${badgeHtml(item.type, item.status)}</div>
         </div>`;

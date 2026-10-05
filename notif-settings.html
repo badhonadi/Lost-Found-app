@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
   <title>FindIt — Notification Settings</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="config.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -27,14 +28,31 @@
       --tog-off: #2D3B4E;
     }
 
-    html, body { height: 100%; overflow: hidden; background: var(--bg); font-family: 'Inter', sans-serif; }
+    html, body {
+      height: 100%; overflow: hidden;
+      background: #dfe6ef;
+      font-family: 'Inter', sans-serif;
+    }
+    body { display: flex; align-items: center; justify-content: center; }
 
     .screen {
-      position: absolute; inset: 0;
+      width: min(100vw, 400px); height: 100dvh; max-height: 100dvh;
+      position: relative;
       overflow-y: auto; overflow-x: hidden;
       background: var(--bg); scrollbar-width: none;
+      border-radius: 28px;
+      box-shadow: 0 18px 45px rgba(15,23,42,.18);
     }
     .screen::-webkit-scrollbar { display: none; }
+
+    @media (max-width: 600px) {
+      body { background: var(--bg); }
+      .screen {
+        width: 100vw;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
 
     /* ── Header ── */
     .header { padding: 48px 20px 24px; }
@@ -187,6 +205,9 @@
 
 <script>
   if (localStorage.getItem('findit_dark') === 'true') document.body.classList.add('dark');
+  const baseUrl = window.API_BASE_URL || '';
+  const storedUser = JSON.parse(localStorage.getItem('findit_user') || sessionStorage.getItem('findit_user') || 'null');
+  const userId = storedUser && storedUser.id;
 
   // Initial state matches React defaults: first 4 on, last 2 off
   const state = {
@@ -198,12 +219,52 @@
     emailDigest:   false,
   };
 
-  function toggleSetting(key) {
+  async function saveNotificationPreferences() {
+    if (!userId) return;
+    const response = await fetch(`${baseUrl}/api/users/${userId}/preferences`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ notificationPreferences: state })
+    });
+    if (!response.ok) {
+      const result = await response.json().catch(() => ({}));
+      throw new Error(result.message || 'Unable to save notification settings.');
+    }
+  }
+
+  async function toggleSetting(key) {
     state[key] = !state[key];
     const btn   = document.getElementById('tog-' + key);
     btn.classList.toggle('on',  state[key]);
     btn.classList.toggle('off', !state[key]);
+    try {
+      await saveNotificationPreferences();
+    } catch (error) {
+      state[key] = !state[key];
+      btn.classList.toggle('on', state[key]);
+      btn.classList.toggle('off', !state[key]);
+      alert(error.message);
+    }
   }
+
+  async function loadNotificationPreferences() {
+    if (!userId) return;
+    try {
+      const response = await fetch(`${baseUrl}/api/users/${userId}/preferences`);
+      if (!response.ok) throw new Error('Unable to load notification settings.');
+      const result = await response.json();
+      Object.assign(state, result.notificationPreferences || {});
+      Object.keys(state).forEach(key => {
+        const btn = document.getElementById('tog-' + key);
+        btn.classList.toggle('on', state[key]);
+        btn.classList.toggle('off', !state[key]);
+      });
+    } catch (error) {
+      console.error('Notification settings load error:', error);
+    }
+  }
+
+  loadNotificationPreferences();
 </script>
 </body>
 </html>

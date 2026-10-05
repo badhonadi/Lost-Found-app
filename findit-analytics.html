@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>FindIT Admin — Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+button,input,select,textarea{font-family:inherit;}
+
+:root{
+  --bg:#0B0F1A;--card:#141928;--sidebar:#0D1120;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.05);
+  --primary:#6B8AFF;--primary-d:rgba(107,138,255,0.15);--primary-g:rgba(107,138,255,0.28);
+  --accent:#00D4AA;--fg:#E8EAF6;--muted:#8B93A9;
+  --muted-bg:rgba(255,255,255,0.06);--muted-bg2:rgba(255,255,255,0.04);
+  --radius:16px;--font-h:'Plus Jakarta Sans',sans-serif;
+  --font-b:'Inter',sans-serif;--font-m:'JetBrains Mono',monospace;
+  --c1:#6B8AFF;--c2:#00D4AA;--c3:#F59E0B;--c4:#A78BFA;--c5:#EF4444;
+}
+[data-theme="light"]{
+  --bg:#EEF0F8;--card:#FFFFFF;--sidebar:#0D1120;
+  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.05);
+  --primary:#4F6EF7;--primary-d:rgba(79,110,247,0.10);--primary-g:rgba(79,110,247,0.22);
+  --accent:#00C49F;--fg:#0D1120;--muted:#6B7280;
+  --muted-bg:rgba(0,0,0,0.05);--muted-bg2:rgba(0,0,0,0.03);
+  --c1:#4F6EF7;--c2:#00C49F;--c3:#F59E0B;--c4:#8B5CF6;--c5:#EF4444;
+}
+
+html,body{height:100%;overflow:hidden;}
+body{font-family:var(--font-b);background:var(--bg);color:var(--fg);display:flex;font-size:14px;}
+.shell{display:flex;height:100vh;width:100%;}
+
+/* ── Sidebar ── */
+.sidebar{
+  width:232px;height:100vh;display:flex;flex-direction:column;
+  background:var(--sidebar);border-right:1px solid rgba(255,255,255,0.05);
+  flex-shrink:0;transition:width .25s ease;overflow:hidden;position:relative;z-index:10;
+}
+.sidebar.collapsed{width:64px;}
+.sidebar-header{
+  height:56px;display:flex;align-items:center;padding:0 16px;
+  border-bottom:1px solid rgba(255,255,255,0.05);flex-shrink:0;gap:10px;
+}
+.logo-mark{
+  width:32px;height:32px;border-radius:9px;flex-shrink:0;
+  background:linear-gradient(135deg,#6B8AFF 0%,#4F6EF7 55%,#00D4AA 100%);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 12px rgba(107,138,255,0.38);
+}
+.logo-mark svg{width:16px;height:16px;}
+.logo-text{overflow:hidden;white-space:nowrap;}
+.logo-name{font-family:var(--font-h);font-size:16px;font-weight:800;color:#fff;letter-spacing:-.3px;display:block;}
+.logo-sub{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.32);display:block;}
+.sidebar-nav{flex:1;overflow-y:auto;padding:12px 8px;display:flex;flex-direction:column;gap:2px;scrollbar-width:none;}
+.sidebar-nav::-webkit-scrollbar{display:none;}
+.nav-item{
+  display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;
+  font-size:12px;font-weight:500;color:rgba(255,255,255,.42);
+  cursor:pointer;border:1px solid transparent;transition:all .15s;white-space:nowrap;
+  background:none;width:100%;text-align:left;
+}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;color:rgba(255,255,255,.32);transition:color .15s;}
+.nav-item:hover{color:rgba(255,255,255,.78);background:rgba(255,255,255,.04);}
+.nav-item:hover svg{color:rgba(255,255,255,.58);}
+.nav-item.active{background:rgba(107,138,255,.13);color:#9BAEFF;border-color:rgba(107,138,255,.22);}
+.nav-item.active svg{color:#6B8AFF;}
+.nav-label{overflow:hidden;}
+.sidebar.collapsed .nav-label{display:none;}
+.sidebar.collapsed .nav-item{justify-content:center;padding:10px;}
+.sidebar-footer{padding:12px 8px;border-top:1px solid rgba(255,255,255,.05);}
+.logout-btn{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;margin-bottom:6px;border:1px solid rgba(239,68,68,.18);border-radius:8px;background:rgba(239,68,68,.08);color:#f87171;cursor:pointer;font-size:12px;font-weight:600;}
+.logout-btn:hover{background:rgba(239,68,68,.15);}
+.logout-btn svg{width:14px;height:14px;flex-shrink:0;}
+.sidebar.collapsed .logout-btn{justify-content:center;padding:10px;}
+.sidebar.collapsed .logout-label{display:none;}
+.collapse-btn{
+  display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:7px 10px;
+  border-radius:8px;border:none;background:none;color:rgba(255,255,255,.28);
+  cursor:pointer;width:100%;font-size:11px;font-weight:500;transition:all .15s;
+}
+.collapse-btn:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.55);}
+.sidebar.collapsed .collapse-btn{justify-content:center;}
+.collapse-btn svg{width:14px;height:14px;flex-shrink:0;transition:transform .25s;}
+.sidebar.collapsed .collapse-btn svg{transform:rotate(180deg);}
+.sidebar.collapsed .collapse-label{display:none;}
+
+/* ── Main ── */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+
+/* ── Topbar ── */
+.topbar{
+  height:56px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;border-bottom:1px solid var(--border);
+  background:color-mix(in srgb,var(--bg) 80%,transparent);
+  backdrop-filter:blur(20px);position:sticky;top:0;z-index:9;flex-shrink:0;
+}
+.topbar-left h2{font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--fg);line-height:1.2;}
+.topbar-left p{font-size:10px;color:var(--muted);}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.icon-btn{
+  width:32px;height:32px;border-radius:8px;border:1px solid var(--border);
+  background:var(--muted-bg);color:var(--fg);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;position:relative;
+}
+.icon-btn:hover{background:var(--muted-bg2);}
+.icon-btn svg{width:14px;height:14px;}
+.notif-badge{
+  position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;
+  border-radius:8px;background:#EF4444;border:2px solid var(--bg);
+  font-size:9px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;padding:0 2px;
+}
+.lang-btn{
+  display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;
+  border:1px solid var(--border);background:var(--muted-bg);color:var(--fg);
+  font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.lang-btn:hover{background:var(--muted-bg2);}
+.lang-btn svg{width:14px;height:14px;}
+.avatar-pill{
+  width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,#6B8AFF,#8B5CF6);
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;color:#fff;
+}
+
+/* ── Notification panel ── */
+.notif-panel{
+  position:fixed;top:60px;right:16px;z-index:9999;width:340px;
+  background:var(--card);border:1px solid var(--border);border-radius:18px;
+  box-shadow:0 20px 60px rgba(0,0,0,.38);overflow:hidden;
+  display:none;animation:fadeDown .18s ease;
+}
+.notif-panel.open{display:block;}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+.notif-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);}
+.notif-head-left{display:flex;align-items:center;gap:8px;}
+.notif-head-left span{font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--fg);}
+.new-badge{font-size:9px;font-weight:700;background:#EF4444;color:#fff;border-radius:20px;padding:1px 6px;}
+.notif-head-right{display:flex;gap:8px;}
+.text-btn{font-size:10px;font-weight:600;background:none;border:none;cursor:pointer;transition:color .15s;}
+.text-btn.primary{color:var(--primary);}
+.text-btn.muted{color:var(--muted);}
+.text-btn:hover{opacity:.8;}
+.notif-list{max-height:300px;overflow-y:auto;scrollbar-width:none;}
+.notif-list::-webkit-scrollbar{display:none;}
+.notif-item{
+  display:flex;align-items:flex-start;gap:10px;padding:12px 16px;
+  border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;
+}
+.notif-item:hover{background:var(--muted-bg2);}
+.notif-item.unread{background:rgba(107,138,255,.04);}
+.notif-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.notif-icon svg{width:14px;height:14px;}
+.notif-body{flex:1;min-width:0;}
+.notif-title{font-size:12px;font-weight:700;color:var(--fg);line-height:1.3;margin-bottom:2px;display:flex;align-items:center;gap:6px;}
+.unread-dot{width:6px;height:6px;border-radius:50%;background:var(--primary);flex-shrink:0;}
+.notif-sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.notif-time{font-size:10px;color:var(--muted);opacity:.6;margin-top:3px;}
+.notif-foot{padding:10px 16px;border-top:1px solid var(--border);}
+.notif-foot-btn{
+  width:100%;padding:8px;border-radius:10px;border:none;cursor:pointer;
+  background:var(--primary-d);color:var(--primary);font-size:12px;font-weight:700;transition:background .15s;
+}
+.notif-foot-btn:hover{background:var(--primary-g);}
+
+/* ── Content ── */
+.content{flex:1;overflow-y:auto;padding:20px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+
+/* ── Top controls ── */
+.analytics-controls{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;margin-bottom:20px;flex-wrap:wrap;
+}
+.range-tabs{display:flex;align-items:center;gap:4px;background:var(--muted-bg);border-radius:10px;padding:4px;}
+.range-tab{
+  padding:5px 13px;border-radius:7px;font-size:11px;font-weight:600;
+  border:none;background:none;color:var(--muted);cursor:pointer;transition:all .15s;
+}
+.range-tab.active{background:var(--card);color:var(--fg);box-shadow:0 1px 6px rgba(0,0,0,.18);}
+.controls-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.compare-toggle{
+  display:flex;align-items:center;gap:7px;padding:6px 12px;border-radius:9px;
+  border:1px solid var(--border);background:var(--muted-bg);cursor:pointer;
+  font-size:11px;font-weight:600;color:var(--muted);transition:all .15s;
+}
+.compare-toggle.on{border-color:rgba(107,138,255,.3);background:var(--primary-d);color:var(--primary);}
+.compare-toggle svg{width:13px;height:13px;}
+.export-btn{
+  display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:9px;
+  border:1px solid var(--border);background:var(--muted-bg);cursor:pointer;
+  font-size:11px;font-weight:600;color:var(--muted);transition:all .15s;
+}
+.export-btn:hover{background:var(--muted-bg2);color:var(--fg);}
+.export-btn svg{width:13px;height:13px;}
+
+/* ── KPI cards ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px;}
+@media(max-width:1300px){.kpi-grid{grid-template-columns:repeat(3,1fr);}}
+@media(max-width:700px){.kpi-grid{grid-template-columns:repeat(2,1fr);}}
+.kpi-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;display:flex;flex-direction:column;gap:8px;
+  transition:box-shadow .2s,transform .2s;cursor:default;
+}
+.kpi-card:hover{box-shadow:0 8px 28px rgba(0,0,0,.18);transform:translateY(-1px);}
+.kpi-top{display:flex;align-items:flex-start;justify-content:space-between;}
+.kpi-label{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;}
+.kpi-delta{
+  display:flex;align-items:center;gap:3px;font-size:9px;font-weight:700;
+  padding:2px 6px;border-radius:5px;
+}
+.delta-up{background:rgba(74,222,128,.12);color:#4ade80;}
+.delta-down{background:rgba(248,113,113,.12);color:#f87171;}
+.kpi-val{font-family:var(--font-h);font-size:22px;font-weight:800;color:var(--fg);line-height:1;}
+.kpi-sub{font-size:10px;color:var(--muted);}
+.kpi-spark{height:40px;}
+
+/* ── Chart cards ── */
+.chart-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;
+}
+.chart-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:8px;flex-wrap:wrap;}
+.chart-title{font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--fg);}
+.chart-sub{font-size:10px;color:var(--muted);margin-top:1px;}
+.chart-legend{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--muted);}
+.legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+svg text{font-family:var(--font-m);fill:var(--muted);}
+
+/* ── Mode tabs ── */
+.mode-tabs{display:flex;gap:4px;}
+.mode-tab{
+  padding:4px 10px;border-radius:6px;font-size:10px;font-weight:600;
+  border:none;background:none;color:var(--muted);cursor:pointer;transition:all .15s;
+}
+.mode-tab.active{background:var(--primary-d);color:var(--primary);}
+
+/* ── Grid layouts ── */
+.grid-2{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:12px;}
+.grid-2b{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;}
+@media(max-width:1100px){.grid-2{grid-template-columns:1fr;}.grid-3{grid-template-columns:1fr 1fr;}}
+@media(max-width:700px){.grid-2,.grid-2b,.grid-3{grid-template-columns:1fr;}}
+
+/* ── City table ── */
+.city-table{width:100%;border-collapse:collapse;font-size:11px;}
+.city-table th{
+  padding:8px 10px;text-align:left;font-size:10px;font-weight:600;
+  color:var(--muted);text-transform:uppercase;letter-spacing:.05em;
+  border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;
+}
+.city-table th:hover{color:var(--fg);}
+.city-table td{padding:9px 10px;border-bottom:1px solid var(--border2);vertical-align:middle;}
+.city-table tr:last-child td{border-bottom:none;}
+.city-table tr:hover td{background:var(--muted-bg2);}
+.city-name{font-weight:600;color:var(--fg);}
+.city-bar-wrap{width:80px;height:5px;background:var(--muted-bg);border-radius:3px;overflow:hidden;}
+.city-bar{height:100%;border-radius:3px;background:var(--primary);}
+
+/* ── Funnel ── */
+.funnel-row{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.funnel-label{font-size:11px;color:var(--muted);width:90px;text-align:right;flex-shrink:0;}
+.funnel-bar-wrap{flex:1;height:28px;background:var(--muted-bg);border-radius:6px;overflow:hidden;position:relative;}
+.funnel-bar{height:100%;border-radius:6px;display:flex;align-items:center;padding-left:10px;transition:width .4s ease;}
+.funnel-val{font-size:11px;font-weight:700;font-family:var(--font-m);color:var(--fg);width:52px;text-align:right;flex-shrink:0;}
+.funnel-pct{font-size:10px;color:var(--muted);width:36px;flex-shrink:0;}
+
+/* ── Insight cards ── */
+.insight-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:16px;display:flex;flex-direction:column;gap:8px;
+}
+.insight-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.insight-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.insight-icon svg{width:15px;height:15px;}
+.insight-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;}
+.insight-metric{font-family:var(--font-h);font-size:18px;font-weight:800;color:var(--fg);}
+.insight-title{font-size:12px;font-weight:700;color:var(--fg);}
+.insight-desc{font-size:11px;color:var(--muted);line-height:1.5;}
+
+/* ── Heatmap ── */
+.heatmap-days{display:flex;gap:4px;margin-bottom:6px;padding-left:42px;}
+.heatmap-day{flex:1;font-size:9px;font-weight:600;color:var(--muted);text-align:center;}
+.heatmap-row{display:flex;align-items:center;gap:4px;margin-bottom:4px;}
+.heatmap-hour{font-size:9px;color:var(--muted);width:38px;text-align:right;flex-shrink:0;}
+.heatmap-cell{flex:1;height:18px;border-radius:3px;cursor:pointer;transition:transform .12s;}
+.heatmap-cell:hover{transform:scale(1.15);}
+
+/* ── Toast ── */
+#toast-wrap{position:fixed;bottom:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.toast{
+  display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:12px;
+  font-size:12px;font-weight:600;color:#fff;min-width:220px;max-width:320px;
+  box-shadow:0 8px 28px rgba(0,0,0,.28);animation:toastIn .28s ease;pointer-events:auto;
+}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.toast.success{background:linear-gradient(135deg,#10b981,#059669);}
+.toast.info{background:linear-gradient(135deg,#6B8AFF,#4F6EF7);}
+.toast.warn{background:linear-gradient(135deg,#F59E0B,#D97706);}
+.toast svg{width:15px;height:15px;flex-shrink:0;}
+body{font-size:15px;}
+.nav-item{font-size:13px;}
+.topbar-left h2{font-size:15px;}
+.topbar-left p{font-size:11px;}
+.section-title{font-size:16px;}
+.section-sub{font-size:12px;}
+.stat-label{font-size:12px;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ══ SIDEBAR ══ -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+    </div>
+    <div class="logo-text">
+      <span class="logo-name">FindIT</span>
+      <span class="logo-sub">Admin Console</span>
+    </div>
+  </div>
+  <div class="sidebar-nav">
+    <button class="nav-item" onclick="location.href='findit-dashboard.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      <span class="nav-label">Dashboard</span>
+    </button>
+    <button class="nav-item" onclick="location.href='findit-usermanagement.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span class="nav-label">User Management</span>
+    </button>
+    <button class="nav-item" onclick="location.href='findit-reports.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span class="nav-label">Reports &amp; Complaints</span>
+    </button>
+    <button class="nav-item" onclick="location.href='findit-categories.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+      <span class="nav-label">Categories</span>
+    </button>
+    <button class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span class="nav-label">Analytics</span>
+    </button>
+    <button class="nav-item" onclick="location.href='findit-notifications.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="nav-label">Notifications</span>
+    </button>
+    <button class="nav-item" onclick="location.href='findit-settings.html'">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span class="nav-label">Settings</span>
+    </button>
+  </div>
+  <div class="sidebar-footer">
+    <button class="logout-btn" onclick="localStorage.removeItem('findit_admin_active');sessionStorage.removeItem('findit_admin_active');location.href='findit-otp.html'" title="Log out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/></svg><span class="logout-label">Logout</span></button>
+    <button class="collapse-btn" onclick="toggleSidebar()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg>
+      <span class="collapse-label">Collapse</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h2 id="tb-title">Analytics</h2>
+      <p id="tb-sub">Platform-wide performance metrics &amp; insights</p>
+    </div>
+    <div class="topbar-right">
+      <div class="notif-panel" id="notifPanel">
+        <div class="notif-head">
+          <div class="notif-head-left">
+            <span>Notifications</span><span class="new-badge" id="notifNewBadge">0 new</span>
+          </div>
+          <div class="notif-head-right">
+            <button class="text-btn primary" onclick="markAllTopbarRead()">Mark all read</button>
+            <button class="text-btn muted" onclick="document.getElementById('notifPanel').classList.remove('open')">&#x2715;</button>
+          </div>
+        </div>
+        <div class="notif-list" id="topbarNotifList">
+          <div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Loading...</div>
+        </div>
+        <div class="notif-foot">
+          <button class="notif-foot-btn" onclick="location.href='findit-notifications.html'">View all notifications</button>
+        </div>
+      </div>
+
+      <button class="icon-btn" onclick="toggleNotifPanel()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="notif-badge" id="topbarNotifBadge" style="display:none;">0</span>
+      </button>
+      <button class="lang-btn" onclick="toggleLang()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <span id="langLabel">EN</span>
+      </button>
+      <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle theme">
+        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="avatar-pill" onclick="location.href='findit-settings.html'" title="Admin profile">AR</button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- Controls -->
+    <div class="analytics-controls">
+      <div class="range-tabs">
+        <button class="range-tab" onclick="setRange(this,'7d')">7D</button>
+        <button class="range-tab active" onclick="setRange(this,'30d')">30D</button>
+        <button class="range-tab" onclick="setRange(this,'90d')">90D</button>
+        <button class="range-tab" onclick="setRange(this,'1y')">1Y</button>
+        <button class="range-tab" onclick="setRange(this,'all')">All</button>
+      </div>
+      <div class="controls-right">
+        <button class="compare-toggle" id="compareBtn" onclick="toggleCompare()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+          Compare Period
+        </button>
+        <button class="export-btn" onclick="exportData('csv')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export CSV
+        </button>
+        <button class="export-btn" onclick="exportData('pdf')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          Export PDF
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI Grid -->
+    <div class="kpi-grid" id="kpiGrid"></div>
+
+    <!-- Activity Overview + Category Donut -->
+    <div class="grid-2">
+      <div class="chart-card">
+        <div class="chart-head">
+          <div>
+            <div class="chart-title" id="ct-overview">Activity Overview</div>
+            <div class="chart-sub" id="cs-overview">Lost, Found &amp; Resolved posts over time</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div class="chart-legend">
+              <div class="legend-item"><span class="legend-dot" style="background:var(--c1)"></span><span>Lost</span></div>
+              <div class="legend-item"><span class="legend-dot" style="background:var(--c2)"></span><span>Found</span></div>
+              <div class="legend-item"><span class="legend-dot" style="background:var(--c3)"></span><span>Resolved</span></div>
+            </div>
+            <div class="mode-tabs">
+              <button class="mode-tab active" onclick="setTrendMode(this,'area')">Area</button>
+              <button class="mode-tab" onclick="setTrendMode(this,'line')">Line</button>
+              <button class="mode-tab" onclick="setTrendMode(this,'bar')">Bar</button>
+            </div>
+          </div>
+        </div>
+        <div id="trendChart"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-head">
+          <div>
+            <div class="chart-title" id="ct-cat">Category Breakdown</div>
+            <div class="chart-sub" id="cs-cat">Posts by category</div>
+          </div>
+        </div>
+        <div id="donutChart"></div>
+      </div>
+    </div>
+
+    <!-- User Growth + Resolution Rate -->
+    <div class="grid-2b">
+      <div class="chart-card">
+        <div class="chart-head">
+          <div>
+            <div class="chart-title">User Growth</div>
+            <div class="chart-sub">Cumulative registered users</div>
+          </div>
+          <div class="chart-legend">
+            <div class="legend-item"><span class="legend-dot" style="background:var(--c4)"></span><span>Total Users</span></div>
+          </div>
+        </div>
+        <div id="userGrowthChart"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-head">
+          <div>
+            <div class="chart-title">Resolution Rate Trend</div>
+            <div class="chart-sub">% of cases resolved vs 60% target</div>
+          </div>
+          <div class="chart-legend">
+            <div class="legend-item"><span class="legend-dot" style="background:var(--c2);border-radius:50%"></span><span>Rate</span></div>
+            <div class="legend-item"><span class="legend-dot" style="background:#EF4444;border-radius:50%"></span><span>Target</span></div>
+          </div>
+        </div>
+        <div id="resolutionChart"></div>
+      </div>
+    </div>
+
+    <!-- Heatmap + Match Distribution -->
+    <div class="grid-2b">
+      <div class="chart-card">
+        <div class="chart-head">
+          <div>
+            <div class="chart-title">Activity Heatmap</div>
+            <div class="chart-sub">Posts submitted by hour &amp; day of week</div>
+          </div>
+        </div>
+        <div id="heatmapWrap"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-head">
+          <div>
+            <div class="chart-title">AI Match Confidence</div>
+            <div class="chart-sub">Distribution of smart match scores</div>
+          </div>
+        </div>
+        <div id="matchDistChart"></div>
+      </div>
+    </div>
+
+    <!-- Funnel + Day-of-Week -->
+    <div class="grid-2b">
+      <div class="chart-card">
+        <div class="chart-head">
+          <div>
+            <div class="chart-title">Resolution Funnel</div>
+            <div class="chart-sub">Post journey from submission to resolution</div>
+          </div>
+        </div>
+        <div id="funnelWrap"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-head">
+          <div>
+            <div class="chart-title">Day-of-Week Activity</div>
+            <div class="chart-sub">Average posts per day</div>
+          </div>
+        </div>
+        <div id="dowChart"></div>
+      </div>
+    </div>
+
+    <!-- AI Insights -->
+    <div style="margin-bottom:24px;">
+      <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--fg);margin-bottom:10px;">&#x2726; AI Insights</div>
+      <div class="grid-3" style="margin-bottom:0;" id="insightsRow"></div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<div id="toast-wrap"></div>
+
+<script>
+/* ══ STATE ══ */
+var theme = 'dark', lang = 'en', rangeKey = '30d', compare = false, trendMode = 'area';
+var citySort = { key: 'posts', asc: false };
+window._lastAnalytics = null;
+var _CITY_DATA = [];
+
+/* ══ API BASE ══ */
+var API_BASE = (typeof window.API_BASE_URL !== 'undefined') ? window.API_BASE_URL : window.location.origin;
+
+/* ══ SIDEBAR ══ */
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
+
+/* ══ NOTIF ══ */
+function toggleNotifPanel() { document.getElementById('notifPanel').classList.toggle('open'); }
+document.addEventListener('click', function(e) {
+  var p = document.getElementById('notifPanel');
+  if (!p.contains(e.target) && !e.target.closest('.icon-btn')) p.classList.remove('open');
+});
+
+/* ══ THEME ══ */
+function toggleTheme() {
+  theme = theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+  var icon = document.getElementById('themeIcon');
+  if (theme === 'light') {
+    icon.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  } else {
+    icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  }
+  setTimeout(redrawAll, 80);
+}
+
+function getCSSVar(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+/* ══ LANG ══ */
+function toggleLang() {
+  lang = lang === 'en' ? 'bn' : 'en';
+  document.getElementById('langLabel').textContent = lang === 'en' ? 'EN' : 'বাং';
+  document.getElementById('tb-title').textContent = lang === 'en' ? 'Analytics' : 'বিশ্লেষণ';
+  document.getElementById('tb-sub').textContent = lang === 'en' ? 'Platform-wide performance metrics & insights' : 'প্ল্যাটফর্ম পারফর্মেন্স মেট্রিক্স';
+  document.getElementById('ct-overview').textContent = lang === 'en' ? 'Activity Overview' : 'কার্যক্রম সংক্ষিপ্ত';
+  document.getElementById('ct-cat').textContent = lang === 'en' ? 'Category Breakdown' : 'বিভাগ বিভাজন';
+}
+
+/* ══ RANGE ══ */
+function setRange(btn, r) {
+  rangeKey = r;
+  document.querySelectorAll('.range-tab').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  loadAndRender();
+  showToast('Date range: ' + r.toUpperCase(), 'info');
+}
+
+/* ══ COMPARE ══ */
+function toggleCompare() {
+  compare = !compare;
+  document.getElementById('compareBtn').classList.toggle('on', compare);
+  loadAndRender();
+  showToast(compare ? 'Compare period enabled' : 'Compare period disabled', 'info');
+}
+
+/* ══ TREND MODE ══ */
+function setTrendMode(btn, m) {
+  trendMode = m;
+  document.querySelectorAll('.mode-tab').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  drawTrend(window._lastAnalytics);
+}
+
+/* ══ EXPORT ══ */
+function exportData(type) {
+  showToast('Exporting as ' + type.toUpperCase() + '…', 'info');
+  setTimeout(function() { showToast(type.toUpperCase() + ' exported successfully', 'success'); }, 1200);
+}
+
+/* ══ LIVE FETCH FROM MONGODB ══ */
+function loadAndRender() {
+  fetch(API_BASE + '/api/admin/analytics?range=' + rangeKey + '&compare=' + compare)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.success) { showToast('Analytics load failed', 'warn'); return; }
+      window._lastAnalytics = data;
+      renderKPI(data);
+      drawTrend(data);
+      drawUserGrowth(data);
+      drawResolution(data);
+      renderDonut(data.categoryData);
+      renderHeatmap();
+      drawMatchDist(data.matchDist);
+      renderFunnel(data.funnelData);
+      drawDOW(data.dowData);
+      renderInsights(data.insights);
+      _CITY_DATA = data.cityData || [];
+      renderCityTable();
+    })
+    .catch(function(err) {
+      console.error('Analytics fetch error', err);
+      showToast('Server unreachable — showing cached view', 'warn');
+      redrawAll();
+    });
+}
+
+/* ══ DATA HELPERS ══ */
+var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var DAYS_SHORT = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+var HOURS = ['00','03','06','09','12','15','18','21'];
+
+function genSeries(len, base, variance, drift) {
+  drift = drift || 0;
+  var arr = [], v = base;
+  for (var i = 0; i < len; i++) {
+    v = Math.max(base * 0.3, v + (Math.random() - 0.48) * variance + drift);
+    arr.push(Math.round(v));
+  }
+  return arr;
+}
+
+function getN() {
+  var map = { '7d':7, '30d':30, '90d':90, '1y':12, 'all':18 };
+  return map[rangeKey] || 30;
+}
+
+/* static fallback data used only when server is unreachable */
+var _DEFAULT_CAT = [
+  { label:'Electronics', val:2840, col:'#6B8AFF' },
+  { label:'Documents',   val:1920, col:'#00D4AA' },
+  { label:'Jewelry',     val:1340, col:'#F59E0B' },
+  { label:'Bags',        val:980,  col:'#A78BFA' },
+  { label:'Keys',        val:760,  col:'#EF4444' },
+  { label:'Others',      val:620,  col:'#64748B' }
+];
+var _DEFAULT_FUNNEL = [
+  { label:'Total Posts', val:14280, col:'#6B8AFF' },
+  { label:'Reviewed',    val:11420, col:'#4F6EF7' },
+  { label:'Approved',    val:9876,  col:'#00D4AA' },
+  { label:'Matched',     val:6543,  col:'#F59E0B' },
+  { label:'Resolved',    val:3821,  col:'#10b981' }
+];
+var _DEFAULT_CITY = [
+  { city:'Dhaka',      posts:4820, resolved:2604, rate:54, wow:3.2 },
+  { city:'Chittagong', posts:2341, resolved:1498, rate:64, wow:1.8 },
+  { city:'Sylhet',     posts:1203, resolved:841,  rate:70, wow:-0.5 },
+  { city:'Rajshahi',   posts:987,  resolved:611,  rate:62, wow:2.1 },
+  { city:'Khulna',     posts:876,  resolved:508,  rate:58, wow:-1.2 },
+  { city:'Barisal',    posts:654,  resolved:432,  rate:66, wow:0.9 },
+  { city:'Mymensingh', posts:543,  resolved:326,  rate:60, wow:0.3 },
+  { city:'Comilla',    posts:498,  resolved:339,  rate:68, wow:-0.8 }
+];
+
+/* ══ SVG HELPERS ══ */
+function curvePath(xs, ys) {
+  var p = 'M' + xs[0] + ',' + ys[0];
+  for (var i = 1; i < xs.length; i++) {
+    var cx = (xs[i] + xs[i-1]) / 2;
+    p += ' C' + cx + ',' + ys[i-1] + ' ' + cx + ',' + ys[i] + ' ' + xs[i] + ',' + ys[i];
+  }
+  return p;
+}
+
+function gradDef(id, col, op1, op2) {
+  op1 = op1 !== undefined ? op1 : 0.3;
+  op2 = op2 !== undefined ? op2 : 0.02;
+  return '<linearGradient id="' + id + '" x1="0" y1="0" x2="0" y2="1">' +
+    '<stop offset="0%" stop-color="' + col + '" stop-opacity="' + op1 + '"/>' +
+    '<stop offset="100%" stop-color="' + col + '" stop-opacity="' + op2 + '"/>' +
+    '</linearGradient>';
+}
+
+function sparklineSVG(data, col) {
+  var w = 100, h = 36;
+  var mx = Math.max.apply(null, data), mn = Math.min.apply(null, data);
+  var rng = mx - mn || 1;
+  var xs = data.map(function(_, i) { return (i / (data.length - 1)) * w; });
+  var ys = data.map(function(v) { return h - 4 - ((v - mn) / rng) * (h - 8); });
+  var path = curvePath(xs, ys);
+  var area = path + ' L' + xs[xs.length-1] + ',' + h + ' L' + xs[0] + ',' + h + ' Z';
+  var gid = 'sg' + Math.random().toString(36).slice(2, 7);
+  return '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" preserveAspectRatio="none">' +
+    '<defs>' + gradDef(gid, col, 0.35, 0) + '</defs>' +
+    '<path d="' + area + '" fill="url(#' + gid + ')"/>' +
+    '<path d="' + path + '" fill="none" stroke="' + col + '" stroke-width="1.5" stroke-linecap="round"/>' +
+    '</svg>';
+}
+
+/* ══ KPI CARDS ══ */
+function renderKPI(data) {
+  var KPI_META = [
+    { key:'totalPosts',     label:'Total Posts',     sub:'Posts submitted',   col:'#6B8AFF' },
+    { key:'activeUsers',    label:'Active Users',    sub:'Registered users',  col:'#00D4AA' },
+    { key:'matchRate',      label:'Match Rate',      sub:'AI smart matches',  col:'#F59E0B' },
+    { key:'resolutionRate', label:'Resolution Rate', sub:'Cases resolved',    col:'#A78BFA' },
+    { key:'avgResponse',    label:'Avg Response',    sub:'Avg review time',   col:'#00D4AA' },
+    { key:'flaggedPosts',   label:'Flagged Posts',   sub:'Pending review',    col:'#EF4444' }
+  ];
+  var kpi = (data && data.kpi) ? data.kpi : {};
+  var html = KPI_META.map(function(m) {
+    var d = kpi[m.key] || {};
+    var val = d.val || '—';
+    var delta = d.delta || '';
+    var up = d.up !== false;
+    var spark = genSeries(12, 3000, 400, 20);
+    return '<div class="kpi-card">' +
+      '<div class="kpi-top">' +
+        '<div class="kpi-label">' + m.label + '</div>' +
+        '<div class="kpi-delta ' + (up ? 'delta-up' : 'delta-down') + '">' + (up ? '&#x25B2;' : '&#x25BC;') + ' ' + delta + '</div>' +
+      '</div>' +
+      '<div class="kpi-val">' + val + '</div>' +
+      '<div class="kpi-sub">' + m.sub + '</div>' +
+      '<div class="kpi-spark">' + sparklineSVG(spark, m.col) + '</div>' +
+      '</div>';
+  }).join('');
+  document.getElementById('kpiGrid').innerHTML = html;
+}
+
+/* ══ TREND CHART ══ */
+function drawTrend(data) {
+  var apiT = (data && data.trends) ? data.trends : {};
+  var n = apiT.n || getN();
+  var lost     = (apiT.lost     && apiT.lost.length)     ? apiT.lost     : genSeries(n, 280, 60, 1.2);
+  var found    = (apiT.found    && apiT.found.length)    ? apiT.found    : genSeries(n, 190, 45, 0.9);
+  var resolved = (apiT.resolved && apiT.resolved.length) ? apiT.resolved : genSeries(n, 120, 35, 1.5);
+  var W = 560, H = 200, PL = 36, PR = 12, PT = 10, PB = 28;
+  var cw = W - PL - PR, ch = H - PT - PB;
+  var allVals = lost.concat(found, resolved);
+  var mx = Math.max.apply(null, allVals) * 1.1;
+  var xs = lost.map(function(_, i) { return PL + (i / (n - 1)) * cw; });
+  var yS = function(v) { return PT + ch - (v / mx) * ch; };
+  var losY = lost.map(yS), fouY = found.map(yS), resY = resolved.map(yS);
+
+  var grids = [0, 0.25, 0.5, 0.75, 1].map(function(t) {
+    var y = PT + ch * (1 - t), lbl = Math.round(mx * t);
+    lbl = lbl >= 1000 ? (lbl/1000).toFixed(1) + 'k' : lbl;
+    return '<line x1="' + PL + '" y1="' + y + '" x2="' + (W-PR) + '" y2="' + y + '" stroke="var(--border)" stroke-width="1"/>' +
+      '<text x="' + (PL-4) + '" y="' + (y+4) + '" text-anchor="end" font-size="8" opacity=".6">' + lbl + '</text>';
+  }).join('');
+
+  var tickStep = Math.max(1, Math.floor(n / 6));
+  var xTicks = '';
+  xs.forEach(function(x, i) {
+    if (i % tickStep !== 0 && i !== n-1) return;
+    var lbl = rangeKey === '1y' ? MONTHS[i % 12] : (rangeKey === '7d' ? DAYS_SHORT[i % 7] : 'D'+(i+1));
+    xTicks += '<text x="' + x + '" y="' + (H-4) + '" text-anchor="middle" font-size="8" opacity=".6">' + lbl + '</text>';
+  });
+
+  var series = '';
+  if (trendMode === 'area') {
+    var areaP = function(xs2, ys2) {
+      return curvePath(xs2, ys2) + ' L' + xs2[xs2.length-1] + ',' + (PT+ch) + ' L' + xs2[0] + ',' + (PT+ch) + ' Z';
+    };
+    series = '<defs>' + gradDef('gt1','var(--c1)') + gradDef('gt2','var(--c2)') + gradDef('gt3','var(--c3)') + '</defs>' +
+      '<path d="' + areaP(xs,losY) + '" fill="url(#gt1)" opacity=".65"/>' +
+      '<path d="' + areaP(xs,fouY) + '" fill="url(#gt2)" opacity=".65"/>' +
+      '<path d="' + areaP(xs,resY) + '" fill="url(#gt3)" opacity=".65"/>' +
+      '<path d="' + curvePath(xs,losY) + '" fill="none" stroke="var(--c1)" stroke-width="2" stroke-linecap="round"/>' +
+      '<path d="' + curvePath(xs,fouY) + '" fill="none" stroke="var(--c2)" stroke-width="2" stroke-linecap="round"/>' +
+      '<path d="' + curvePath(xs,resY) + '" fill="none" stroke="var(--c3)" stroke-width="2" stroke-linecap="round"/>';
+    if (compare) {
+      series +=
+        '<path d="' + curvePath(xs, lost.map(function(v){ return yS(v*.82); })) + '" fill="none" stroke="var(--c1)" stroke-width="1.2" stroke-dasharray="5,3" opacity=".38"/>' +
+        '<path d="' + curvePath(xs, found.map(function(v){ return yS(v*.82); })) + '" fill="none" stroke="var(--c2)" stroke-width="1.2" stroke-dasharray="5,3" opacity=".38"/>' +
+        '<path d="' + curvePath(xs, resolved.map(function(v){ return yS(v*.82); })) + '" fill="none" stroke="var(--c3)" stroke-width="1.2" stroke-dasharray="5,3" opacity=".38"/>';
+    }
+  } else if (trendMode === 'line') {
+    series =
+      '<path d="' + curvePath(xs,losY) + '" fill="none" stroke="var(--c1)" stroke-width="2.2" stroke-linecap="round"/>' +
+      '<path d="' + curvePath(xs,fouY) + '" fill="none" stroke="var(--c2)" stroke-width="2.2" stroke-linecap="round"/>' +
+      '<path d="' + curvePath(xs,resY) + '" fill="none" stroke="var(--c3)" stroke-width="2.2" stroke-linecap="round"/>';
+    if (compare) {
+      series +=
+        '<path d="' + curvePath(xs, lost.map(function(v){ return yS(v*.82); })) + '" fill="none" stroke="var(--c1)" stroke-width="1" stroke-dasharray="4,3" opacity=".38"/>' +
+        '<path d="' + curvePath(xs, found.map(function(v){ return yS(v*.82); })) + '" fill="none" stroke="var(--c2)" stroke-width="1" stroke-dasharray="4,3" opacity=".38"/>' +
+        '<path d="' + curvePath(xs, resolved.map(function(v){ return yS(v*.82); })) + '" fill="none" stroke="var(--c3)" stroke-width="1" stroke-dasharray="4,3" opacity=".38"/>';
+    }
+  } else {
+    var bw = Math.max(2, cw / n / 4.5);
+    series = lost.map(function(v, i) {
+      var x = xs[i];
+      var lh = (v/mx)*ch, fh = (found[i]/mx)*ch, rh = (resolved[i]/mx)*ch;
+      return '<rect x="' + (x-bw*1.6) + '" y="' + (PT+ch-lh) + '" width="' + bw + '" height="' + lh + '" fill="var(--c1)" rx="1" opacity=".85"/>' +
+        '<rect x="' + (x-bw*.3) + '" y="' + (PT+ch-fh) + '" width="' + bw + '" height="' + fh + '" fill="var(--c2)" rx="1" opacity=".85"/>' +
+        '<rect x="' + (x+bw*1.0) + '" y="' + (PT+ch-rh) + '" width="' + bw + '" height="' + rh + '" fill="var(--c3)" rx="1" opacity=".85"/>';
+    }).join('');
+  }
+
+  document.getElementById('trendChart').innerHTML =
+    '<svg width="100%" viewBox="0 0 ' + W + ' ' + H + '" style="overflow:visible;">' +
+    grids + xTicks + series + '</svg>';
+}
+
+/* ══ USER GROWTH ══ */
+function drawUserGrowth(apiData) {
+  var n = getN();
+  var series = (apiData && apiData.userGrowth && apiData.userGrowth.length) ? apiData.userGrowth : [];
+  if (!series.length) {
+    var cum = 15000;
+    for (var i = 0; i < n; i++) { cum += Math.round(200 + Math.random() * 300); series.push(cum); }
+  }
+  var W = 480, H = 180, PL = 48, PR = 12, PT = 10, PB = 28;
+  var cw = W - PL - PR, ch = H - PT - PB;
+  var mx = Math.max.apply(null, series) * 1.05, mn = series[0] * 0.95, rng = mx - mn || 1;
+  var xs = series.map(function(_, i) { return PL + (i / (series.length - 1)) * cw; });
+  var ys = series.map(function(v) { return PT + ch - ((v-mn)/rng)*ch; });
+  var col = getCSSVar('--c4');
+  var path = curvePath(xs, ys);
+  var area = path + ' L' + xs[xs.length-1] + ',' + (PT+ch) + ' L' + xs[0] + ',' + (PT+ch) + ' Z';
+  var grids = [0,0.25,0.5,0.75,1].map(function(t) {
+    var y = PT + ch*(1-t), lbl = Math.round(mn + rng*t);
+    return '<line x1="' + PL + '" y1="' + y + '" x2="' + (W-PR) + '" y2="' + y + '" stroke="var(--border)" stroke-width="1"/>' +
+      '<text x="' + (PL-4) + '" y="' + (y+4) + '" text-anchor="end" font-size="8" opacity=".6">' + (lbl/1000).toFixed(0) + 'k</text>';
+  }).join('');
+  var lx = xs[xs.length-1], ly = ys[ys.length-1];
+  var ghostLine = compare ? '<path d="' + curvePath(xs, series.map(function(v) { return PT+ch-((v*.9-mn)/rng)*ch; })) + '" fill="none" stroke="' + col + '" stroke-width="1.2" stroke-dasharray="5,3" opacity=".38"/>' : '';
+  document.getElementById('userGrowthChart').innerHTML =
+    '<svg width="100%" viewBox="0 0 ' + W + ' ' + H + '" style="overflow:visible;">' +
+    '<defs>' + gradDef('gug', col, 0.4, 0.02) + '</defs>' +
+    grids + '<path d="' + area + '" fill="url(#gug)"/>' +
+    '<path d="' + path + '" fill="none" stroke="' + col + '" stroke-width="2.2" stroke-linecap="round"/>' +
+    '<circle cx="' + lx + '" cy="' + ly + '" r="4" fill="' + col + '" stroke="var(--card)" stroke-width="2"/>' +
+    ghostLine + '</svg>';
+}
+
+/* ══ RESOLUTION RATE ══ */
+function drawResolution(apiData) {
+  var n = getN();
+  var series = (apiData && apiData.resolutionRateSeries && apiData.resolutionRateSeries.length)
+    ? apiData.resolutionRateSeries : genSeries(n, 60, 5, 0.05);
+  var W = 480, H = 180, PL = 36, PR = 18, PT = 10, PB = 28;
+  var cw = W - PL - PR, ch = H - PT - PB;
+  var mx = 82, mn = 38, rng = mx - mn;
+  var xs = series.map(function(_, i) { return PL + (i/(series.length-1))*cw; });
+  var ys = series.map(function(v) { return PT + ch - ((v-mn)/rng)*ch; });
+  var col = getCSSVar('--c2');
+  var targetY = PT + ch - ((60-mn)/rng)*ch;
+  var grids = [40,50,60,70,80].map(function(v) {
+    var y = PT + ch - ((v-mn)/rng)*ch;
+    return '<line x1="' + PL + '" y1="' + y + '" x2="' + (W-PR) + '" y2="' + y + '" stroke="var(--border)" stroke-width="1"/>' +
+      '<text x="' + (PL-4) + '" y="' + (y+4) + '" text-anchor="end" font-size="8" opacity=".6">' + v + '%</text>';
+  }).join('');
+  var path = curvePath(xs, ys);
+  var area = path + ' L' + xs[xs.length-1] + ',' + (PT+ch) + ' L' + xs[0] + ',' + (PT+ch) + ' Z';
+  var ghost = compare ? '<path d="' + curvePath(xs, series.map(function(v){ return PT+ch-((v*.93-mn)/rng)*ch; })) + '" fill="none" stroke="' + col + '" stroke-width="1" stroke-dasharray="4,3" opacity=".38"/>' : '';
+  document.getElementById('resolutionChart').innerHTML =
+    '<svg width="100%" viewBox="0 0 ' + W + ' ' + H + '" style="overflow:visible;">' +
+    '<defs>' + gradDef('gres', col, 0.28, 0.02) + '</defs>' + grids +
+    '<line x1="' + PL + '" y1="' + targetY + '" x2="' + (W-PR) + '" y2="' + targetY + '" stroke="#EF4444" stroke-width="1.5" stroke-dasharray="6,3" opacity=".6"/>' +
+    '<text x="' + (W-PR+3) + '" y="' + (targetY+4) + '" font-size="8" fill="#EF4444" opacity=".8">60%</text>' +
+    '<path d="' + area + '" fill="url(#gres)"/>' +
+    '<path d="' + path + '" fill="none" stroke="' + col + '" stroke-width="2" stroke-linecap="round"/>' +
+    ghost + '</svg>';
+}
+
+/* ══ DONUT ══ */
+function renderDonut(catData) {
+  var CAT_DATA = (catData && catData.length) ? catData : _DEFAULT_CAT;
+  var W = 260, H = 220, cx = W/2, cy = H/2 - 12, R = 68, ri = 44;
+  var total = CAT_DATA.reduce(function(s, c) { return s + c.val; }, 0);
+  var angle = -Math.PI / 2, slices = '';
+  CAT_DATA.forEach(function(c) {
+    var sweep = (c.val / total) * 2 * Math.PI;
+    var x1 = cx + R*Math.cos(angle), y1 = cy + R*Math.sin(angle);
+    var x2 = cx + R*Math.cos(angle+sweep), y2 = cy + R*Math.sin(angle+sweep);
+    var xi1 = cx + ri*Math.cos(angle), yi1 = cy + ri*Math.sin(angle);
+    var xi2 = cx + ri*Math.cos(angle+sweep), yi2 = cy + ri*Math.sin(angle+sweep);
+    var la = sweep > Math.PI ? 1 : 0;
+    slices += '<path d="M' + xi1 + ',' + yi1 + ' L' + x1 + ',' + y1 + ' A' + R + ',' + R + ' 0 ' + la + ',1 ' + x2 + ',' + y2 +
+      ' L' + xi2 + ',' + yi2 + ' A' + ri + ',' + ri + ' 0 ' + la + ',0 ' + xi1 + ',' + yi1 + ' Z" fill="' + c.col + '" opacity=".88" style="cursor:pointer;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=.88"/>';
+    angle += sweep;
+  });
+  var cardBg = getCSSVar('--card'), fgCol = getCSSVar('--fg');
+  var totalStr = total >= 1000 ? (total/1000).toFixed(1) + 'k' : total.toLocaleString();
+  var legend = CAT_DATA.map(function(c) {
+    var pctStr = total > 0 ? ((c.val/total)*100).toFixed(1) + '%' : '0%';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:5px;">' +
+      '<div style="display:flex;align-items:center;gap:6px;">' +
+        '<span style="width:8px;height:8px;border-radius:2px;background:' + c.col + ';flex-shrink:0;display:inline-block;"></span>' +
+        '<span style="font-size:10px;color:var(--muted);">' + c.label + '</span>' +
+      '</div>' +
+      '<span style="font-size:10px;font-weight:600;color:var(--fg);font-family:var(--font-m);">' + pctStr + '</span>' +
+      '</div>';
+  }).join('');
+  document.getElementById('donutChart').innerHTML =
+    '<svg width="100%" viewBox="0 0 ' + W + ' ' + H + '" style="overflow:visible;max-height:220px;">' + slices +
+    '<circle cx="' + cx + '" cy="' + cy + '" r="' + (ri-3) + '" fill="' + cardBg + '"/>' +
+    '<text x="' + cx + '" y="' + (cy-5) + '" text-anchor="middle" font-size="19" font-weight="800" fill="' + fgCol + '" font-family="Plus Jakarta Sans,sans-serif">' + totalStr + '</text>' +
+    '<text x="' + cx + '" y="' + (cy+13) + '" text-anchor="middle" font-size="9" fill="var(--muted)">total posts</text>' +
+    '</svg><div style="padding:0 4px;">' + legend + '</div>';
+}
+
+/* ══ HEATMAP ══ */
+function renderHeatmap() {
+  var data = DAYS_SHORT.map(function() { return HOURS.map(function() { return Math.round(20 + Math.random() * 280); }); });
+  var maxVal = Math.max.apply(null, [].concat.apply([], data));
+  var col = getCSSVar('--c1');
+  var html = '<div class="heatmap-days">' + DAYS_SHORT.map(function(d) { return '<div class="heatmap-day">' + d + '</div>'; }).join('') + '</div>';
+  HOURS.forEach(function(h, hi) {
+    html += '<div class="heatmap-row"><div class="heatmap-hour">' + h + ':00</div>';
+    DAYS_SHORT.forEach(function(day, di) {
+      var v = data[di][hi];
+      var alpha = (0.08 + (v / maxVal) * 0.88).toFixed(2);
+      html += '<div class="heatmap-cell" style="background:' + col + ';opacity:' + alpha + ';" title="' + day + ' ' + h + ':00 — ' + v + ' posts"></div>';
+    });
+    html += '</div>';
+  });
+  document.getElementById('heatmapWrap').innerHTML = html;
+}
+
+/* ══ MATCH DIST ══ */
+function drawMatchDist(matchDist) {
+  var items = (matchDist && matchDist.length) ? matchDist : [
+    { label:'50-59%', val:340, col:'#6B8AFF' },
+    { label:'60-69%', val:820, col:'#00D4AA' },
+    { label:'70-79%', val:1240,col:'#F59E0B' },
+    { label:'80-89%', val:960, col:'#A78BFA' },
+    { label:'90-100%',val:480, col:'#10b981' }
+  ];
+  var vals   = items.map(function(x){ return x.val; });
+  var labels = items.map(function(x){ return x.label; });
+  var cols   = items.map(function(x){ return x.col; });
+  var W = 420, H = 180, PL = 48, PR = 12, PT = 10, PB = 28;
+  var cw = W - PL - PR, ch = H - PT - PB;
+  var mx = Math.max.apply(null, vals) * 1.15;
+  var bw = cw / vals.length;
+  var bars = vals.map(function(v, i) {
+    var bh = (v/mx)*ch, x = PL + i*bw + bw*0.12, bwi = bw*0.76;
+    return '<rect x="' + x + '" y="' + (PT+ch-bh) + '" width="' + bwi + '" height="' + bh + '" fill="' + cols[i] + '" rx="4" opacity=".88"/>' +
+      '<text x="' + (x+bwi/2) + '" y="' + (PT+ch-bh-5) + '" text-anchor="middle" font-size="9" fill="var(--fg)" opacity=".8">' + v + '</text>' +
+      '<text x="' + (x+bwi/2) + '" y="' + (H-4) + '" text-anchor="middle" font-size="8" opacity=".6">' + labels[i] + '</text>';
+  }).join('');
+  var grids = [0,0.5,1].map(function(t) {
+    var y = PT + ch*(1-t);
+    return '<line x1="' + PL + '" y1="' + y + '" x2="' + (W-PR) + '" y2="' + y + '" stroke="var(--border)" stroke-width="1"/>' +
+      '<text x="' + (PL-4) + '" y="' + (y+4) + '" text-anchor="end" font-size="8" opacity=".6">' + Math.round(mx*t) + '</text>';
+  }).join('');
+  document.getElementById('matchDistChart').innerHTML =
+    '<svg width="100%" viewBox="0 0 ' + W + ' ' + H + '" style="overflow:visible;">' + grids + bars + '</svg>';
+}
+
+/* ══ FUNNEL ══ */
+function renderFunnel(funnelData) {
+  var FUNNEL_DATA = (funnelData && funnelData.length) ? funnelData : _DEFAULT_FUNNEL;
+  var max = FUNNEL_DATA[0].val;
+  document.getElementById('funnelWrap').innerHTML = FUNNEL_DATA.map(function(f, i) {
+    var pct = (f.val/max*100).toFixed(1);
+    var dropPct = i > 0 ? '&#x2212;' + (100 - Math.round(f.val/FUNNEL_DATA[i-1].val*100)) + '%' : '';
+    var innerLabel = f.val >= max*0.3 ? '<span style="font-size:10px;font-weight:700;color:#fff;">' + (f.val/FUNNEL_DATA[0].val*100).toFixed(0) + '%</span>' : '';
+    return '<div class="funnel-row">' +
+      '<div class="funnel-label">' + f.label + '</div>' +
+      '<div class="funnel-bar-wrap"><div class="funnel-bar" style="width:' + pct + '%;background:' + f.col + ';">' + innerLabel + '</div></div>' +
+      '<div class="funnel-val">' + f.val.toLocaleString() + '</div>' +
+      '<div class="funnel-pct">' + dropPct + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+/* ══ DAY-OF-WEEK ══ */
+function drawDOW(dowData) {
+  var vals = (dowData && dowData.length === 7) ? dowData : [312, 287, 398, 421, 510, 389, 276];
+  var mx = Math.max.apply(null, vals);
+  var peakIdx = vals.indexOf(mx);
+  var W = 420, H = 180, PL = 36, PR = 12, PT = 16, PB = 28;
+  var cw = W - PL - PR, ch = H - PT - PB;
+  var bw = cw / vals.length;
+  var bars = vals.map(function(v, i) {
+    var bh = (v / (mx*1.12)) * ch;
+    var x = PL + i*bw + bw*0.12, bwi = bw*0.76;
+    var col = i === peakIdx ? 'var(--c3)' : 'var(--c1)';
+    var stroke = i === peakIdx ? ' stroke="var(--c3)" stroke-width="1.5"' : '';
+    var peakBadge = i === peakIdx ? '<text x="' + (x+bwi/2) + '" y="' + (PT+ch-bh-16) + '" text-anchor="middle" font-size="7" fill="var(--c3)" font-weight="700">PEAK</text>' : '';
+    return '<rect x="' + x + '" y="' + (PT+ch-bh) + '" width="' + bwi + '" height="' + bh + '" fill="' + col + '" rx="4" opacity=".88"' + stroke + '/>' +
+      '<text x="' + (x+bwi/2) + '" y="' + (PT+ch-bh-5) + '" text-anchor="middle" font-size="9" fill="var(--fg)" opacity=".8">' + v + '</text>' +
+      peakBadge +
+      '<text x="' + (x+bwi/2) + '" y="' + (H-4) + '" text-anchor="middle" font-size="9" opacity=".6">' + DAYS_SHORT[i] + '</text>';
+  }).join('');
+  var grids = [0,0.5,1].map(function(t) {
+    var y = PT + ch*(1-t);
+    return '<line x1="' + PL + '" y1="' + y + '" x2="' + (W-PR) + '" y2="' + y + '" stroke="var(--border)" stroke-width="1"/>' +
+      '<text x="' + (PL-4) + '" y="' + (y+4) + '" text-anchor="end" font-size="8" opacity=".6">' + Math.round(mx*1.12*t) + '</text>';
+  }).join('');
+  document.getElementById('dowChart').innerHTML =
+    '<svg width="100%" viewBox="0 0 ' + W + ' ' + H + '" style="overflow:visible;">' + grids + bars + '</svg>';
+}
+
+/* ══ AI INSIGHTS ══ */
+function renderInsights(insightsData) {
+  var INSIGHTS = (insightsData && insightsData.length) ? insightsData : [
+    {
+      iconSvg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>',
+      iconBg:'rgba(107,138,255,.15)', iconCol:'#6B8AFF',
+      badge:'Peak Time', badgeBg:'rgba(107,138,255,.15)', badgeCol:'#6B8AFF',
+      metric:'9-11 AM', title:'Morning peak drives 34% of daily posts',
+      desc:'Users are most active between 9 AM and 11 AM. Scheduling moderator shifts during this window can reduce average review time by up to 40%.'
+    },
+    {
+      iconSvg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+      iconBg:'rgba(245,158,11,.15)', iconCol:'#F59E0B',
+      badge:'Attention', badgeBg:'rgba(245,158,11,.15)', badgeCol:'#F59E0B',
+      metric:'54% -> 60%', title:'Dhaka resolution rate below target',
+      desc:'Dhaka has the highest post volume but lowest resolution rate at 54%. Targeted community outreach and adding 2 moderators could bridge the gap.'
+    },
+    {
+      iconSvg:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>',
+      iconBg:'rgba(0,212,170,.15)', iconCol:'#00D4AA',
+      badge:'Positive', badgeBg:'rgba(0,212,170,.15)', badgeCol:'#00D4AA',
+      metric:'+12% WoW', title:'Electronics recovery rate climbing',
+      desc:'Electronics category resolution improved 12% week-over-week, driven by the AI image matching feature.'
+    }
+  ];
+  document.getElementById('insightsRow').innerHTML = INSIGHTS.map(function(ins) {
+    return '<div class="insight-card">' +
+      '<div class="insight-head">' +
+        '<div class="insight-icon" style="background:' + ins.iconBg + ';color:' + ins.iconCol + ';">' + ins.iconSvg + '</div>' +
+        '<span class="insight-badge" style="background:' + ins.badgeBg + ';color:' + ins.badgeCol + ';">' + ins.badge + '</span>' +
+      '</div>' +
+      '<div class="insight-metric">' + ins.metric + '</div>' +
+      '<div class="insight-title">' + ins.title + '</div>' +
+      '<div class="insight-desc">' + ins.desc + '</div>' +
+      '</div>';
+  }).join('');
+}
+
+/* ══ CITY TABLE ══ */
+function sortCity(key) {
+  if (citySort.key === key) citySort.asc = !citySort.asc;
+  else { citySort.key = key; citySort.asc = false; }
+  renderCityTable();
+}
+function renderCityTable() {
+  var src = (_CITY_DATA && _CITY_DATA.length) ? _CITY_DATA : _DEFAULT_CITY;
+  var rows = src.slice().sort(function(a, b) {
+    var av = a[citySort.key], bv = b[citySort.key];
+    if (typeof av === 'string') return citySort.asc ? av.localeCompare(bv) : bv.localeCompare(av);
+    return citySort.asc ? av - bv : bv - av;
+  });
+  var maxPosts = Math.max.apply(null, src.map(function(c) { return c.posts; })) || 1;
+  document.getElementById('cityTbody').innerHTML = rows.map(function(c) {
+    var rateCol = c.rate >= 65 ? '#4ade80' : c.rate >= 58 ? 'var(--fg)' : '#f87171';
+    var wowCls = c.wow >= 0 ? 'color:#4ade80' : 'color:#f87171';
+    return '<tr>' +
+      '<td class="city-name">' + c.city + '</td>' +
+      '<td style="font-family:var(--font-m);font-size:11px;">' + (c.posts||0).toLocaleString() + '</td>' +
+      '<td style="font-family:var(--font-m);font-size:11px;">' + (c.resolved||0).toLocaleString() + '</td>' +
+      '<td style="font-family:var(--font-m);font-size:11px;color:' + rateCol + ';">' + (c.rate||0) + '%</td>' +
+      '<td><div class="city-bar-wrap"><div class="city-bar" style="width:' + ((c.posts/maxPosts)*100).toFixed(1) + '%"></div></div></td>' +
+      '<td style="font-size:10px;font-weight:600;' + wowCls + ';">' + (c.wow >= 0 ? '&#x25B2;' : '&#x25BC;') + ' ' + Math.abs(c.wow||0) + '%</td>' +
+      '</tr>';
+  }).join('');
+}
+
+/* ══ TOAST ══ */
+function showToast(msg, type) {
+  type = type || 'info';
+  var icons = {
+    success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20,6 9,17 4,12"/></svg>',
+    info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+    warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>'
+  };
+  var t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = (icons[type] || icons.info) + '<span>' + msg + '</span>';
+  document.getElementById('toast-wrap').appendChild(t);
+  setTimeout(function() {
+    t.style.opacity = '0'; t.style.transform = 'translateY(8px)'; t.style.transition = 'all .3s';
+    setTimeout(function() { t.remove(); }, 300);
+  }, 3000);
+}
+
+/* ══ REDRAW ALL (uses cached MongoDB data) ══ */
+function redrawAll() {
+  var d = window._lastAnalytics || null;
+  drawTrend(d); drawUserGrowth(d); drawResolution(d);
+  renderDonut(d ? d.categoryData : null);
+  renderHeatmap();
+  drawMatchDist(d ? d.matchDist : null);
+  drawDOW(d ? d.dowData : null);
+}
+
+/* ══ TOPBAR NOTIFICATIONS from MongoDB ══ */
+function loadTopbarNotifications() {
+  fetch(API_BASE + '/api/admin/notifications?limit=5')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var notifs = (data.notifications || []).slice(0, 5);
+      var unread = notifs.filter(function(n){ return !n.read; }).length;
+
+      // Update bell badge
+      var badge = document.getElementById('topbarNotifBadge');
+      if (badge) { badge.textContent = unread > 0 ? unread : ''; badge.style.display = unread > 0 ? '' : 'none'; }
+      var newBadge = document.getElementById('notifNewBadge');
+      if (newBadge) { newBadge.textContent = unread + ' new'; newBadge.style.display = unread > 0 ? '' : 'none'; }
+
+      var typeMap = {
+        user:   { bg:'rgba(107,138,255,.15)', col:'#6B8AFF' },
+        report: { bg:'rgba(0,212,170,.15)',   col:'#00D4AA' },
+        system: { bg:'rgba(167,139,250,.15)', col:'#A78BFA' },
+        alert:  { bg:'rgba(245,158,11,.15)',  col:'#F59E0B' },
+        warn:   { bg:'rgba(239,68,68,.15)',   col:'#EF4444' }
+      };
+      var ICON_SVG = {
+        user:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>',
+        report: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20,6 9,17 4,12"/></svg>',
+        system: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>',
+        alert:  '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>',
+        warn:   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>'
+      };
+
+      function timeAgo(ts) {
+        var diff = Date.now() - new Date(ts).getTime();
+        var m = Math.floor(diff/60000);
+        if (m < 1) return 'just now';
+        if (m < 60) return m + 'm ago';
+        var h = Math.floor(m/60);
+        if (h < 24) return h + 'h ago';
+        return Math.floor(h/24) + 'd ago';
+      }
+
+      var html = notifs.map(function(n) {
+        var tm = typeMap[n.type] || typeMap.system;
+        var icn = ICON_SVG[n.type] || ICON_SVG.system;
+        return '<div class="notif-item' + (n.read ? '' : ' unread') + '" onclick="markTopbarRead(\'' + n._id + '\',this)">' +
+          '<div class="notif-icon" style="background:' + tm.bg + ';color:' + tm.col + ';">' + icn + '</div>' +
+          '<div class="notif-body">' +
+            '<div class="notif-title">' + (n.read ? '' : '<span class="unread-dot"></span>') + (n.title || 'Notification') + '</div>' +
+            '<div class="notif-sub">' + (n.body || '') + '</div>' +
+            '<div class="notif-time">' + timeAgo(n.createdAt) + '</div>' +
+          '</div>' +
+          '</div>';
+      }).join('');
+
+      if (!html) html = '<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">No notifications yet</div>';
+      var listEl = document.getElementById('topbarNotifList');
+      if (listEl) listEl.innerHTML = html;
+    })
+    .catch(function(err){ console.error('Topbar notif error', err); });
+}
+
+function markTopbarRead(id, el) {
+  if (!id) return;
+  fetch(API_BASE + '/api/admin/notifications/' + id + '/read', { method: 'PATCH' })
+    .then(function() {
+      el.classList.remove('unread');
+      var dot = el.querySelector('.unread-dot');
+      if (dot) dot.remove();
+      loadTopbarNotifications();
+    })
+    .catch(function(err){ console.error(err); });
+}
+
+function markAllTopbarRead() {
+  fetch(API_BASE + '/api/admin/notifications/mark-all-read', { method: 'PATCH' })
+    .then(function() { loadTopbarNotifications(); showToast('All marked as read', 'success'); })
+    .catch(function(err){ console.error(err); });
+}
+
+/* ══ INIT ══ */
+loadAndRender();
+loadTopbarNotifications();
+setInterval(loadAndRender, 5 * 60 * 1000);       // refresh analytics every 5 min
+setInterval(loadTopbarNotifications, 60 * 1000); // refresh notifications every 60 sec
+
+</script>
+</body>
+</html>

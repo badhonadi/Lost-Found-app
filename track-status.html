@@ -297,7 +297,14 @@
   const dark = document.body.classList.contains('dark');
 
   function goBack() {
-    location.href = 'my-posts.html';
+    const q = new URLSearchParams(location.search);
+    const returnTargets = {
+      home: 'home.html',
+      search: 'search.html',
+      'smart-match': 'smart-match.html',
+      'my-posts': 'my-posts.html'
+    };
+    location.href = returnTargets[q.get('from')] || 'my-posts.html';
   }
 
   const STATUS_CONFIG = {

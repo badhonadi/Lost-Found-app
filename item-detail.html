@@ -376,6 +376,10 @@
 </div>
 
 <script>
+  const urlParams = new URLSearchParams(location.search);
+  if (urlParams.get('id')) {
+    location.replace('viewdetails.html' + location.search);
+  }
   if (localStorage.getItem('findit_dark') === 'true') document.body.classList.add('dark');
   const dark = document.body.classList.contains('dark');
 

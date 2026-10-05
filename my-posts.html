@@ -199,7 +199,7 @@
   <!-- Header -->
   <div class="header">
     <div class="header-row">
-      <button class="back-btn" onclick="location.href='home.html'">
+      <button class="back-btn" id="my-posts-back-btn">
         <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--tc)">
           <path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>
         </svg>
@@ -255,6 +255,14 @@
       <span class="nav-label active">Profile</span>
     </button>
   </nav>
+
+  <script>
+    const myPostsOrigin = new URLSearchParams(window.location.search).get('from');
+    const myPostsBackTarget = myPostsOrigin === 'profile' ? 'profile.html' : 'home.html';
+    document.getElementById('my-posts-back-btn').onclick = () => {
+      window.location.href = myPostsBackTarget;
+    };
+  </script>
 
 </div>
 

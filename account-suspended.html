@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FindIt — Account Suspended</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px; background: #0b1020; color: #f4f6ff; font-family: Inter, Arial, sans-serif; }
+    .card { width: min(460px, 100%); padding: 36px 30px; text-align: center; border: 1px solid rgba(239, 68, 68, .3); border-radius: 20px; background: #151b2c; box-shadow: 0 18px 60px rgba(0,0,0,.35); }
+    .icon { width: 58px; height: 58px; margin: 0 auto 18px; display: grid; place-items: center; border-radius: 50%; background: rgba(239,68,68,.14); color: #f87171; font-size: 28px; }
+    h1 { margin: 0 0 12px; font-size: 24px; }
+    p { margin: 0; color: rgba(244,246,255,.68); line-height: 1.6; }
+    .reason { margin-top: 22px; padding: 14px 16px; text-align: left; border-radius: 12px; background: rgba(239,68,68,.08); color: #fecaca; line-height: 1.5; }
+    .label { display: block; margin-bottom: 5px; color: #f87171; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+    button { margin-top: 24px; padding: 11px 18px; border: 0; border-radius: 10px; background: #526de5; color: #fff; font-weight: 700; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="icon">!</div>
+    <h1>Your account is suspended</h1>
+    <p>Your FindIt account is temporarily unavailable while an admin action is active.</p>
+    <div class="reason"><span class="label">Reason</span><span id="reason">Your account was suspended due to a community guideline violation.</span></div>
+    <button type="button" onclick="logout()">Back to Login</button>
+  </main>
+  <script>
+    const user = JSON.parse(localStorage.getItem('findit_user') || sessionStorage.getItem('findit_user') || 'null');
+    if (user && user.suspensionReason) document.getElementById('reason').textContent = user.suspensionReason;
+    function logout() {
+      localStorage.removeItem('findit_user');
+      sessionStorage.removeItem('findit_user');
+      location.replace('login.html');
+    }
+  </script>
+</body>
+</html>

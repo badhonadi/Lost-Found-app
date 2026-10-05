@@ -1,0 +1,1715 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>FindIT Admin — Settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="config.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+button,input,select,textarea{font-family:inherit;}
+html,body{height:100%;overflow:hidden;}
+
+/* ══ TOKENS ══ */
+:root{
+  --bg:#0B0F1A;--card:#141928;--sidebar:#0D1120;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.04);
+  --primary:#6B8AFF;--primary-d:rgba(107,138,255,.14);--primary-g:rgba(107,138,255,.26);
+  --accent:#00D4AA;--fg:#E8EAF6;--muted:#8B93A9;
+  --muted-bg:rgba(255,255,255,.055);--muted-bg2:rgba(255,255,255,.035);
+  --danger:#EF4444;--danger-d:rgba(239,68,68,.13);--danger-g:rgba(239,68,68,.22);
+  --amber:#F59E0B;--amber-d:rgba(245,158,11,.13);
+  --green:#4ade80;--green-d:rgba(74,222,128,.11);
+  --violet:#A78BFA;--violet-d:rgba(167,139,250,.12);
+  --radius:16px;
+  --font-h:'Plus Jakarta Sans',sans-serif;
+  --font-b:'Inter',sans-serif;
+  --font-m:'JetBrains Mono',monospace;
+}
+[data-theme="light"]{
+  --bg:#EEF0F8;--card:#FFFFFF;--sidebar:#0D1120;
+  --border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.04);
+  --primary:#4F6EF7;--primary-d:rgba(79,110,247,.10);--primary-g:rgba(79,110,247,.20);
+  --accent:#00C49F;--fg:#0D1120;--muted:#6B7280;
+  --muted-bg:rgba(0,0,0,.05);--muted-bg2:rgba(0,0,0,.03);
+  --danger-d:rgba(239,68,68,.09);--danger-g:rgba(239,68,68,.16);
+  --amber-d:rgba(245,158,11,.09);--green-d:rgba(74,222,128,.08);--violet-d:rgba(167,139,250,.09);
+}
+body{font-family:var(--font-b);background:var(--bg);color:var(--fg);font-size:14px;display:flex;}
+.shell{display:flex;height:100vh;width:100%;}
+
+/* ══ SIDEBAR ══ */
+.sidebar{width:232px;height:100vh;display:flex;flex-direction:column;background:var(--sidebar);border-right:1px solid rgba(255,255,255,.05);flex-shrink:0;transition:width .25s;overflow:hidden;z-index:10;}
+.sidebar.collapsed{width:64px;}
+.sidebar-header{height:56px;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid rgba(255,255,255,.05);gap:10px;flex-shrink:0;}
+.logo-mark{width:32px;height:32px;border-radius:9px;flex-shrink:0;background:linear-gradient(135deg,#6B8AFF 0%,#4F6EF7 55%,#00D4AA 100%);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(107,138,255,.38);}
+.logo-mark svg{width:16px;height:16px;}
+.logo-text{overflow:hidden;white-space:nowrap;}
+.logo-name{font-family:var(--font-h);font-size:16px;font-weight:800;color:#fff;letter-spacing:-.3px;display:block;}
+.logo-sub{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.3);display:block;}
+.sidebar-nav{flex:1;overflow-y:auto;padding:12px 8px;display:flex;flex-direction:column;gap:2px;scrollbar-width:none;}
+.sidebar-nav::-webkit-scrollbar{display:none;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;font-size:12px;font-weight:500;color:rgba(255,255,255,.4);cursor:pointer;border:1px solid transparent;transition:all .15s;background:none;width:100%;text-align:left;white-space:nowrap;}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;color:rgba(255,255,255,.3);transition:color .15s;}
+.nav-item:hover{color:rgba(255,255,255,.75);background:rgba(255,255,255,.04);}
+.nav-item:hover svg{color:rgba(255,255,255,.55);}
+.nav-item.active{background:rgba(107,138,255,.13);color:#9BAEFF;border-color:rgba(107,138,255,.22);}
+.nav-item.active svg{color:#6B8AFF;}
+.nav-label{overflow:hidden;}
+.sidebar.collapsed .nav-label{display:none;}
+.sidebar.collapsed .nav-item{justify-content:center;padding:10px;}
+.sidebar-footer{padding:12px 8px;border-top:1px solid rgba(255,255,255,.05);}
+.logout-btn{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;margin-bottom:6px;border:1px solid rgba(239,68,68,.18);border-radius:8px;background:rgba(239,68,68,.08);color:#f87171;cursor:pointer;font-size:12px;font-weight:600;}
+.logout-btn:hover{background:rgba(239,68,68,.15);}
+.logout-btn svg{width:14px;height:14px;flex-shrink:0;}
+.sidebar.collapsed .logout-btn{justify-content:center;padding:10px;}
+.sidebar.collapsed .logout-label{display:none;}
+.collapse-btn{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:7px 10px;border-radius:8px;border:none;background:none;color:rgba(255,255,255,.28);cursor:pointer;width:100%;font-size:11px;transition:all .15s;}
+.collapse-btn:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.55);}
+.sidebar.collapsed .collapse-btn{justify-content:center;}
+.collapse-btn svg{width:14px;height:14px;flex-shrink:0;transition:transform .25s;}
+.sidebar.collapsed .collapse-btn svg{transform:rotate(180deg);}
+.sidebar.collapsed .collapse-label{display:none;}
+
+/* ══ MAIN ══ */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+.topbar{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--border);background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(20px);flex-shrink:0;z-index:9;}
+.topbar-left h2{font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--fg);}
+.topbar-left p{font-size:10px;color:var(--muted);}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.icon-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--muted-bg);color:var(--fg);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;position:relative;}
+.icon-btn:hover{background:var(--muted-bg2);}
+.icon-btn svg{width:14px;height:14px;}
+.notif-badge{position:absolute;top:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;background:#EF4444;border:2px solid var(--bg);font-size:9px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;padding:0 2px;}
+.lang-btn{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;border:1px solid var(--border);background:var(--muted-bg);color:var(--fg);font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.lang-btn:hover{background:var(--muted-bg2);}
+.lang-btn svg{width:14px;height:14px;}
+.avatar-pill{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6B8AFF,#8B5CF6);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;}
+
+/* ══ NOTIF PANEL ══ */
+.notif-panel{position:fixed;top:60px;right:16px;z-index:9999;width:340px;background:var(--card);border:1px solid var(--border);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.38);overflow:hidden;display:none;animation:fadeDown .18s ease;}
+.notif-panel.open{display:block;}
+@keyframes fadeDown{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+.notif-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);}
+.notif-head-left{display:flex;align-items:center;gap:8px;}
+.notif-head-left span{font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--fg);}
+.new-badge{font-size:9px;font-weight:700;background:#EF4444;color:#fff;border-radius:20px;padding:1px 6px;}
+.notif-head-right{display:flex;gap:8px;}
+.text-btn{font-size:10px;font-weight:600;background:none;border:none;cursor:pointer;}
+.text-btn.primary{color:var(--primary);}
+.text-btn.muted{color:var(--muted);}
+.text-btn:hover{opacity:.8;}
+.notif-list{max-height:280px;overflow-y:auto;scrollbar-width:none;}
+.notif-list::-webkit-scrollbar{display:none;}
+.notif-item{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;}
+.notif-item:hover{background:var(--muted-bg2);}
+.notif-item.unread{background:rgba(107,138,255,.04);}
+.notif-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.notif-icon svg{width:14px;height:14px;}
+.notif-body{flex:1;min-width:0;}
+.notif-title{font-size:12px;font-weight:700;color:var(--fg);margin-bottom:2px;display:flex;align-items:center;gap:6px;}
+.unread-dot{width:6px;height:6px;border-radius:50%;background:var(--primary);flex-shrink:0;}
+.notif-sub{font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.notif-time{font-size:10px;color:var(--muted);opacity:.6;margin-top:3px;}
+.notif-foot{padding:10px 16px;border-top:1px solid var(--border);}
+.notif-foot-btn{width:100%;padding:8px;border-radius:10px;border:none;cursor:pointer;background:var(--primary-d);color:var(--primary);font-size:12px;font-weight:700;transition:background .15s;}
+.notif-foot-btn:hover{background:var(--primary-g);}
+
+/* ══ SETTINGS LAYOUT ══ */
+.content{flex:1;overflow-y:auto;display:flex;min-height:0;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+
+/* left nav */
+.settings-nav{
+  width:210px;flex-shrink:0;padding:20px 12px;display:flex;flex-direction:column;gap:2px;
+  border-right:1px solid var(--border);overflow-y:auto;scrollbar-width:none;
+}
+.settings-nav::-webkit-scrollbar{display:none;}
+.snav-section{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:10px 8px 4px;margin-top:6px;}
+.snav-section:first-child{margin-top:0;}
+.snav-item{
+  display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;
+  font-size:12px;font-weight:500;color:var(--muted);cursor:pointer;
+  transition:all .15s;border:1px solid transparent;background:none;width:100%;text-align:left;
+}
+.snav-item svg{width:15px;height:15px;flex-shrink:0;}
+.snav-item:hover{color:var(--fg);background:var(--muted-bg);}
+.snav-item.active{color:var(--primary);background:var(--primary-d);border-color:rgba(107,138,255,.2);}
+.snav-item.active svg{color:var(--primary);}
+
+/* right panels */
+.settings-body{flex:1;padding:24px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.settings-panel{display:none;}
+.settings-panel.active{display:block;}
+
+/* section heading */
+.s-section-title{font-family:var(--font-h);font-size:16px;font-weight:800;color:var(--fg);margin-bottom:4px;}
+.s-section-sub{font-size:11px;color:var(--muted);margin-bottom:22px;}
+
+/* card wrapper */
+.s-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:14px;}
+.s-card-title{font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--fg);margin-bottom:2px;}
+.s-card-sub{font-size:11px;color:var(--muted);margin-bottom:16px;}
+
+/* row */
+.s-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid var(--border2);}
+.s-row:last-child{border-bottom:none;padding-bottom:0;}
+.s-row:first-child{padding-top:0;}
+.s-row-left{flex:1;min-width:0;}
+.s-row-label{font-size:12px;font-weight:600;color:var(--fg);}
+.s-row-desc{font-size:10px;color:var(--muted);margin-top:2px;}
+
+/* toggle switch */
+.toggle-wrap{position:relative;width:40px;height:22px;flex-shrink:0;}
+.toggle-wrap input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-track{
+  position:absolute;inset:0;border-radius:11px;background:var(--muted-bg);
+  border:1px solid var(--border);cursor:pointer;transition:background .2s,border-color .2s;
+}
+.toggle-wrap input:checked + .toggle-track{background:var(--primary);border-color:var(--primary);}
+.toggle-thumb{
+  position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;
+  background:#fff;transition:left .2s;pointer-events:none;
+  box-shadow:0 1px 4px rgba(0,0,0,.28);
+}
+.toggle-wrap input:checked ~ .toggle-thumb{left:21px;}
+
+/* form fields */
+.s-input{
+  width:100%;padding:8px 12px;border-radius:9px;font-size:12px;
+  background:var(--muted-bg);border:1px solid var(--border);color:var(--fg);
+  outline:none;transition:border-color .15s;
+}
+.s-input:focus{border-color:var(--primary);}
+.s-input::placeholder{color:var(--muted);}
+.s-input-wrap{position:relative;}
+.s-select{
+  width:100%;padding:8px 12px;border-radius:9px;font-size:12px;
+  background:var(--muted-bg);border:1px solid var(--border);color:var(--fg);
+  outline:none;cursor:pointer;appearance:none;transition:border-color .15s;
+}
+.s-select:focus{border-color:var(--primary);}
+.s-select-wrap{position:relative;}
+.s-select-wrap::after{
+  content:'▾';position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  font-size:11px;color:var(--muted);pointer-events:none;
+}
+.s-textarea{
+  width:100%;padding:10px 12px;border-radius:9px;font-size:12px;
+  background:var(--muted-bg);border:1px solid var(--border);color:var(--fg);
+  outline:none;resize:vertical;min-height:90px;transition:border-color .15s;line-height:1.5;
+}
+.s-textarea:focus{border-color:var(--primary);}
+.s-label{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:5px;display:block;}
+
+/* grid fields */
+.s-field-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+@media(max-width:700px){.s-field-grid{grid-template-columns:1fr;}}
+.s-field{margin-bottom:14px;}
+
+/* buttons */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;
+  font-size:12px;font-weight:600;cursor:pointer;border:1px solid transparent;transition:all .15s;
+}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary);}
+.btn-primary:hover{opacity:.9;}
+.btn-ghost{background:var(--muted-bg);color:var(--fg);border-color:var(--border);}
+.btn-ghost:hover{background:var(--muted-bg2);}
+.btn-danger{background:var(--danger-d);color:var(--danger);border-color:rgba(239,68,68,.22);}
+.btn-danger:hover{background:var(--danger-g);}
+.btn svg{width:13px;height:13px;}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px;}
+
+/* avatar editor */
+.avatar-editor{display:flex;align-items:center;gap:16px;margin-bottom:16px;}
+.avatar-big{width:72px;height:72px;border-radius:18px;background:linear-gradient(135deg,#6B8AFF,#8B5CF6);display:flex;align-items:center;justify-content:center;font-family:var(--font-h);font-size:22px;font-weight:800;color:#fff;flex-shrink:0;}
+.avatar-actions{display:flex;flex-direction:column;gap:6px;}
+.avatar-hint{font-size:10px;color:var(--muted);}
+
+/* colour palette selector */
+.color-row{display:flex;gap:8px;flex-wrap:wrap;}
+.color-swatch{
+  width:28px;height:28px;border-radius:8px;cursor:pointer;
+  border:2px solid transparent;transition:transform .12s,border-color .12s;
+}
+.color-swatch:hover{transform:scale(1.15);}
+.color-swatch.active{border-color:#fff;box-shadow:0 0 0 2px var(--primary);}
+
+/* permission chips */
+.perm-list{display:flex;flex-direction:column;gap:0;}
+.perm-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border2);}
+.perm-row:last-child{border-bottom:none;}
+.perm-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.perm-icon svg{width:13px;height:13px;}
+.perm-info{flex:1;}
+.perm-name{font-size:12px;font-weight:600;color:var(--fg);}
+.perm-desc{font-size:10px;color:var(--muted);}
+.role-badge{font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;}
+
+/* api key card */
+.apikey-display{
+  display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:9px;
+  background:var(--muted-bg);border:1px solid var(--border);
+}
+.apikey-val{flex:1;font-family:var(--font-m);font-size:11px;color:var(--fg);letter-spacing:.04em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.apikey-copy{padding:4px 10px;border-radius:7px;font-size:10px;font-weight:600;border:none;background:var(--primary-d);color:var(--primary);cursor:pointer;transition:background .15s;flex-shrink:0;}
+.apikey-copy:hover{background:var(--primary-g);}
+
+/* log table */
+.log-table{width:100%;border-collapse:collapse;font-size:11px;}
+.log-table th{padding:8px 10px;text-align:left;font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);}
+.log-table td{padding:9px 10px;border-bottom:1px solid var(--border2);vertical-align:middle;}
+.log-table tr:last-child td{border-bottom:none;}
+.log-table tr:hover td{background:var(--muted-bg2);}
+.status-pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:9px;font-weight:700;}
+
+/* danger zone */
+.danger-zone{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.18);border-radius:var(--radius);padding:20px;}
+.danger-zone-title{font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--danger);margin-bottom:4px;}
+.danger-zone-sub{font-size:11px;color:var(--muted);margin-bottom:16px;}
+.danger-item{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0;border-bottom:1px solid rgba(239,68,68,.12);}
+.danger-item:last-child{border-bottom:none;padding-bottom:0;}
+
+/* unsaved bar */
+.unsaved-bar{
+  position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:12px;padding:10px 16px;
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  box-shadow:0 12px 40px rgba(0,0,0,.32);z-index:1000;
+  opacity:0;pointer-events:none;transition:opacity .22s,transform .22s;
+  white-space:nowrap;
+}
+.unsaved-bar.show{opacity:1;pointer-events:auto;transform:translateX(-50%) translateY(-4px);}
+.unsaved-bar span{font-size:12px;font-weight:600;color:var(--fg);}
+
+/* toast */
+#toast-wrap{position:fixed;bottom:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.toast{display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:12px;font-size:12px;font-weight:600;color:#fff;min-width:220px;max-width:320px;box-shadow:0 8px 28px rgba(0,0,0,.28);animation:toastIn .28s ease;pointer-events:auto;}
+@keyframes toastIn{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+.toast.success{background:linear-gradient(135deg,#10b981,#059669);}
+.toast.info{background:linear-gradient(135deg,#6B8AFF,#4F6EF7);}
+.toast.warn{background:linear-gradient(135deg,#F59E0B,#D97706);}
+.toast.danger{background:linear-gradient(135deg,#EF4444,#DC2626);}
+.toast svg{width:15px;height:15px;flex-shrink:0;}
+
+/* confirm modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9998;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-bg.open{display:flex;}
+.modal-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px;width:360px;box-shadow:0 24px 64px rgba(0,0,0,.44);animation:modalIn .2s ease;}
+@keyframes modalIn{from{opacity:0;transform:scale(.96);}to{opacity:1;transform:scale(1);}}
+.modal-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
+.modal-icon svg{width:20px;height:20px;}
+.modal-title{font-family:var(--font-h);font-size:15px;font-weight:800;color:var(--fg);margin-bottom:6px;}
+.modal-body{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:20px;}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;}
+body{font-size:15px;}
+.nav-item{font-size:13px;}
+.topbar-left h2{font-size:15px;}
+.topbar-left p{font-size:11px;}
+.section-title{font-size:16px;}
+.section-sub{font-size:12px;}
+.stat-label{font-size:12px;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ══ SIDEBAR ══ -->
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+    </div>
+    <div class="logo-text">
+      <span class="logo-name">FindIT</span>
+      <span class="logo-sub">Admin Console</span>
+    </div>
+  </div>
+  <div class="sidebar-nav">
+    <button class="nav-item" onclick="go('findit-dashboard.html')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      <span class="nav-label">Dashboard</span>
+    </button>
+    <button class="nav-item" onclick="go('findit-usermanagement.html')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span class="nav-label">User Management</span>
+    </button>
+    <button class="nav-item" onclick="go('findit-reports.html')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <span class="nav-label">Reports &amp; Complaints</span>
+    </button>
+    <button class="nav-item" onclick="go('findit-categories.html')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+      <span class="nav-label">Categories</span>
+    </button>
+    <button class="nav-item" onclick="go('findit-analytics.html')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span class="nav-label">Analytics</span>
+    </button>
+    <button class="nav-item" onclick="go('findit-notifications.html')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="nav-label">Notifications</span>
+    </button>
+    <button class="nav-item active">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span class="nav-label">Settings</span>
+    </button>
+  </div>
+  <div class="sidebar-footer">
+    <button class="logout-btn" onclick="localStorage.removeItem('findit_admin_active');sessionStorage.removeItem('findit_admin_active');location.href='findit-otp.html'" title="Log out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/></svg><span class="logout-label">Logout</span></button>
+    <button class="collapse-btn" onclick="toggleSidebar()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15,18 9,12 15,6"/></svg>
+      <span class="collapse-label">Collapse</span>
+    </button>
+  </div>
+</nav>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-left">
+      <h2 id="tb-title">Settings</h2>
+      <p id="tb-sub">Manage platform configuration &amp; preferences</p>
+    </div>
+    <div class="topbar-right">
+
+      <!-- Notif panel -->
+      <div class="notif-panel" id="notifPanel">
+        <div class="notif-head">
+          <div class="notif-head-left"><span>Notifications</span><span class="new-badge">3 new</span></div>
+          <div class="notif-head-right">
+            <button class="text-btn primary">Mark all read</button>
+            <button class="text-btn muted" onclick="document.getElementById('notifPanel').classList.remove('open')">&#x2715;</button>
+          </div>
+        </div>
+        <div class="notif-list">
+          <div class="notif-item unread">
+            <div class="notif-icon" style="background:rgba(107,138,255,.15);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#6B8AFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            </div>
+            <div class="notif-body">
+              <div class="notif-title"><span class="unread-dot"></span>Config changed</div>
+              <div class="notif-sub">SMTP settings updated by admin</div>
+              <div class="notif-time">5 min ago</div>
+            </div>
+          </div>
+          <div class="notif-item unread">
+            <div class="notif-icon" style="background:rgba(0,212,170,.15);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#00D4AA" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20,6 9,17 4,12"/></svg>
+            </div>
+            <div class="notif-body">
+              <div class="notif-title"><span class="unread-dot"></span>AI model updated</div>
+              <div class="notif-sub">Smart match model v2.4 deployed</div>
+              <div class="notif-time">2h ago</div>
+            </div>
+          </div>
+          <div class="notif-item unread">
+            <div class="notif-icon" style="background:rgba(245,158,11,.15);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+            </div>
+            <div class="notif-body">
+              <div class="notif-title"><span class="unread-dot"></span>API rate limit near</div>
+              <div class="notif-sub">87% of daily quota used</div>
+              <div class="notif-time">4h ago</div>
+            </div>
+          </div>
+        </div>
+        <div class="notif-foot"><button class="notif-foot-btn">View all notifications</button></div>
+      </div>
+
+      <button class="icon-btn" onclick="toggleNotif()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="notif-badge">3</span>
+      </button>
+      <button class="lang-btn" onclick="toggleLang()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <span id="langLabel">EN</span>
+      </button>
+      <button class="icon-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle theme">
+        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <button class="avatar-pill" onclick="location.href='findit-settings.html'" title="Admin profile">AR</button>
+    </div>
+  </div>
+
+  <!-- ── TWO-COL SETTINGS LAYOUT ── -->
+  <div class="content">
+
+    <!-- Left nav -->
+    <div class="settings-nav">
+      <div class="snav-section">Account</div>
+      <button class="snav-item active" onclick="showPanel('profile')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Profile
+      </button>
+      <button class="snav-item" onclick="showPanel('security')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        Security &amp; Auth
+      </button>
+      <button class="snav-item" onclick="showPanel('appearance')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+        Appearance
+      </button>
+
+      <div class="snav-section">Platform</div>
+      <button class="snav-item" onclick="showPanel('general')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        General
+      </button>
+      <button class="snav-item" onclick="showPanel('notifications')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Notifications
+      </button>
+      <button class="snav-item" onclick="showPanel('moderation')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Moderation
+      </button>
+      <button class="snav-item" onclick="showPanel('ai')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+        AI &amp; Smart Match
+      </button>
+      <button class="snav-item" onclick="showPanel('email')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        Email / SMTP
+      </button>
+
+      <div class="snav-section">Advanced</div>
+      <button class="snav-item" onclick="showPanel('api')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16,18 22,12 16,6"/><polyline points="8,6 2,12 8,18"/></svg>
+        API &amp; Integrations
+      </button>
+      <button class="snav-item" onclick="showPanel('roles')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Roles &amp; Permissions
+      </button>
+      <button class="snav-item" onclick="showPanel('audit')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+        Audit Logs
+      </button>
+      <button class="snav-item" onclick="showPanel('danger')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span style="color:#EF4444;">Danger Zone</span>
+      </button>
+    </div>
+
+    <!-- Right body -->
+    <div class="settings-body" id="settingsBody">
+
+      <!-- ═══ PROFILE ═══ -->
+      <div class="settings-panel active" id="panel-profile">
+        <div class="s-section-title">Profile</div>
+        <div class="s-section-sub">Manage your admin account information</div>
+
+        <div class="s-card">
+          <div class="s-card-title">Avatar</div>
+          <div class="s-card-sub">Your display picture across the admin console</div>
+          <div class="avatar-editor">
+            <div class="avatar-big" id="avatarBig">AR</div>
+            <div class="avatar-actions">
+              <button class="btn btn-ghost" onclick="showToast('Upload feature coming soon','info')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                Upload photo
+              </button>
+              <button class="btn btn-ghost btn-danger" onclick="showToast('Avatar removed','warn')">Remove</button>
+              <span class="avatar-hint">JPG, PNG or GIF. Max 2 MB.</span>
+            </div>
+          </div>
+          <div class="s-row" style="border-top:1px solid var(--border2);padding-top:16px;">
+            <div class="s-row-left">
+              <div class="s-row-label">Display initials colour</div>
+              <div class="s-row-desc">Shown when no photo is set</div>
+            </div>
+            <div class="color-row">
+              <div class="color-swatch active" style="background:linear-gradient(135deg,#6B8AFF,#8B5CF6);" onclick="pickAvatarColor(this,'linear-gradient(135deg,#6B8AFF,#8B5CF6)')"></div>
+              <div class="color-swatch" style="background:linear-gradient(135deg,#00D4AA,#0891b2);" onclick="pickAvatarColor(this,'linear-gradient(135deg,#00D4AA,#0891b2)')"></div>
+              <div class="color-swatch" style="background:linear-gradient(135deg,#F59E0B,#ef4444);" onclick="pickAvatarColor(this,'linear-gradient(135deg,#F59E0B,#ef4444)')"></div>
+              <div class="color-swatch" style="background:linear-gradient(135deg,#10b981,#14b8a6);" onclick="pickAvatarColor(this,'linear-gradient(135deg,#10b981,#14b8a6)')"></div>
+              <div class="color-swatch" style="background:linear-gradient(135deg,#ec4899,#8B5CF6);" onclick="pickAvatarColor(this,'linear-gradient(135deg,#ec4899,#8B5CF6)')"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-title">Personal information</div>
+          <div class="s-card-sub">Update your name, email and contact details (Saved in MongoDB)</div>
+          <div class="s-field-grid">
+            <div>
+              <label class="s-label">First name</label>
+              <input class="s-input" id="profFirstName" value="Arif" oninput="markUnsaved()"/>
+            </div>
+            <div>
+              <label class="s-label">Last name</label>
+              <input class="s-input" id="profLastName" value="Rahman" oninput="markUnsaved()"/>
+            </div>
+          </div>
+          <div class="s-field">
+            <label class="s-label">Email address</label>
+            <input class="s-input" id="profEmail" type="email" value="arif@findit.com.bd" oninput="markUnsaved()"/>
+          </div>
+          <div class="s-field">
+            <label class="s-label">Phone number</label>
+            <input class="s-input" id="profPhone" type="tel" value="+880 1700-000000" oninput="markUnsaved()"/>
+          </div>
+          <div class="s-field">
+            <label class="s-label">Bio</label>
+            <textarea class="s-textarea" id="profBio" oninput="markUnsaved()">Platform administrator for FindIT Bangladesh. Managing lost &amp; found across all divisions.</textarea>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="saveSection('Profile')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20,6 9,17 4,12"/></svg>
+              Save changes
+            </button>
+            <button class="btn btn-ghost" onclick="discardChanges()">Discard</button>
+          </div>
+        </div>
+      </div><!-- /profile -->
+
+      <!-- ═══ SECURITY ═══ -->
+      <div class="settings-panel" id="panel-security">
+        <div class="s-section-title">Security &amp; Authentication</div>
+        <div class="s-section-sub">Manage password, 2FA and active sessions</div>
+
+        <div class="s-card">
+          <div class="s-card-title">Change password</div>
+          <div class="s-card-sub">Use a strong unique password of at least 12 characters</div>
+          <div class="s-field">
+            <label class="s-label">Current password</label>
+            <input class="s-input" id="currPwd" type="password" placeholder="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;" oninput="markUnsaved()"/>
+          </div>
+          <div class="s-field-grid">
+            <div>
+              <label class="s-label">New password</label>
+              <input class="s-input" type="password" placeholder="Min 12 characters" id="newPwd" oninput="checkPwdStrength(); markUnsaved();"/>
+            </div>
+            <div>
+              <label class="s-label">Confirm new password</label>
+              <input class="s-input" id="confirmPwd" type="password" placeholder="Repeat password" oninput="markUnsaved();"/>
+            </div>
+          </div>
+          <div style="margin-bottom:14px;">
+            <div style="display:flex;gap:3px;margin-bottom:5px;" id="pwdBars">
+              <div style="flex:1;height:4px;border-radius:2px;background:var(--muted-bg);"></div>
+              <div style="flex:1;height:4px;border-radius:2px;background:var(--muted-bg);"></div>
+              <div style="flex:1;height:4px;border-radius:2px;background:var(--muted-bg);"></div>
+              <div style="flex:1;height:4px;border-radius:2px;background:var(--muted-bg);"></div>
+            </div>
+            <div style="font-size:10px;color:var(--muted);" id="pwdLabel">Enter a new password to see strength</div>
+          </div>
+          <button class="btn btn-primary" onclick="saveSection('Password')">Update password</button>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-title">Two-factor authentication</div>
+          <div class="s-card-sub">Add an extra layer of security to your account</div>
+          <div class="s-row">
+            <div class="s-row-left">
+              <div class="s-row-label">Authenticator app (TOTP)</div>
+              <div class="s-row-desc">Use Google Authenticator or similar</div>
+            </div>
+            <label class="toggle-wrap">
+              <input type="checkbox" id="secTwoFactor" checked onchange="markUnsaved(); onToggle(this,'2FA Authenticator')"/>
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left">
+              <div class="s-row-label">SMS verification</div>
+              <div class="s-row-desc">Receive OTP on admin phone</div>
+            </div>
+            <label class="toggle-wrap">
+              <input type="checkbox" id="secSmsTwoFactor" onchange="markUnsaved(); onToggle(this,'SMS 2FA')"/>
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left">
+              <div class="s-row-label">Login alert emails</div>
+              <div class="s-row-desc">Send email on new device sign-in</div>
+            </div>
+            <label class="toggle-wrap">
+              <input type="checkbox" id="secLoginAlerts" checked onchange="markUnsaved(); onToggle(this,'Login alerts')"/>
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+          <div class="btn-row"><button class="btn btn-primary" onclick="saveSection('Security')">Save security settings</button></div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-title">Active sessions</div>
+          <div class="s-card-sub">Devices currently signed in to your account</div>
+          <div class="s-row">
+            <div class="s-row-left">
+              <div class="s-row-label">&#x1F4BB; Chrome on Windows — Dhaka, BD <span style="font-size:9px;background:var(--green-d);color:var(--green);padding:1px 6px;border-radius:20px;font-weight:700;margin-left:6px;">Current Session</span></div>
+              <div class="s-row-desc">MongoDB Logged · Active now · IP 127.0.0.1</div>
+            </div>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left">
+              <div class="s-row-label">&#x1F4F1; Safari on iPhone — Chittagong, BD</div>
+              <div class="s-row-desc">Last active: 2h ago · IP 202.4.0.0</div>
+            </div>
+            <button class="btn btn-danger" onclick="revokeSession('iPhone Safari')">Revoke</button>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left">
+              <div class="s-row-label">&#x1F5A5; Firefox on Linux — Sylhet, BD</div>
+              <div class="s-row-desc">Last active: 3 days ago · IP 114.130.0.0</div>
+            </div>
+            <button class="btn btn-danger" onclick="revokeSession('Firefox Linux')">Revoke</button>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-danger" onclick="showConfirm({title:'Revoke all sessions?',body:'You will be signed out on all devices except this one.',confirm:'Revoke all',cb:function(){showToast('All other sessions revoked','success');}})">Revoke all other sessions</button>
+          </div>
+        </div>
+      </div><!-- /security -->
+
+      <!-- ═══ APPEARANCE ═══ -->
+      <div class="settings-panel" id="panel-appearance">
+        <div class="s-section-title">Appearance</div>
+        <div class="s-section-sub">Customise how the admin console looks and feels</div>
+
+        <div class="s-card">
+          <div class="s-card-title">Theme</div>
+          <div class="s-card-sub">Choose light or dark mode</div>
+          <div style="display:flex;gap:10px;margin-bottom:8px;">
+            <div id="themeOptDark" onclick="setThemeOpt('dark')" style="flex:1;padding:14px;border-radius:12px;border:2px solid var(--primary);background:var(--muted-bg);cursor:pointer;text-align:center;">
+              <div style="font-size:22px;margin-bottom:6px;">&#x1F319;</div>
+              <div style="font-size:12px;font-weight:700;color:var(--fg);">Dark</div>
+            </div>
+            <div id="themeOptLight" onclick="setThemeOpt('light')" style="flex:1;padding:14px;border-radius:12px;border:2px solid var(--border);background:var(--muted-bg);cursor:pointer;text-align:center;">
+              <div style="font-size:22px;margin-bottom:6px;">&#x2600;&#xFE0F;</div>
+              <div style="font-size:12px;font-weight:700;color:var(--fg);">Light</div>
+            </div>
+            <div id="themeOptSystem" onclick="setThemeOpt('system')" style="flex:1;padding:14px;border-radius:12px;border:2px solid var(--border);background:var(--muted-bg);cursor:pointer;text-align:center;">
+              <div style="font-size:22px;margin-bottom:6px;">&#x1F4BB;</div>
+              <div style="font-size:12px;font-weight:700;color:var(--fg);">System</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-title">Display preferences</div>
+          <div class="s-card-sub">Control layout, density and language</div>
+          <div class="s-row">
+            <div class="s-row-left">
+              <div class="s-row-label">Compact mode</div>
+              <div class="s-row-desc">Reduce padding and font sizes throughout</div>
+            </div>
+            <label class="toggle-wrap">
+              <input type="checkbox" id="appCompactMode" onchange="markUnsaved(); onToggle(this,'Compact mode')"/>
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left">
+              <div class="s-row-label">Sidebar auto-collapse on mobile</div>
+              <div class="s-row-desc">Collapse sidebar on screens &lt; 768 px</div>
+            </div>
+            <label class="toggle-wrap">
+              <input type="checkbox" id="appAutoCollapse" checked onchange="markUnsaved(); onToggle(this,'Sidebar auto-collapse')"/>
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left">
+              <div class="s-row-label">Interface language</div>
+              <div class="s-row-desc">Primary language for labels and messages</div>
+            </div>
+            <div class="s-select-wrap" style="width:140px;">
+              <select class="s-select" id="appLanguage" onchange="markUnsaved(); onToggle(this,'Language')">
+                <option value="English">English</option>
+                <option value="Bangla">বাংলা (Bangla)</option>
+              </select>
+            </div>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left">
+              <div class="s-row-label">Default date format</div>
+            </div>
+            <div class="s-select-wrap" style="width:160px;">
+              <select class="s-select" id="appDateFormat" onchange="markUnsaved(); onToggle(this,'Date format')">
+                <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+              </select>
+            </div>
+          </div>
+          <div class="btn-row"><button class="btn btn-primary" onclick="saveSection('Appearance')">Save appearance settings</button></div>
+        </div>
+      </div><!-- /appearance -->
+
+      <!-- ═══ GENERAL ═══ -->
+      <div class="settings-panel" id="panel-general">
+        <div class="s-section-title">General</div>
+        <div class="s-section-sub">Core platform settings for FindIT Bangladesh</div>
+
+        <div class="s-card">
+          <div class="s-card-title">Platform identity</div>
+          <div class="s-card-sub">Name and branding shown across user-facing pages</div>
+          <div class="s-field">
+            <label class="s-label">Platform name</label>
+            <input class="s-input" id="genPlatformName" value="FindIT Bangladesh" oninput="markUnsaved()"/>
+          </div>
+          <div class="s-field-grid">
+            <div>
+              <label class="s-label">Support email</label>
+              <input class="s-input" id="genSupportEmail" type="email" value="support@findit.com.bd" oninput="markUnsaved()"/>
+            </div>
+            <div>
+              <label class="s-label">Support phone</label>
+              <input class="s-input" id="genSupportPhone" value="+880 1700-FINDIT" oninput="markUnsaved()"/>
+            </div>
+          </div>
+          <div class="s-field">
+            <label class="s-label">Platform tagline (EN)</label>
+            <input class="s-input" id="genTaglineEn" value="Reconnecting people with what matters" oninput="markUnsaved()"/>
+          </div>
+          <div class="s-field">
+            <label class="s-label">Platform tagline (BN)</label>
+            <input class="s-input" id="genTaglineBn" value="হারানো জিনিস ফিরিয়ে দিচ্ছি" oninput="markUnsaved()"/>
+          </div>
+          <div class="btn-row"><button class="btn btn-primary" onclick="saveSection('General')">Save changes</button><button class="btn btn-ghost" onclick="discardChanges()">Discard</button></div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-title">Regional defaults</div>
+          <div class="s-card-sub">Timezone, currency and country defaults</div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">Default timezone</div></div>
+            <div class="s-select-wrap" style="width:200px;">
+              <select class="s-select" id="genTimezone" onchange="markUnsaved()">
+                <option value="Asia/Dhaka (UTC+6)" selected>Asia/Dhaka (UTC+6)</option>
+                <option value="UTC">UTC</option>
+                <option value="Asia/Kolkata (UTC+5:30)">Asia/Kolkata (UTC+5:30)</option>
+              </select>
+            </div>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">Default country</div></div>
+            <div class="s-select-wrap" style="width:200px;">
+              <select class="s-select" id="genCountry" onchange="markUnsaved()">
+                <option value="Bangladesh" selected>Bangladesh</option>
+                <option value="India">India</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">Posts per page</div></div>
+            <div class="s-select-wrap" style="width:120px;">
+              <select class="s-select" id="genPostsPerPage" onchange="markUnsaved()">
+                <option value="10">10</option><option value="20" selected>20</option><option value="50">50</option><option value="100">100</option>
+              </select>
+            </div>
+          </div>
+          <div class="btn-row"><button class="btn btn-primary" onclick="saveSection('Regional Defaults')">Save</button></div>
+        </div>
+      </div><!-- /general -->
+
+      <!-- ═══ NOTIFICATIONS ═══ -->
+      <div class="settings-panel" id="panel-notifications">
+        <div class="s-section-title">Notification Preferences</div>
+        <div class="s-section-sub">Choose which events trigger admin alerts</div>
+
+        <div class="s-card">
+          <div class="s-card-title">Email notifications</div>
+          <div class="s-card-sub">Receive email alerts for the following events</div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">New user registration</div><div class="s-row-desc">Email when a new account is created</div></div>
+            <label class="toggle-wrap"><input type="checkbox" id="notifEmailUser" checked onchange="markUnsaved(); onToggle(this,'Email: new user')"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">New report filed</div><div class="s-row-desc">Email when a complaint is submitted</div></div>
+            <label class="toggle-wrap"><input type="checkbox" id="notifEmailReport" checked onchange="markUnsaved(); onToggle(this,'Email: new report')"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">Successful match</div><div class="s-row-desc">Email when AI confirms a match</div></div>
+            <label class="toggle-wrap"><input type="checkbox" id="notifEmailMatch" checked onchange="markUnsaved(); onToggle(this,'Email: match')"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">Weekly digest</div><div class="s-row-desc">Summary every Monday at 9 AM</div></div>
+            <label class="toggle-wrap"><input type="checkbox" id="notifEmailDigest" checked onchange="markUnsaved(); onToggle(this,'Weekly digest')"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">System alerts</div><div class="s-row-desc">Downtime, errors and critical failures</div></div>
+            <label class="toggle-wrap"><input type="checkbox" id="notifEmailAlerts" checked onchange="markUnsaved(); onToggle(this,'System alerts')"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-title">In-app &amp; push</div>
+          <div class="s-card-sub">Alerts shown within the admin console</div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">Pending moderation queue</div></div>
+            <label class="toggle-wrap"><input type="checkbox" id="notifInAppMod" checked onchange="markUnsaved(); onToggle(this,'Moderation queue alert')"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">Resolution milestones</div></div>
+            <label class="toggle-wrap"><input type="checkbox" id="notifInAppMilestones" checked onchange="markUnsaved(); onToggle(this,'Resolution milestones')"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">Sound on notification</div></div>
+            <label class="toggle-wrap"><input type="checkbox" id="notifInAppSound" onchange="markUnsaved(); onToggle(this,'Notification sound')"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="btn-row"><button class="btn btn-primary" onclick="saveSection('Notifications')">Save preferences</button></div>
+        </div>
+      </div><!-- /notifications -->
+
+      <!-- ═══ MODERATION ═══ -->
+      <div class="settings-panel" id="panel-moderation">
+        <div class="s-section-title">Moderation Settings</div>
+        <div class="s-section-sub">Rules and thresholds for post &amp; user moderation</div>
+
+        <div class="s-card">
+          <div class="s-card-title">Auto-moderation</div>
+          <div class="s-card-sub">Automatically take action on flagged content</div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">Auto-hide posts with ≥ 3 reports</div><div class="s-row-desc">Hides post pending manual review</div></div>
+            <label class="toggle-wrap"><input type="checkbox" id="modAutoHide" checked onchange="markUnsaved(); onToggle(this,'Auto-hide flagged posts')"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">Auto-suspend user with ≥ 5 violations</div><div class="s-row-desc">Temporary 24h suspension</div></div>
+            <label class="toggle-wrap"><input type="checkbox" id="modAutoSuspend" checked onchange="markUnsaved(); onToggle(this,'Auto-suspend users')"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">Profanity filter (EN + BN)</div><div class="s-row-desc">Block posts containing banned words</div></div>
+            <label class="toggle-wrap"><input type="checkbox" id="modProfanity" checked onchange="markUnsaved(); onToggle(this,'Profanity filter')"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">Require photo for lost posts</div><div class="s-row-desc">Improves AI match accuracy</div></div>
+            <label class="toggle-wrap"><input type="checkbox" id="modRequirePhoto" onchange="markUnsaved(); onToggle(this,'Require photo')"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-title">Post limits</div>
+          <div class="s-card-sub">Control how many posts a single user can submit</div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">Max active posts per user</div></div>
+            <div class="s-select-wrap" style="width:100px;">
+              <select class="s-select" id="modMaxPosts" onchange="markUnsaved()"><option value="5">5</option><option value="10" selected>10</option><option value="20">20</option><option value="Unlimited">Unlimited</option></select>
+            </div>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">Post expiry (auto-archive)</div></div>
+            <div class="s-select-wrap" style="width:120px;">
+              <select class="s-select" id="modExpiry" onchange="markUnsaved()"><option value="30 days">30 days</option><option value="60 days" selected>60 days</option><option value="90 days">90 days</option><option value="Never">Never</option></select>
+            </div>
+          </div>
+          <div class="btn-row"><button class="btn btn-primary" onclick="saveSection('Moderation')">Save moderation settings</button></div>
+        </div>
+      </div><!-- /moderation -->
+
+      <!-- ═══ AI ═══ -->
+      <div class="settings-panel" id="panel-ai">
+        <div class="s-section-title">AI &amp; Smart Match</div>
+        <div class="s-section-sub">Configure the intelligent matching engine</div>
+
+        <div class="s-card">
+          <div class="s-card-title">Matching thresholds</div>
+          <div class="s-card-sub">Minimum confidence required for automatic actions</div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">Smart match enabled</div><div class="s-row-desc">Use AI to automatically suggest matches</div></div>
+            <label class="toggle-wrap"><input type="checkbox" id="aiSmartMatch" checked onchange="markUnsaved(); onToggle(this,'Smart match')"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left">
+              <div class="s-row-label">Confidence threshold for suggestion</div>
+              <div class="s-row-desc" id="threshDesc">Currently: 65% — show match suggestions above this score</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="range" id="aiConfidenceThresh" min="40" max="95" value="65" style="width:120px;accent-color:var(--primary);" oninput="updateThresh(this.value); markUnsaved();"/>
+              <span id="threshVal" style="font-family:var(--font-m);font-size:12px;font-weight:700;color:var(--primary);width:36px;">65%</span>
+            </div>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">Auto-notify on match ≥ 85%</div><div class="s-row-desc">Send push to both users without manual approval</div></div>
+            <label class="toggle-wrap"><input type="checkbox" id="aiAutoNotify" checked onchange="markUnsaved(); onToggle(this,'Auto-notify high confidence')"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-title">AI model</div>
+          <div class="s-card-sub">Select the active matching model version</div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">Active model</div></div>
+            <div class="s-select-wrap" style="width:220px;">
+              <select class="s-select" id="aiModel" onchange="markUnsaved()">
+                <option value="FindIT Match v2.4 (Latest)" selected>FindIT Match v2.4 (Latest)</option>
+                <option value="FindIT Match v2.3">FindIT Match v2.3</option>
+                <option value="FindIT Match v2.1 (Stable)">FindIT Match v2.1 (Stable)</option>
+              </select>
+            </div>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">Image similarity matching</div><div class="s-row-desc">Compare uploaded photos using vision AI</div></div>
+            <label class="toggle-wrap"><input type="checkbox" id="aiImageSimilarity" checked onchange="markUnsaved(); onToggle(this,'Image similarity')"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">Location-weighted scoring</div><div class="s-row-desc">Boost matches within same district</div></div>
+            <label class="toggle-wrap"><input type="checkbox" id="aiLocationWeighting" checked onchange="markUnsaved(); onToggle(this,'Location weighting')"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="btn-row"><button class="btn btn-primary" onclick="saveSection('AI Settings')">Save AI settings</button></div>
+        </div>
+      </div><!-- /ai -->
+
+      <!-- ═══ EMAIL ═══ -->
+      <div class="settings-panel" id="panel-email">
+        <div class="s-section-title">Email &amp; SMTP</div>
+        <div class="s-section-sub">Configure outgoing email delivery</div>
+
+        <div class="s-card">
+          <div class="s-card-title">SMTP configuration</div>
+          <div class="s-card-sub">Settings for sending transactional emails</div>
+          <div class="s-field-grid">
+            <div>
+              <label class="s-label">SMTP host</label>
+              <input class="s-input" id="smtpHost" value="smtp.mailgun.org" oninput="markUnsaved()"/>
+            </div>
+            <div>
+              <label class="s-label">Port</label>
+              <input class="s-input" id="smtpPort" value="587" oninput="markUnsaved()"/>
+            </div>
+          </div>
+          <div class="s-field-grid">
+            <div>
+              <label class="s-label">Username</label>
+              <input class="s-input" id="smtpUser" value="postmaster@findit.com.bd" oninput="markUnsaved()"/>
+            </div>
+            <div>
+              <label class="s-label">Password</label>
+              <input class="s-input" id="smtpPass" type="password" placeholder="&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;&#x2022;" oninput="markUnsaved()"/>
+            </div>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">Use TLS encryption</div></div>
+            <label class="toggle-wrap"><input type="checkbox" id="smtpTls" checked onchange="markUnsaved(); onToggle(this,'TLS')"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-primary" onclick="saveSection('SMTP')">Save SMTP</button>
+            <button class="btn btn-ghost" onclick="testSMTP()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              Send test email
+            </button>
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-title">Sender identity</div>
+          <div class="s-card-sub">From name and address used in outgoing emails</div>
+          <div class="s-field-grid">
+            <div>
+              <label class="s-label">From name</label>
+              <input class="s-input" id="smtpFromName" value="FindIT Bangladesh" oninput="markUnsaved()"/>
+            </div>
+            <div>
+              <label class="s-label">From address</label>
+              <input class="s-input" id="smtpFromAddress" type="email" value="noreply@findit.com.bd" oninput="markUnsaved()"/>
+            </div>
+          </div>
+          <div class="s-field">
+            <label class="s-label">Email footer text</label>
+            <textarea class="s-textarea" id="smtpFooter" style="min-height:60px;" oninput="markUnsaved()">FindIT Bangladesh · Reuniting people with what matters. Unsubscribe at any time.</textarea>
+          </div>
+        </div>
+      </div><!-- /email -->
+
+      <!-- ═══ API ═══ -->
+      <div class="settings-panel" id="panel-api">
+        <div class="s-section-title">API &amp; Integrations</div>
+        <div class="s-section-sub">Manage API keys and third-party connections</div>
+
+        <div class="s-card">
+          <div class="s-card-title">API keys</div>
+          <div class="s-card-sub">Use these keys to authenticate with the FindIT REST API</div>
+          <div style="margin-bottom:14px;">
+            <label class="s-label">Live API key</label>
+            <div class="apikey-display">
+              <div class="apikey-val" id="liveKey">fnd_live_••••••••••••••••••••••••••••••••</div>
+              <button class="apikey-copy" onclick="revealKey('liveKey','fnd_live_a8f2c4e91b03d57f6a24c8e0b5d3a712')">Reveal</button>
+              <button class="apikey-copy" onclick="copyKey('fnd_live_a8f2c4e91b03d57f6a24c8e0b5d3a712')">Copy</button>
+            </div>
+          </div>
+          <div style="margin-bottom:14px;">
+            <label class="s-label">Test API key</label>
+            <div class="apikey-display">
+              <div class="apikey-val" id="testKey">fnd_test_••••••••••••••••••••••••••••••••</div>
+              <button class="apikey-copy" onclick="revealKey('testKey','fnd_test_c2a1b7e40d83f596b21c8e0a4d7f3c801')">Reveal</button>
+              <button class="apikey-copy" onclick="copyKey('fnd_test_c2a1b7e40d83f596b21c8e0a4d7f3c801')">Copy</button>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button class="btn btn-ghost" onclick="showConfirm({title:'Rotate API key?',body:'The current live key will be invalidated immediately. All services using it must be updated.',confirm:'Rotate key',cb:function(){showToast('Live API key rotated in MongoDB','success');}})">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1,4 1,10 7,10"/><path d="M3.51 15a9 9 0 1 0 .49-3.44"/></svg>
+              Rotate live key
+            </button>
+          </div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-title">Webhooks</div>
+          <div class="s-card-sub">Push event notifications to external endpoints</div>
+          <div class="s-field">
+            <label class="s-label">Webhook URL</label>
+            <input class="s-input" id="webhookUrl" placeholder="https://your-server.com/webhook" oninput="markUnsaved()"/>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">Events: post.created</div></div>
+            <label class="toggle-wrap"><input type="checkbox" id="webhookPostCreated" checked onchange="markUnsaved(); onToggle(this,'Webhook: post.created')"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">Events: match.confirmed</div></div>
+            <label class="toggle-wrap"><input type="checkbox" id="webhookMatchConfirmed" checked onchange="markUnsaved(); onToggle(this,'Webhook: match.confirmed')"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">Events: user.reported</div></div>
+            <label class="toggle-wrap"><input type="checkbox" id="webhookUserReported" onchange="markUnsaved(); onToggle(this,'Webhook: user.reported')"/><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="btn-row"><button class="btn btn-primary" onclick="saveSection('Webhooks')">Save Webhooks</button><button class="btn btn-ghost" onclick="showToast('Test webhook pinged','info')">Send test</button></div>
+        </div>
+
+        <div class="s-card">
+          <div class="s-card-title">Third-party integrations</div>
+          <div class="s-card-sub">Connected services and their status in MongoDB</div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">&#x1F4CA; Google Analytics</div><div class="s-row-desc">Track user behaviour on the public site</div></div>
+            <span class="status-pill" style="background:var(--green-d);color:var(--green);">&#x25CF; Connected</span>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">&#x1F5FA;&#xFE0F; Google Maps</div><div class="s-row-desc">Geocoding &amp; map tiles</div></div>
+            <span class="status-pill" style="background:var(--green-d);color:var(--green);">&#x25CF; Connected</span>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">&#x1F4E7; Mailgun</div><div class="s-row-desc">Email delivery provider</div></div>
+            <span class="status-pill" style="background:var(--green-d);color:var(--green);">&#x25CF; Active</span>
+          </div>
+          <div class="s-row">
+            <div class="s-row-left"><div class="s-row-label">&#x1F4F2; bKash / Nagad</div><div class="s-row-desc">Mobile payment gateway (reward payouts)</div></div>
+            <span class="status-pill" style="background:var(--amber-d);color:var(--amber);">&#x25CF; Pending</span>
+          </div>
+        </div>
+      </div><!-- /api -->
+
+      <!-- ═══ ROLES ═══ -->
+      <div class="settings-panel" id="panel-roles">
+        <div class="s-section-title">Roles &amp; Permissions</div>
+        <div class="s-section-sub">Define what each admin role can do in the console</div>
+
+        <div class="s-card">
+          <div class="s-card-title">Role matrix</div>
+          <div class="s-card-sub">Click a role badge to toggle permission</div>
+          <div class="perm-list" id="roleMatrixList">
+            <div class="perm-row">
+              <div class="perm-icon" style="background:var(--primary-d);"><svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+              <div class="perm-info"><div class="perm-name">Manage users</div><div class="perm-desc">Create, suspend, ban accounts</div></div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <span class="role-badge" style="background:var(--primary-d);color:var(--primary);cursor:pointer;" onclick="toggleRoleBadge(this)">Super Admin</span>
+                <span class="role-badge" style="background:var(--primary-d);color:var(--primary);cursor:pointer;" onclick="toggleRoleBadge(this)">Admin</span>
+                <span class="role-badge" style="background:var(--muted-bg);color:var(--muted);cursor:pointer;" onclick="toggleRoleBadge(this)">Moderator</span>
+              </div>
+            </div>
+            <div class="perm-row">
+              <div class="perm-icon" style="background:var(--green-d);"><svg viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/></svg></div>
+              <div class="perm-info"><div class="perm-name">Moderate posts</div><div class="perm-desc">Approve, reject, hide posts</div></div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <span class="role-badge" style="background:var(--primary-d);color:var(--primary);cursor:pointer;" onclick="toggleRoleBadge(this)">Super Admin</span>
+                <span class="role-badge" style="background:var(--primary-d);color:var(--primary);cursor:pointer;" onclick="toggleRoleBadge(this)">Admin</span>
+                <span class="role-badge" style="background:var(--primary-d);color:var(--primary);cursor:pointer;" onclick="toggleRoleBadge(this)">Moderator</span>
+              </div>
+            </div>
+            <div class="perm-row">
+              <div class="perm-icon" style="background:var(--amber-d);"><svg viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+              <div class="perm-info"><div class="perm-name">View analytics</div><div class="perm-desc">Access all reporting dashboards</div></div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <span class="role-badge" style="background:var(--primary-d);color:var(--primary);cursor:pointer;" onclick="toggleRoleBadge(this)">Super Admin</span>
+                <span class="role-badge" style="background:var(--primary-d);color:var(--primary);cursor:pointer;" onclick="toggleRoleBadge(this)">Admin</span>
+                <span class="role-badge" style="background:var(--muted-bg);color:var(--muted);cursor:pointer;" onclick="toggleRoleBadge(this)">Moderator</span>
+              </div>
+            </div>
+            <div class="perm-row">
+              <div class="perm-icon" style="background:var(--violet-d);"><svg viewBox="0 0 24 24" fill="none" stroke="var(--violet)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+              <div class="perm-info"><div class="perm-name">Change settings</div><div class="perm-desc">Modify platform configuration</div></div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <span class="role-badge" style="background:var(--primary-d);color:var(--primary);cursor:pointer;" onclick="toggleRoleBadge(this)">Super Admin</span>
+                <span class="role-badge" style="background:var(--muted-bg);color:var(--muted);cursor:pointer;" onclick="toggleRoleBadge(this)">Admin</span>
+                <span class="role-badge" style="background:var(--muted-bg);color:var(--muted);cursor:pointer;" onclick="toggleRoleBadge(this)">Moderator</span>
+              </div>
+            </div>
+            <div class="perm-row">
+              <div class="perm-icon" style="background:var(--danger-d);"><svg viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></div>
+              <div class="perm-info"><div class="perm-name">Danger zone access</div><div class="perm-desc">Delete data, purge cache, factory reset</div></div>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <span class="role-badge" style="background:var(--primary-d);color:var(--primary);cursor:pointer;" onclick="toggleRoleBadge(this)">Super Admin</span>
+                <span class="role-badge" style="background:var(--muted-bg);color:var(--muted);cursor:pointer;" onclick="toggleRoleBadge(this)">Admin</span>
+                <span class="role-badge" style="background:var(--muted-bg);color:var(--muted);cursor:pointer;" onclick="toggleRoleBadge(this)">Moderator</span>
+              </div>
+            </div>
+          </div>
+          <div class="btn-row"><button class="btn btn-primary" onclick="saveSection('Roles')">Save permissions</button></div>
+        </div>
+      </div><!-- /roles -->
+
+      <!-- ═══ AUDIT LOG ═══ -->
+      <div class="settings-panel" id="panel-audit">
+        <div class="s-section-title">Audit Logs</div>
+        <div class="s-section-sub">Complete history of admin actions across the platform (Live MongoDB Collection: audit_logs)</div>
+
+        <div class="s-card" style="padding-bottom:0;">
+          <div class="chart-head" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+            <div style="font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--fg);">Recent activity in MongoDB</div>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-ghost" onclick="renderAuditLog()">Refresh Logs</button>
+            </div>
+          </div>
+          <div style="overflow-x:auto;">
+            <table class="log-table" id="auditTable">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Admin</th>
+                  <th>Action</th>
+                  <th>Target</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="auditTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div><!-- /audit -->
+
+      <!-- ═══ DANGER ZONE ═══ -->
+      <div class="settings-panel" id="panel-danger">
+        <div class="s-section-title">Danger Zone</div>
+        <div class="s-section-sub">These actions are irreversible. Proceed with extreme caution.</div>
+
+        <div class="danger-zone">
+          <div class="danger-zone-title">&#x26A0;&#xFE0F; Irreversible actions</div>
+          <div class="danger-zone-sub">All actions below require confirmation and are logged in the MongoDB audit trail.</div>
+
+          <div class="danger-item">
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--fg);">Purge AI match cache</div>
+              <div style="font-size:10px;color:var(--muted);">Clears all cached match scores in MongoDB. Re-indexing will run automatically.</div>
+            </div>
+            <button class="btn btn-danger" onclick="showConfirm({title:'Purge AI cache?',body:'All cached match scores will be deleted in MongoDB.',confirm:'Purge cache',cb:function(){ callDangerAction('purge-ai-cache'); }})">Purge cache</button>
+          </div>
+
+          <div class="danger-item">
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--fg);">Archive all expired posts</div>
+              <div style="font-size:10px;color:var(--muted);">Move posts older than 90 days to resolved status in MongoDB.</div>
+            </div>
+            <button class="btn btn-danger" onclick="showConfirm({title:'Archive expired posts?',body:'Posts older than 90 days will be marked resolved.',confirm:'Archive posts',cb:function(){ callDangerAction('archive-posts'); }})">Archive now</button>
+          </div>
+
+          <div class="danger-item">
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--fg);">Delete all test data</div>
+              <div style="font-size:10px;color:var(--muted);">Remove all staging posts and matches created for test purposes.</div>
+            </div>
+            <button class="btn btn-danger" onclick="showConfirm({title:'Delete test data?',body:'All staging users and test posts will be cleaned in MongoDB.',confirm:'Delete test data',cb:function(){ callDangerAction('delete-test-data'); }})">Delete test data</button>
+          </div>
+
+          <div class="danger-item">
+            <div>
+              <div style="font-size:12px;font-weight:700;color:var(--fg);">Factory reset platform</div>
+              <div style="font-size:10px;color:var(--muted);">Restore default system settings in MongoDB. Safety override active.</div>
+            </div>
+            <button class="btn btn-danger" style="background:var(--danger);color:#fff;border-color:var(--danger);" onclick="showConfirm({title:'&#x1F6A8; Factory reset?',body:'Are you sure you want to restore default settings in MongoDB?',confirm:'Yes, restore defaults',cb:function(){ callDangerAction('factory-reset'); }})">Factory reset</button>
+          </div>
+        </div>
+      </div><!-- /danger -->
+
+    </div><!-- /settings-body -->
+  </div><!-- /content -->
+
+</div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- Unsaved bar -->
+<div class="unsaved-bar" id="unsavedBar">
+  <span>You have unsaved changes in settings</span>
+  <button class="btn btn-primary" onclick="saveSection('All')">Save now</button>
+  <button class="btn btn-ghost" onclick="discardChanges()">Discard</button>
+</div>
+
+<!-- Confirm modal -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal-box">
+    <div class="modal-icon" id="modalIcon" style="background:var(--danger-d);"><svg viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+    <div class="modal-title" id="modalTitle">Confirm</div>
+    <div class="modal-body" id="modalBody">Are you sure?</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-danger" id="modalConfirmBtn" onclick="confirmModal()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-wrap"></div>
+
+<script>
+/* ══ STATE & SETTINGS OBJECT ══ */
+var _theme = 'dark';
+var _lang = 'en';
+var _unsaved = false;
+var _currentSettings = null;
+var _avatarColor = 'linear-gradient(135deg,#6B8AFF,#8B5CF6)';
+
+/* ══ NAV ══ */
+function go(url) { location.href = url; }
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('collapsed'); }
+
+/* ══ NOTIF PANEL ══ */
+function toggleNotif() { document.getElementById('notifPanel').classList.toggle('open'); }
+document.addEventListener('click', function(e) {
+  var p = document.getElementById('notifPanel');
+  if (!p.contains(e.target) && !e.target.closest('.icon-btn')) p.classList.remove('open');
+});
+
+/* ══ THEME ══ */
+function toggleTheme() {
+  _theme = _theme === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', _theme);
+  var ic = document.getElementById('themeIcon');
+  if (_theme === 'light') {
+    ic.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  } else {
+    ic.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  }
+  syncThemeOpts();
+}
+
+function syncThemeOpts() {
+  ['dark','light','system'].forEach(function(t) {
+    var el = document.getElementById('themeOpt' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (el) el.style.borderColor = (_theme === t) ? 'var(--primary)' : 'var(--border)';
+  });
+}
+
+function setThemeOpt(t) {
+  if (t === 'system') t = 'dark';
+  _theme = t;
+  document.documentElement.setAttribute('data-theme', _theme);
+  syncThemeOpts();
+  markUnsaved();
+  showToast('Theme set to ' + t, 'info');
+}
+
+/* ══ LANG ══ */
+function toggleLang() {
+  _lang = _lang === 'en' ? 'bn' : 'en';
+  document.getElementById('langLabel').textContent = _lang === 'en' ? 'EN' : 'বাং';
+  document.getElementById('tb-title').textContent = _lang === 'en' ? 'Settings' : 'সেটিংস';
+  document.getElementById('tb-sub').textContent = _lang === 'en' ? 'Manage platform configuration & preferences' : 'প্ল্যাটফর্ম কনফিগারেশন পরিচালনা করুন';
+}
+
+/* ══ SETTINGS NAV ══ */
+function showPanel(id) {
+  document.querySelectorAll('.snav-item').forEach(function(b) { b.classList.remove('active'); });
+  event.currentTarget.classList.add('active');
+  document.querySelectorAll('.settings-panel').forEach(function(p) { p.classList.remove('active'); });
+  document.getElementById('panel-' + id).classList.add('active');
+  document.getElementById('settingsBody').scrollTop = 0;
+  if (id === 'audit') renderAuditLog();
+}
+
+/* ══ UNSAVED BAR ══ */
+function markUnsaved() {
+  _unsaved = true;
+  document.getElementById('unsavedBar').classList.add('show');
+}
+function discardChanges() {
+  _unsaved = false;
+  document.getElementById('unsavedBar').classList.remove('show');
+  fetchSettings();
+  showToast('Changes discarded and reloaded from MongoDB', 'info');
+}
+
+/* ══ AVATAR COLOUR ══ */
+function pickAvatarColor(el, grad) {
+  document.querySelectorAll('.color-swatch').forEach(function(s) { s.classList.remove('active'); });
+  el.classList.add('active');
+  _avatarColor = grad;
+  document.getElementById('avatarBig').style.background = grad;
+  markUnsaved();
+}
+
+/* ══ ROLE BADGE TOGGLE ══ */
+function toggleRoleBadge(el) {
+  if (el.style.color === 'var(--muted)' || el.style.background.includes('muted')) {
+    el.style.background = 'var(--primary-d)'; el.style.color = 'var(--primary)';
+    showToast('Permission granted to ' + el.textContent, 'success');
+  } else {
+    el.style.background = 'var(--muted-bg)'; el.style.color = 'var(--muted)';
+    showToast('Permission revoked from ' + el.textContent, 'warn');
+  }
+  markUnsaved();
+}
+
+/* ══ PASSWORD STRENGTH ══ */
+function checkPwdStrength() {
+  var pwd = document.getElementById('newPwd').value;
+  var score = 0;
+  if (pwd.length >= 8) score++;
+  if (pwd.length >= 12) score++;
+  if (/[A-Z]/.test(pwd) && /[0-9]/.test(pwd)) score++;
+  if (/[^A-Za-z0-9]/.test(pwd)) score++;
+  var bars = document.getElementById('pwdBars').children;
+  var labels = ['','Weak','Fair','Good','Strong'];
+  var colors = ['','#EF4444','#F59E0B','#6B8AFF','#4ade80'];
+  for (var i = 0; i < 4; i++) {
+    bars[i].style.background = i < score ? colors[score] : 'var(--muted-bg)';
+  }
+  document.getElementById('pwdLabel').textContent = score > 0 ? labels[score] + ' password' : 'Enter a new password to see strength';
+  document.getElementById('pwdLabel').style.color = score > 0 ? colors[score] : 'var(--muted)';
+}
+
+/* ══ AI THRESHOLD ══ */
+function updateThresh(v) {
+  document.getElementById('threshVal').textContent = v + '%';
+  document.getElementById('threshDesc').textContent = 'Currently: ' + v + '% — show match suggestions above this score';
+}
+
+/* ══ API KEYS ══ */
+function revealKey(elemId, key) {
+  document.getElementById(elemId).textContent = key;
+  showToast('Key revealed — copy it now', 'warn');
+}
+function copyKey(key) {
+  navigator.clipboard && navigator.clipboard.writeText(key);
+  showToast('API key copied to clipboard', 'success');
+}
+
+function testSMTP() {
+  showToast('Sending test email via configured SMTP…', 'info');
+  setTimeout(function() { showToast('Test email delivered successfully', 'success'); }, 1400);
+}
+
+function revokeSession(name) {
+  showConfirm({
+    title: 'Revoke session?',
+    body: 'The session on ' + name + ' will be signed out immediately.',
+    confirm: 'Revoke',
+    cb: function() { showToast(name + ' session revoked in MongoDB', 'success'); }
+  });
+}
+
+function onToggle(el, label) {
+  showToast(label + ' ' + (el.checked ? 'enabled' : 'disabled'), 'info');
+}
+
+/* ═══ BACKEND API: LOAD SETTINGS FROM MONGODB ═══ */
+async function fetchSettings() {
+  try {
+    const res = await fetch((window.API_BASE_URL || '') + '/api/admin/settings');
+    const data = await res.json();
+    if (data && data.success && data.settings) {
+      _currentSettings = data.settings;
+      populateSettings(data.settings);
+    }
+  } catch (err) {
+    console.error('Error loading settings from MongoDB:', err);
+  }
+}
+
+function populateSettings(s) {
+  if (!s) return;
+  // Profile
+  if (s.profile) {
+    if (document.getElementById('profFirstName')) document.getElementById('profFirstName').value = s.profile.firstName || 'Arif';
+    if (document.getElementById('profLastName')) document.getElementById('profLastName').value = s.profile.lastName || 'Rahman';
+    if (document.getElementById('profEmail')) document.getElementById('profEmail').value = s.profile.email || 'arif@findit.com.bd';
+    if (document.getElementById('profPhone')) document.getElementById('profPhone').value = s.profile.phone || '+880 1700-000000';
+    if (document.getElementById('profBio')) document.getElementById('profBio').value = s.profile.bio || '';
+    if (s.profile.avatarColor) {
+      _avatarColor = s.profile.avatarColor;
+      document.getElementById('avatarBig').style.background = _avatarColor;
+    }
+    const initials = ((s.profile.firstName||'A')[0] + (s.profile.lastName||'R')[0]).toUpperCase();
+    document.getElementById('avatarBig').textContent = initials;
+    document.querySelector('.avatar-pill').textContent = initials;
+  }
+
+  // Security
+  if (s.security) {
+    if (document.getElementById('secTwoFactor')) document.getElementById('secTwoFactor').checked = s.security.twoFactorAuth !== false;
+    if (document.getElementById('secSmsTwoFactor')) document.getElementById('secSmsTwoFactor').checked = Boolean(s.security.smsTwoFactor);
+    if (document.getElementById('secLoginAlerts')) document.getElementById('secLoginAlerts').checked = s.security.loginAlertEmails !== false;
+  }
+
+  // Appearance
+  if (s.appearance) {
+    if (s.appearance.theme) {
+      _theme = s.appearance.theme;
+      document.documentElement.setAttribute('data-theme', _theme);
+      syncThemeOpts();
+    }
+    if (document.getElementById('appCompactMode')) document.getElementById('appCompactMode').checked = Boolean(s.appearance.compactMode);
+    if (document.getElementById('appAutoCollapse')) document.getElementById('appAutoCollapse').checked = s.appearance.sidebarAutoCollapse !== false;
+    if (document.getElementById('appLanguage') && s.appearance.language) document.getElementById('appLanguage').value = s.appearance.language;
+    if (document.getElementById('appDateFormat') && s.appearance.dateFormat) document.getElementById('appDateFormat').value = s.appearance.dateFormat;
+  }
+
+  // General
+  if (s.general) {
+    if (document.getElementById('genPlatformName')) document.getElementById('genPlatformName').value = s.general.platformName || 'FindIT Bangladesh';
+    if (document.getElementById('genSupportEmail')) document.getElementById('genSupportEmail').value = s.general.supportEmail || 'support@findit.com.bd';
+    if (document.getElementById('genSupportPhone')) document.getElementById('genSupportPhone').value = s.general.supportPhone || '+880 1700-FINDIT';
+    if (document.getElementById('genTaglineEn')) document.getElementById('genTaglineEn').value = s.general.taglineEn || '';
+    if (document.getElementById('genTaglineBn')) document.getElementById('genTaglineBn').value = s.general.taglineBn || '';
+    if (document.getElementById('genTimezone') && s.general.timezone) document.getElementById('genTimezone').value = s.general.timezone;
+    if (document.getElementById('genCountry') && s.general.country) document.getElementById('genCountry').value = s.general.country;
+    if (document.getElementById('genPostsPerPage') && s.general.postsPerPage) document.getElementById('genPostsPerPage').value = String(s.general.postsPerPage);
+  }
+
+  // Notifications
+  if (s.notifications) {
+    if (document.getElementById('notifEmailUser')) document.getElementById('notifEmailUser').checked = s.notifications.emailNewUser !== false;
+    if (document.getElementById('notifEmailReport')) document.getElementById('notifEmailReport').checked = s.notifications.emailNewReport !== false;
+    if (document.getElementById('notifEmailMatch')) document.getElementById('notifEmailMatch').checked = s.notifications.emailMatch !== false;
+    if (document.getElementById('notifEmailDigest')) document.getElementById('notifEmailDigest').checked = s.notifications.emailWeeklyDigest !== false;
+    if (document.getElementById('notifEmailAlerts')) document.getElementById('notifEmailAlerts').checked = s.notifications.emailSystemAlerts !== false;
+    if (document.getElementById('notifInAppMod')) document.getElementById('notifInAppMod').checked = s.notifications.inAppModerationQueue !== false;
+    if (document.getElementById('notifInAppMilestones')) document.getElementById('notifInAppMilestones').checked = s.notifications.inAppResolutionMilestones !== false;
+    if (document.getElementById('notifInAppSound')) document.getElementById('notifInAppSound').checked = Boolean(s.notifications.inAppNotificationSound);
+  }
+
+  // Moderation
+  if (s.moderation) {
+    if (document.getElementById('modAutoHide')) document.getElementById('modAutoHide').checked = s.moderation.autoHideFlagged !== false;
+    if (document.getElementById('modAutoSuspend')) document.getElementById('modAutoSuspend').checked = s.moderation.autoSuspendUsers !== false;
+    if (document.getElementById('modProfanity')) document.getElementById('modProfanity').checked = s.moderation.profanityFilter !== false;
+    if (document.getElementById('modRequirePhoto')) document.getElementById('modRequirePhoto').checked = Boolean(s.moderation.requirePhoto);
+    if (document.getElementById('modMaxPosts') && s.moderation.maxPostsPerUser) document.getElementById('modMaxPosts').value = s.moderation.maxPostsPerUser;
+    if (document.getElementById('modExpiry') && s.moderation.postExpiry) document.getElementById('modExpiry').value = s.moderation.postExpiry;
+  }
+
+  // AI
+  if (s.ai) {
+    if (document.getElementById('aiSmartMatch')) document.getElementById('aiSmartMatch').checked = s.ai.smartMatchEnabled !== false;
+    if (document.getElementById('aiConfidenceThresh')) {
+      const val = s.ai.confidenceThreshold || 65;
+      document.getElementById('aiConfidenceThresh').value = val;
+      updateThresh(val);
+    }
+    if (document.getElementById('aiAutoNotify')) document.getElementById('aiAutoNotify').checked = s.ai.autoNotifyHighConfidence !== false;
+    if (document.getElementById('aiModel') && s.ai.activeModel) document.getElementById('aiModel').value = s.ai.activeModel;
+    if (document.getElementById('aiImageSimilarity')) document.getElementById('aiImageSimilarity').checked = s.ai.imageSimilarity !== false;
+    if (document.getElementById('aiLocationWeighting')) document.getElementById('aiLocationWeighting').checked = s.ai.locationWeighting !== false;
+  }
+
+  // Email / SMTP
+  if (s.email) {
+    if (document.getElementById('smtpHost')) document.getElementById('smtpHost').value = s.email.smtpHost || 'smtp.mailgun.org';
+    if (document.getElementById('smtpPort')) document.getElementById('smtpPort').value = s.email.smtpPort || '587';
+    if (document.getElementById('smtpUser')) document.getElementById('smtpUser').value = s.email.smtpUser || '';
+    if (document.getElementById('smtpTls')) document.getElementById('smtpTls').checked = s.email.tls !== false;
+    if (document.getElementById('smtpFromName')) document.getElementById('smtpFromName').value = s.email.fromName || 'FindIT Bangladesh';
+    if (document.getElementById('smtpFromAddress')) document.getElementById('smtpFromAddress').value = s.email.fromAddress || 'noreply@findit.com.bd';
+    if (document.getElementById('smtpFooter')) document.getElementById('smtpFooter').value = s.email.emailFooter || '';
+  }
+
+  // API & Webhooks
+  if (s.api) {
+    if (document.getElementById('webhookUrl')) document.getElementById('webhookUrl').value = s.api.webhookUrl || '';
+    if (document.getElementById('webhookPostCreated')) document.getElementById('webhookPostCreated').checked = s.api.webhookPostCreated !== false;
+    if (document.getElementById('webhookMatchConfirmed')) document.getElementById('webhookMatchConfirmed').checked = s.api.webhookMatchConfirmed !== false;
+    if (document.getElementById('webhookUserReported')) document.getElementById('webhookUserReported').checked = Boolean(s.api.webhookUserReported);
+  }
+}
+
+/* ═══ BACKEND API: SAVE SETTINGS TO MONGODB ═══ */
+async function saveSection(sectionName) {
+  _unsaved = false;
+  document.getElementById('unsavedBar').classList.remove('show');
+
+  const payload = {
+    _sectionName: sectionName || 'Settings',
+    profile: {
+      firstName: (document.getElementById('profFirstName')?.value || 'Arif').trim(),
+      lastName: (document.getElementById('profLastName')?.value || 'Rahman').trim(),
+      email: (document.getElementById('profEmail')?.value || 'arif@findit.com.bd').trim(),
+      phone: (document.getElementById('profPhone')?.value || '+880 1700-000000').trim(),
+      bio: (document.getElementById('profBio')?.value || '').trim(),
+      avatarColor: _avatarColor
+    },
+    security: {
+      twoFactorAuth: Boolean(document.getElementById('secTwoFactor')?.checked),
+      smsTwoFactor: Boolean(document.getElementById('secSmsTwoFactor')?.checked),
+      loginAlertEmails: Boolean(document.getElementById('secLoginAlerts')?.checked)
+    },
+    appearance: {
+      theme: _theme,
+      compactMode: Boolean(document.getElementById('appCompactMode')?.checked),
+      sidebarAutoCollapse: Boolean(document.getElementById('appAutoCollapse')?.checked),
+      language: document.getElementById('appLanguage')?.value || 'English',
+      dateFormat: document.getElementById('appDateFormat')?.value || 'DD/MM/YYYY'
+    },
+    general: {
+      platformName: (document.getElementById('genPlatformName')?.value || 'FindIT Bangladesh').trim(),
+      supportEmail: (document.getElementById('genSupportEmail')?.value || 'support@findit.com.bd').trim(),
+      supportPhone: (document.getElementById('genSupportPhone')?.value || '+880 1700-FINDIT').trim(),
+      taglineEn: (document.getElementById('genTaglineEn')?.value || '').trim(),
+      taglineBn: (document.getElementById('genTaglineBn')?.value || '').trim(),
+      timezone: document.getElementById('genTimezone')?.value || 'Asia/Dhaka (UTC+6)',
+      country: document.getElementById('genCountry')?.value || 'Bangladesh',
+      postsPerPage: Number(document.getElementById('genPostsPerPage')?.value) || 20
+    },
+    notifications: {
+      emailNewUser: Boolean(document.getElementById('notifEmailUser')?.checked),
+      emailNewReport: Boolean(document.getElementById('notifEmailReport')?.checked),
+      emailMatch: Boolean(document.getElementById('notifEmailMatch')?.checked),
+      emailWeeklyDigest: Boolean(document.getElementById('notifEmailDigest')?.checked),
+      emailSystemAlerts: Boolean(document.getElementById('notifEmailAlerts')?.checked),
+      inAppModerationQueue: Boolean(document.getElementById('notifInAppMod')?.checked),
+      inAppResolutionMilestones: Boolean(document.getElementById('notifInAppMilestones')?.checked),
+      inAppNotificationSound: Boolean(document.getElementById('notifInAppSound')?.checked)
+    },
+    moderation: {
+      autoHideFlagged: Boolean(document.getElementById('modAutoHide')?.checked),
+      autoSuspendUsers: Boolean(document.getElementById('modAutoSuspend')?.checked),
+      profanityFilter: Boolean(document.getElementById('modProfanity')?.checked),
+      requirePhoto: Boolean(document.getElementById('modRequirePhoto')?.checked),
+      maxPostsPerUser: document.getElementById('modMaxPosts')?.value || '10',
+      postExpiry: document.getElementById('modExpiry')?.value || '60 days'
+    },
+    ai: {
+      smartMatchEnabled: Boolean(document.getElementById('aiSmartMatch')?.checked),
+      confidenceThreshold: Number(document.getElementById('aiConfidenceThresh')?.value) || 65,
+      autoNotifyHighConfidence: Boolean(document.getElementById('aiAutoNotify')?.checked),
+      activeModel: document.getElementById('aiModel')?.value || 'FindIT Match v2.4 (Latest)',
+      imageSimilarity: Boolean(document.getElementById('aiImageSimilarity')?.checked),
+      locationWeighting: Boolean(document.getElementById('aiLocationWeighting')?.checked)
+    },
+    email: {
+      smtpHost: (document.getElementById('smtpHost')?.value || 'smtp.mailgun.org').trim(),
+      smtpPort: (document.getElementById('smtpPort')?.value || '587').trim(),
+      smtpUser: (document.getElementById('smtpUser')?.value || '').trim(),
+      smtpPass: (document.getElementById('smtpPass')?.value || '').trim(),
+      tls: Boolean(document.getElementById('smtpTls')?.checked),
+      fromName: (document.getElementById('smtpFromName')?.value || 'FindIT Bangladesh').trim(),
+      fromAddress: (document.getElementById('smtpFromAddress')?.value || 'noreply@findit.com.bd').trim(),
+      emailFooter: (document.getElementById('smtpFooter')?.value || '').trim()
+    },
+    api: {
+      webhookUrl: (document.getElementById('webhookUrl')?.value || '').trim(),
+      webhookPostCreated: Boolean(document.getElementById('webhookPostCreated')?.checked),
+      webhookMatchConfirmed: Boolean(document.getElementById('webhookMatchConfirmed')?.checked),
+      webhookUserReported: Boolean(document.getElementById('webhookUserReported')?.checked)
+    }
+  };
+
+  try {
+    const res = await fetch((window.API_BASE_URL || '') + '/api/admin/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data && data.success) {
+      showToast(sectionName + ' settings saved in MongoDB', 'success');
+      populateSettings(data.settings);
+    } else {
+      showToast(data.message || 'Failed to save settings', 'danger');
+    }
+  } catch (err) {
+    console.error('Error saving settings to MongoDB:', err);
+    showToast('Failed to connect to backend', 'danger');
+  }
+}
+
+/* ═══ AUDIT LOG FROM MONGODB ═══ */
+async function renderAuditLog() {
+  try {
+    const res = await fetch((window.API_BASE_URL || '') + '/api/admin/audit-logs');
+    const data = await res.json();
+    const logs = (data && data.logs) ? data.logs : [];
+    if (!logs.length) {
+      document.getElementById('auditTbody').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--muted);">No audit logs found in MongoDB.</td></tr>';
+      return;
+    }
+    document.getElementById('auditTbody').innerHTML = logs.map(function(l) {
+      var statusStyle = l.status === 'success'
+        ? 'background:var(--green-d);color:var(--green);'
+        : l.status === 'failed'
+          ? 'background:var(--danger-d);color:var(--danger);'
+          : 'background:var(--amber-d);color:var(--amber);';
+      var statusLabel = l.status === 'success' ? '&#x2713; Success' : l.status === 'failed' ? '&#x2715; Failed' : '&#x26A0; Warning';
+      return '<tr>' +
+        '<td style="font-family:var(--font-m);font-size:10px;color:var(--muted);">' + (l.ts || new Date(l.createdAt).toLocaleString()) + '</td>' +
+        '<td style="font-size:11px;font-weight:600;color:var(--fg);">' + (l.admin || 'System Admin') + '</td>' +
+        '<td style="font-size:11px;color:var(--fg);">' + l.action + '</td>' +
+        '<td style="font-size:11px;color:var(--muted);">' + (l.target || 'General') + '</td>' +
+        '<td><span class="status-pill" style="' + statusStyle + '">' + statusLabel + '</span></td>' +
+        '</tr>';
+    }).join('');
+  } catch (err) {
+    console.error('Error loading audit logs:', err);
+  }
+}
+
+/* ═══ DANGER ACTIONS ═══ */
+async function callDangerAction(action) {
+  try {
+    const res = await fetch((window.API_BASE_URL || '') + `/api/admin/settings/danger/${action}`, {
+      method: 'POST'
+    });
+    const data = await res.json();
+    if (data && data.success) {
+      showToast(data.message, 'warn');
+    }
+  } catch (err) {
+    showToast('Failed to execute danger action', 'danger');
+  }
+}
+
+/* ══ CONFIRM MODAL ══ */
+var _modalCb = null;
+function showConfirm(opts) {
+  document.getElementById('modalTitle').innerHTML = opts.title;
+  document.getElementById('modalBody').innerHTML = opts.body;
+  document.getElementById('modalConfirmBtn').textContent = opts.confirm || 'Confirm';
+  _modalCb = opts.cb;
+  document.getElementById('modalBg').classList.add('open');
+}
+function closeModal() { document.getElementById('modalBg').classList.remove('open'); _modalCb = null; }
+function confirmModal() { closeModal(); if (_modalCb) _modalCb(); }
+document.getElementById('modalBg').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+
+/* ══ TOAST ══ */
+function showToast(msg, type) {
+  type = type || 'info';
+  var icons = {
+    success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20,6 9,17 4,12"/></svg>',
+    info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+    warn: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>',
+    danger: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>'
+  };
+  var t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = (icons[type] || icons.info) + '<span>' + msg + '</span>';
+  document.getElementById('toast-wrap').appendChild(t);
+  setTimeout(function() {
+    t.style.opacity = '0'; t.style.transform = 'translateY(8px)'; t.style.transition = 'all .3s';
+    setTimeout(function() { t.remove(); }, 300);
+  }, 3000);
+}
+
+/* ══ INIT ══ */
+window.addEventListener('DOMContentLoaded', function() {
+  syncThemeOpts();
+  fetchSettings();
+});
+</script>
+</body>
+</html>

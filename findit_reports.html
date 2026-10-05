@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>FindIT Admin — Reports &amp; Complaints</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="config.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+button,input,select,textarea{font-family:inherit;}
+html,body{height:100%;overflow:hidden;}
+
+/* ══ TOKENS ══ */
+:root{
+  --bg:#0B0F1A;--card:#141928;--sidebar:#0D1120;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.04);
+  --primary:#6B8AFF;--primary-d:rgba(107,138,255,.14);--primary-g:rgba(107,138,255,.26);
+  --accent:#00D4AA;--fg:#E8EAF6;--muted:#8B93A9;
+  --muted-bg:rgba(255,255,255,.055);--muted-bg2:rgba(255,255,255,.035);
+  --danger:#EF4444;--danger-d:rgba(239,68,68,.12);
+  --amber:#F59E0B;--amber-d:rgba(245,158,11,.13);
+  --green:#4ade80;--green-d:rgba(74,222,128,.11);
+  --violet:#A78BFA;--violet-d:rgba(167,139,250,.12);
+  --radius:16px;
+  --font-h:'Plus Jakarta Sans',sans-serif;
+  --font-b:'Inter',sans-serif;
+  --font-m:'JetBrains Mono',monospace;
+}
+[data-theme="light"]{
+  --bg:#EEF0F8;--card:#FFFFFF;--sidebar:#0D1120;
+  --border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.04);
+  --primary:#4F6EF7;--primary-d:rgba(79,110,247,.10);--primary-g:rgba(79,110,247,.20);
+  --accent:#00C49F;--fg:#0D1120;--muted:#6B7280;
+  --muted-bg:rgba(0,0,0,.05);--muted-bg2:rgba(0,0,0,.03);
+  --danger-d:rgba(239,68,68,.09);--amber-d:rgba(245,158,11,.09);
+  --green-d:rgba(74,222,128,.08);--violet-d:rgba(167,139,250,.09);
+}
+body{font-family:var(--font-b);background:var(--bg);color:var(--fg);font-size:14px;display:flex;}
+.shell{display:flex;height:100vh;width:100%;}
+
+/* ══ SIDEBAR ══ */
+.sidebar{width:232px;height:100vh;display:flex;flex-direction:column;background:var(--sidebar);border-right:1px solid rgba(255,255,255,.05);flex-shrink:0;transition:width .25s;overflow:hidden;z-index:10;}
+.sidebar.collapsed{width:64px;}
+.sidebar-header{height:56px;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid rgba(255,255,255,.05);gap:10px;flex-shrink:0;}
+.logo-mark{width:32px;height:32px;border-radius:9px;flex-shrink:0;background:linear-gradient(135deg,#6B8AFF 0%,#4F6EF7 55%,#00D4AA 100%);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(107,138,255,.38);}
+.logo-mark svg{width:16px;height:16px;}
+.logo-text{overflow:hidden;white-space:nowrap;}
+.logo-name{font-family:var(--font-h);font-size:16px;font-weight:800;color:#fff;letter-spacing:-.3px;display:block;}
+.logo-sub{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.3);display:block;}
+.sidebar-nav{flex:1;overflow-y:auto;padding:12px 8px;display:flex;flex-direction:column;gap:2px;scrollbar-width:none;}
+.sidebar-nav::-webkit-scrollbar{display:none;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;font-size:12px;font-weight:500;color:rgba(255,255,255,.4);cursor:pointer;border:1px solid transparent;transition:all .15s;background:none;width:100%;text-align:left;white-space:nowrap;}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;color:rgba(255,255,255,.3);transition:color .15s;}
+.nav-item:hover{color:rgba(255,255,255,.75);background:rgba(255,255,255,.04);}
+.nav-item:hover svg{color:rgba(255,255,255,.55);}
+.nav-item.active{background:rgba(107,138,255,.13);color:#9BAEFF;border-color:rgba(107,138,255,.22);}
+.nav-item.active svg{color:#6B8AFF;}
+.nav-label{overflow:hidden;}
+.sidebar.collapsed .nav-label{display:none;}
+.sidebar.collapsed .nav-item{justify-content:center;padding:10px;}
+.sidebar-footer{padding:12px 8px;border-top:1px solid rgba(255,255,255,.05);}
+.logout-btn{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;margin-bottom:6px;border:1px solid rgba(239,68,68,.18);border-radius:8px;background:rgba(239,68,68,.08);color:#f87171;cursor:pointer;font-size:12px;font-weight:600;}
+.logout-btn:hover{background:rgba(239,68,68,.15);}
+.logout-btn svg{width:14px;height:14px;flex-shrink:0;}
+.sidebar.collapsed .logout-btn{justify-content:center;padding:10px;}
+.sidebar.collapsed .logout-label{display:none;}
+.collapse-btn{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:7px 10px;border-radius:8px;border:none;background:none;color:rgba(255,255,255,.28);cursor:pointer;width:100%;font-size:11px;transition:all .15s;}
+.collapse-btn:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.55);}
+.sidebar.collapsed .collapse-btn{justify-content:center;}
+.collapse-btn svg{width:14px;height:14px;flex-shrink:0;transition:transform .25s;}
+.sidebar.collapsed .collapse-btn svg{transform:rotate(180deg);}
+.sidebar.collapsed .collapse-label{display:none;}
+
+/* ══ MAIN ══ */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+.topbar{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--border);background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(20px);flex-shrink:0;z-index:9;}
+.topbar-left h2{font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--fg);}
+.topbar-left p{font-size:10px;color:var(--muted);}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.icon-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--muted-bg);color:var(--fg);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;position:relative;}
+.icon-btn:hover{background:var(--muted-bg2);}
+.icon-btn svg{width:14px;height:14px;}
+.notif-dot{position:absolute;top:-3px;right:-3px;width:8px;height:8px;border-radius:50%;background:#EF4444;border:2px solid var(--bg);}
+.lang-btn{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;border:1px solid var(--border);background:var(--muted-bg);color:var(--fg);font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.lang-btn:hover{background:var(--muted-bg2);}
+.avatar-pill{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6B8AFF,#8B5CF6);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;}
+
+/* ══ CONTENT ══ */
+.content-wrap{flex:1;display:flex;overflow:hidden;}
+.left-panel{flex:1;min-width:0;overflow-y:auto;padding:20px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.left-panel::-webkit-scrollbar{width:4px;}
+.left-panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* ══ STATS ROW ══ */
+.stats-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:18px;}
+@media(max-width:1100px){.stats-row{grid-template-columns:repeat(3,1fr);}}
+.stat-mini{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;}
+.stat-mini-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.stat-mini-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.stat-mini-icon svg{width:12px;height:12px;}
+.stat-mini-trend{font-size:9px;font-weight:700;}
+.stat-mini-val{font-family:var(--font-h);font-size:20px;font-weight:800;color:var(--fg);line-height:1;}
+.stat-mini-label{font-size:10px;color:var(--muted);margin-top:3px;}
+.up{color:#4ade80;} .dn{color:#f87171;} .neu{color:var(--muted);}
+
+/* ══ TOOLBAR ══ */
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.tool-search{position:relative;flex:1;min-width:180px;}
+.tool-search input{width:100%;padding:8px 12px 8px 34px;border-radius:10px;background:var(--card);border:1px solid var(--border);color:var(--fg);font-size:12px;outline:none;transition:border-color .15s;}
+.tool-search input:focus{border-color:var(--primary);}
+.tool-search input::placeholder{color:var(--muted);}
+.tool-search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:13px;height:13px;color:var(--muted);}
+.filter-select{padding:7px 10px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--fg);font-size:11px;outline:none;cursor:pointer;}
+.filter-select option{background:var(--card);}
+.export-btn{display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;background:var(--muted-bg);border:1px solid var(--border);color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.export-btn:hover{background:var(--muted-bg2);color:var(--fg);}
+.export-btn svg{width:13px;height:13px;}
+
+/* ══ TABLE ══ */
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.table-head{display:grid;grid-template-columns:28px 90px 1fr 100px 90px 80px 72px;gap:0;padding:10px 16px;border-bottom:1px solid var(--border);}
+.th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);}
+.table-body{display:flex;flex-direction:column;}
+.table-row{display:grid;grid-template-columns:28px 90px 1fr 100px 90px 80px 72px;gap:0;padding:11px 16px;border-bottom:1px solid var(--border2);cursor:pointer;transition:background .12s;align-items:center;}
+.table-row:last-child{border-bottom:none;}
+.table-row:hover{background:var(--muted-bg);}
+.table-row.selected{background:var(--primary-d);border-left:3px solid var(--primary);}
+.table-row.selected:hover{background:var(--primary-g);}
+.row-check{width:15px;height:15px;border-radius:4px;border:1.5px solid var(--border);background:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.row-check.checked{background:var(--primary);border-color:var(--primary);}
+.row-check.checked::after{content:'✓';font-size:9px;color:#fff;font-weight:700;}
+.td-id{font-family:var(--font-m);font-size:10px;color:var(--muted);}
+.reporter-cell{display:flex;align-items:center;gap:7px;min-width:0;}
+.rep-av{width:24px;height:24px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;flex-shrink:0;}
+.rep-info{min-width:0;}
+.rep-name{font-size:11px;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rep-sub{font-size:9px;color:var(--muted);}
+.subject-cell{min-width:0;}
+.subject-title{font-size:11px;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.subject-reason{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.priority-chip{font-size:9px;font-weight:700;padding:2px 7px;border-radius:999px;white-space:nowrap;}
+.p-high{background:rgba(239,68,68,.14);color:#EF4444;}
+.p-medium{background:rgba(245,158,11,.14);color:#F59E0B;}
+.p-low{background:rgba(139,147,169,.12);color:#8B93A9;}
+.status-chip{font-size:9px;font-weight:700;padding:2px 7px;border-radius:999px;white-space:nowrap;}
+.s-open{background:rgba(107,138,255,.14);color:#6B8AFF;}
+.s-resolved{background:rgba(74,222,128,.12);color:#4ade80;}
+.s-rejected{background:rgba(139,147,169,.12);color:#8B93A9;}
+.s-reviewing{background:rgba(245,158,11,.14);color:#F59E0B;}
+.td-date{font-family:var(--font-m);font-size:10px;color:var(--muted);}
+.row-actions{display:flex;align-items:center;gap:4px;}
+.row-btn{width:26px;height:26px;border-radius:7px;border:1px solid var(--border);background:var(--muted-bg);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.row-btn:hover{background:var(--primary-d);border-color:rgba(107,138,255,.22);color:var(--primary);}
+.row-btn svg{width:11px;height:11px;}
+.empty-state{padding:48px 16px;text-align:center;}
+.empty-state svg{width:36px;height:36px;color:var(--muted);opacity:.4;margin:0 auto 12px;display:block;}
+.empty-state p{font-size:12px;color:var(--muted);}
+
+/* pagination */
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--border);}
+.page-info{font-size:11px;color:var(--muted);}
+.page-btns{display:flex;gap:4px;}
+.page-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:var(--muted-bg);color:var(--fg);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.page-btn:hover{background:var(--primary-d);color:var(--primary);}
+.page-btn.active{background:var(--primary-d);border-color:rgba(107,138,255,.28);color:var(--primary);font-weight:700;}
+.page-btn svg{width:11px;height:11px;}
+
+/* ══ DETAIL PANEL ══ */
+.detail-panel{width:380px;flex-shrink:0;overflow-y:auto;padding:20px;border-left:1px solid var(--border);background:color-mix(in srgb,var(--card) 70%,transparent);scrollbar-width:none;}
+.detail-panel::-webkit-scrollbar{display:none;}
+.detail-panel.hidden{display:none;}
+@media(max-width:1060px){.detail-panel{width:320px;}}
+.dp-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.dp-header-label{font-size:11px;font-weight:700;color:var(--muted);}
+.dp-close-btn{width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--muted-bg);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.dp-close-btn:hover{background:var(--muted-bg2);}
+.dp-close-btn svg{width:13px;height:13px;}
+
+/* report id bar */
+.dp-id-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--muted-bg);border-radius:10px;margin-bottom:14px;}
+.dp-id-text{font-family:var(--font-m);font-size:11px;font-weight:600;color:var(--fg);}
+.dp-id-chips{display:flex;gap:6px;}
+
+/* listed post preview */
+.post-preview{background:var(--muted-bg);border:1px solid var(--border2);border-radius:12px;padding:14px;margin-bottom:14px;}
+.post-preview-top{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.post-type-chip{font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;}
+.type-lost{background:rgba(245,158,11,.18);color:#F59E0B;}
+.type-found{background:rgba(0,212,170,.15);color:#00D4AA;}
+.post-title{font-size:13px;font-weight:800;color:var(--fg);font-family:var(--font-h);margin-bottom:4px;}
+.post-meta{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.post-meta span{display:flex;align-items:center;gap:3px;}
+.post-meta svg{width:10px;height:10px;}
+.post-img{width:100%;height:100px;border-radius:8px;object-fit:cover;background:linear-gradient(135deg,rgba(107,138,255,.08),rgba(0,212,170,.06));display:flex;align-items:center;justify-content:center;margin-top:10px;}
+.post-img svg{width:28px;height:28px;color:var(--muted);opacity:.4;}
+
+/* reporter info */
+.dp-section{margin-bottom:16px;}
+.dp-section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;}
+.dp-info-grid{display:flex;flex-direction:column;gap:6px;}
+.dp-info-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;padding:7px 10px;border-radius:9px;background:var(--muted-bg);}
+.dp-info-key{font-size:10px;color:var(--muted);white-space:nowrap;}
+.dp-info-val{font-size:11px;font-weight:600;color:var(--fg);text-align:right;word-break:break-all;}
+.dp-info-val.mono{font-family:var(--font-m);font-size:10px;}
+
+/* reason block */
+.reason-block{padding:10px 12px;background:var(--amber-d);border:1px solid rgba(245,158,11,.18);border-radius:10px;margin-bottom:14px;}
+.reason-label{font-size:9px;font-weight:700;text-transform:uppercase;color:var(--amber);margin-bottom:4px;}
+.reason-text{font-size:11px;color:var(--fg);line-height:1.5;}
+
+/* admin note */
+.admin-note-wrap{margin-bottom:14px;}
+.admin-note-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px;}
+.admin-note-input{width:100%;padding:10px 12px;border-radius:10px;background:var(--muted-bg);border:1px solid var(--border);color:var(--fg);font-size:11px;resize:none;outline:none;transition:border-color .15s;line-height:1.5;}
+.admin-note-input:focus{border-color:var(--primary);}
+.admin-note-input::placeholder{color:var(--muted);}
+
+/* action buttons */
+.dp-actions{display:flex;flex-direction:column;gap:7px;margin-bottom:16px;}
+.action-btn{width:100%;padding:10px 14px;border-radius:11px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid;display:flex;align-items:center;gap:8px;transition:all .15s;text-align:left;}
+.action-btn svg{width:14px;height:14px;flex-shrink:0;}
+.action-btn .btn-label{flex:1;}
+.action-btn .btn-sub{font-size:10px;font-weight:400;opacity:.7;}
+.btn-resolve{background:var(--green-d);border-color:rgba(74,222,128,.2);color:#4ade80;}
+.btn-resolve:hover{background:rgba(74,222,128,.18);}
+.btn-reject{background:var(--muted-bg);border-color:var(--border);color:var(--muted);}
+.btn-reject:hover{background:var(--muted-bg2);color:var(--fg);}
+.btn-warn{background:var(--amber-d);border-color:rgba(245,158,11,.22);color:#F59E0B;}
+.btn-warn:hover{background:rgba(245,158,11,.2);}
+.btn-suspend{background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.2);color:#F59E0B;}
+.btn-suspend:hover{background:rgba(245,158,11,.18);}
+.btn-delete{background:var(--danger-d);border-color:rgba(239,68,68,.2);color:#EF4444;}
+.btn-delete:hover{background:rgba(239,68,68,.18);}
+.btn-dismiss{background:var(--muted-bg);border-color:var(--border);color:var(--muted);}
+.btn-dismiss:hover{background:var(--muted-bg2);color:var(--fg);}
+
+/* timeline */
+.timeline{display:flex;flex-direction:column;gap:10px;}
+.tl-item{display:flex;align-items:flex-start;gap:8px;}
+.tl-icon{width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.tl-icon svg{width:11px;height:11px;}
+.tl-body{flex:1;}
+.tl-title{font-size:11px;font-weight:600;color:var(--fg);line-height:1.3;}
+.tl-time{font-size:10px;color:var(--muted);margin-top:1px;}
+
+/* toast */
+.toast-wrap{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:flex-end;pointer-events:none;}
+.toast{display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:12px;border:1px solid;font-size:12px;font-weight:600;box-shadow:0 12px 40px rgba(0,0,0,.35);pointer-events:all;animation:slideUp .22s ease;min-width:260px;max-width:320px;}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.toast svg{width:14px;height:14px;flex-shrink:0;}
+.toast.success{background:rgba(74,222,128,.11);border-color:rgba(74,222,128,.22);color:#4ade80;}
+.toast.warning{background:rgba(245,158,11,.11);border-color:rgba(245,158,11,.22);color:#F59E0B;}
+.toast.danger{background:rgba(239,68,68,.11);border-color:rgba(239,68,68,.22);color:#EF4444;}
+.toast.info{background:rgba(107,138,255,.11);border-color:rgba(107,138,255,.22);color:var(--primary);}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);z-index:9990;display:flex;align-items:center;justify-content:center;animation:fadeIn .18s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.modal-box{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;width:420px;max-width:94vw;box-shadow:0 24px 80px rgba(0,0,0,.5);animation:popIn .2s ease;}
+@keyframes popIn{from{opacity:0;transform:scale(.95);}to{opacity:1;transform:scale(1);}}
+.modal-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+.modal-icon svg{width:22px;height:22px;}
+.modal-title{font-family:var(--font-h);font-size:17px;font-weight:800;color:var(--fg);text-align:center;margin-bottom:6px;}
+.modal-sub{font-size:12px;color:var(--muted);text-align:center;line-height:1.5;margin-bottom:20px;}
+.modal-textarea{width:100%;padding:10px 12px;border-radius:10px;background:var(--muted-bg);border:1px solid var(--border);color:var(--fg);font-size:12px;resize:none;outline:none;transition:border-color .15s;margin-bottom:16px;}
+.modal-textarea:focus{border-color:var(--primary);}
+.modal-textarea::placeholder{color:var(--muted);}
+.modal-btns{display:flex;gap:10px;}
+.modal-btn-cancel{flex:1;padding:10px;border-radius:11px;border:1px solid var(--border);background:var(--muted-bg);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;}
+.modal-btn-cancel:hover{background:var(--muted-bg2);}
+.modal-btn-confirm{flex:1;padding:10px;border-radius:11px;border:1px solid;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;}
+.modal-btn-confirm.green{background:var(--green-d);border-color:rgba(74,222,128,.22);color:#4ade80;}
+.modal-btn-confirm.amber{background:var(--amber-d);border-color:rgba(245,158,11,.22);color:#F59E0B;}
+.modal-btn-confirm.red{background:var(--danger-d);border-color:rgba(239,68,68,.2);color:#EF4444;}
+.modal-btn-confirm.neutral{background:var(--muted-bg);border-color:var(--border);color:var(--muted);}
+.modal-btn-confirm:hover{opacity:.85;}
+
+/* AI panel */
+.ai-panel{padding:12px;background:linear-gradient(135deg,rgba(107,138,255,.07),rgba(0,212,170,.05));border:1px solid rgba(107,138,255,.14);border-radius:12px;margin-bottom:14px;}
+.ai-panel-top{display:flex;align-items:center;gap:7px;margin-bottom:8px;}
+.ai-chip{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:var(--primary-d);color:var(--primary);padding:2px 7px;border-radius:999px;}
+.ai-suggestion{font-size:11px;color:var(--fg);line-height:1.55;}
+.ai-confidence{display:flex;align-items:center;gap:6px;margin-top:8px;}
+.ai-conf-label{font-size:10px;color:var(--muted);}
+.ai-conf-bar{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.ai-conf-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:2px;}
+.ai-conf-pct{font-family:var(--font-m);font-size:10px;font-weight:700;color:var(--primary);}
+body{font-size:15px;}
+.nav-item{font-size:13px;}
+.topbar-left h2{font-size:15px;}
+.topbar-left p{font-size:11px;}
+.section-title{font-size:16px;}
+.section-sub{font-size:12px;}
+.stat-label{font-size:12px;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
+        <circle cx="11" cy="11" r="4"/><line x1="14.5" y1="14.5" x2="19" y2="19"/>
+        <circle cx="11" cy="11" r="1.5" fill="#fff" stroke="none"/>
+      </svg>
+    </div>
+    <div class="logo-text">
+      <span class="logo-name">FindIT</span>
+      <span class="logo-sub">Admin</span>
+    </div>
+  </div>
+  <nav class="sidebar-nav" id="sidebar-nav"></nav>
+  <div class="sidebar-footer">
+    <button class="logout-btn" onclick="localStorage.removeItem('findit_admin_active');sessionStorage.removeItem('findit_admin_active');location.href='findit-otp.html'" title="Log out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1 2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span class="logout-label">Logout</span></button>
+    <button class="collapse-btn" onclick="toggleSidebar()">
+      <span class="collapse-label">Collapse</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <h2>Reports &amp; Complaints</h2>
+      <p id="page-date"></p>
+    </div>
+    <div class="topbar-right">
+      <button class="lang-btn" onclick="toggleLang()" id="lang-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+        বাংলা
+      </button>
+      <button class="icon-btn" onclick="toggleTheme()" id="theme-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      </button>
+      <button class="icon-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span class="notif-dot"></span>
+      </button>
+      <button class="avatar-pill" onclick="location.href='findit-settings.html'" title="Admin profile">SA</button>
+    </div>
+  </header>
+
+  <div class="content-wrap">
+    <!-- LEFT -->
+    <div class="left-panel">
+      <div class="stats-row" id="stats-row"></div>
+      <div class="toolbar">
+        <div class="tool-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Search by ID, reporter, subject…" id="search-input" oninput="filterReports()"/>
+        </div>
+        <select class="filter-select" id="status-filter" onchange="filterReports()">
+          <option value="all">All Status</option>
+          <option value="open">Open</option>
+          <option value="reviewing">Under Review</option>
+          <option value="resolved">Resolved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <select class="filter-select" id="priority-filter" onchange="filterReports()">
+          <option value="all">All Priority</option>
+          <option value="high">High</option>
+          <option value="medium">Medium</option>
+          <option value="low">Low</option>
+        </select>
+        <select class="filter-select" id="type-filter" onchange="filterReports()">
+          <option value="all">All Types</option>
+          <option value="fraud">Fraud</option>
+          <option value="spam">Spam</option>
+          <option value="inappropriate">Inappropriate</option>
+          <option value="duplicate">Duplicate</option>
+          <option value="other">Other</option>
+        </select>
+        <button class="export-btn" onclick="showToast('Report exported as CSV','info')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export
+        </button>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-head">
+          <div class="th"></div>
+          <div class="th">Report ID</div>
+          <div class="th">Reporter / Subject</div>
+          <div class="th">Type</div>
+          <div class="th">Priority</div>
+          <div class="th">Status</div>
+          <div class="th">Actions</div>
+        </div>
+        <div class="table-body" id="table-body"></div>
+        <div class="pagination">
+          <span class="page-info" id="page-info"></span>
+          <div class="page-btns" id="page-btns"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT DETAIL -->
+    <div class="detail-panel hidden" id="detail-panel">
+      <div class="dp-header">
+        <span class="dp-header-label">Report Detail</span>
+        <button class="dp-close-btn" onclick="closeDetail()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div id="detail-content"></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+<div id="modal-container"></div>
+
+<script>
+/* ═══ NAV ═══ */
+const NAV=[
+  {key:'dashboard',label:'Dashboard',bn:'ড্যাশবোর্ড',icon:'<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'},
+  {key:'users',label:'User Management',bn:'ব্যবহারকারী',icon:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>'},
+  {key:'reports',label:'Reports & Complaints',bn:'রিপোর্ট ও অভিযোগ',icon:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>'},
+  {key:'categories',label:'Categories',bn:'বিভাগ',icon:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>'},
+  {key:'notifications',label:'Notifications',bn:'বিজ্ঞপ্তি',icon:'<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>'},
+  {key:'analytics',label:'Analytics',bn:'বিশ্লেষণ',icon:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'},
+  {key:'settings',label:'Settings',bn:'সেটিংস',icon:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06-.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>'},
+];
+
+const AVATARS=['linear-gradient(135deg,#6B8AFF,#4F6EF7)','linear-gradient(135deg,#f43f5e,#ec4899)','linear-gradient(135deg,#F59E0B,#f97316)','linear-gradient(135deg,#00D4AA,#06b6d4)','linear-gradient(135deg,#A78BFA,#8B5CF6)','linear-gradient(135deg,#4ade80,#22c55e)','linear-gradient(135deg,#fb923c,#f43f5e)','linear-gradient(135deg,#38bdf8,#818cf8)'];
+
+/* ═══ REPORT DATA ═══ */
+const REPORT_REASONS={
+  fraud:'Fraudulent listing — item never existed or seller is fake',
+  spam:'Spam or repeated duplicate posting from same account',
+  inappropriate:'Inappropriate content — offensive images or language',
+  duplicate:'Exact duplicate of an existing active listing',
+  other:'Other policy violation or suspicious behaviour',
+};
+const AI_SUGGESTIONS=[
+  {text:'High probability of fraudulent activity. Multiple matching reports from different users. Recommend immediate listing removal and account suspension.',conf:91},
+  {text:'Spam pattern detected — user has posted 7 nearly identical listings in 48h. Auto-flagged by anomaly detection.',conf:87},
+  {text:'Content violates community guidelines section 4.2. One prior warning on record.',conf:78},
+  {text:'Listing appears duplicated from #POST-0091 posted 3 days ago. Recommend merging or removing.',conf:82},
+  {text:'Low severity violation. First offence detected. Warn user and monitor.',conf:65},
+  {text:'Suspicious contact info detected. Phone number linked to 3 other suspended accounts.',conf:94},
+  {text:'Pattern matches previous resolved fraud case #RPT-0081. Same device fingerprint.',conf:88},
+  {text:'Automated sentiment analysis flagged abusive language in listing description.',conf:73},
+];
+const POST_TYPES=['lost','found','lost','found','lost','lost','found','lost'];
+const POST_LOCATIONS=['Airport, Dhaka','Bashundhara, Dhaka','Gulshan, Dhaka','Chattogram Station','Rajshahi Bus Stand','Sylhet Airport','Khulna Market','Dhanmondi, Dhaka'];
+
+const MOCK_REPORTS_RAW=[
+  {id:'RPT-001',reporterId:'USR003',reporterName:'Tanvir Hasan',reporterAv:2,reporterInitials:'TH',
+   subject:'Fake Gold Necklace Listing',subjectId:'POST-0142',type:'fraud',priority:'high',status:'open',
+   date:'2025-07-27',time:'09:14 AM',reportedUser:'Karim Molla',reportedUserId:'USR007',
+   ai:0,postType:0,location:0,
+   timeline:[
+     {icon:'<circle cx="12" cy="12" r="10"/>',bg:'rgba(239,68,68,.12)',col:'#EF4444',t:'Report submitted by Tanvir Hasan',tm:'09:14 AM, Jul 27'},
+     {icon:'<path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8"/>',bg:'rgba(107,138,255,.12)',col:'#6B8AFF',t:'AI analysis completed — 91% fraud confidence',tm:'09:14 AM, Jul 27'},
+   ]
+  },
+  {id:'RPT-002',reporterId:'USR001',reporterName:'Md. Rahim Uddin',reporterAv:0,reporterInitials:'RU',
+   subject:'Repeated Spam — iPhone Listings',subjectId:'POST-0098',type:'spam',priority:'medium',status:'reviewing',
+   date:'2025-07-26',time:'03:45 PM',reportedUser:'Unknown User',reportedUserId:'USR009',
+   ai:1,postType:1,location:1,
+   timeline:[
+     {icon:'<circle cx="12" cy="12" r="10"/>',bg:'rgba(245,158,11,.12)',col:'#F59E0B',t:'Report submitted by Md. Rahim Uddin',tm:'03:45 PM, Jul 26'},
+     {icon:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',bg:'rgba(107,138,255,.12)',col:'#6B8AFF',t:'Admin assigned — Under review',tm:'04:10 PM, Jul 26'},
+   ]
+  },
+  {id:'RPT-003',reporterId:'USR004',reporterName:'Ayesha Akter',reporterAv:3,reporterInitials:'AA',
+   subject:'Offensive Language in Description',subjectId:'POST-0211',type:'inappropriate',priority:'medium',status:'open',
+   date:'2025-07-26',time:'11:20 AM',reportedUser:'Mehedi Hasan',reportedUserId:'USR005',
+   ai:2,postType:2,location:2,
+   timeline:[
+     {icon:'<circle cx="12" cy="12" r="10"/>',bg:'rgba(239,68,68,.12)',col:'#EF4444',t:'Report submitted by Ayesha Akter',tm:'11:20 AM, Jul 26'},
+   ]
+  },
+  {id:'RPT-004',reporterId:'USR002',reporterName:'Nusrat Jahan',reporterAv:1,reporterInitials:'NJ',
+   subject:'Duplicate Wallet Listing',subjectId:'POST-0187',type:'duplicate',priority:'low',status:'resolved',
+   date:'2025-07-25',time:'02:30 PM',reportedUser:'Shirin Akter',reportedUserId:'USR008',
+   ai:3,postType:3,location:3,
+   timeline:[
+     {icon:'<circle cx="12" cy="12" r="10"/>',bg:'rgba(107,138,255,.12)',col:'#6B8AFF',t:'Report submitted by Nusrat Jahan',tm:'02:30 PM, Jul 25'},
+     {icon:'<polyline points="20 6 9 17 4 12"/>',bg:'rgba(74,222,128,.12)',col:'#4ade80',t:'Report resolved — duplicate listing removed',tm:'05:15 PM, Jul 25'},
+   ]
+  },
+  {id:'RPT-005',reporterId:'USR006',reporterName:'Roksana Begum',reporterAv:5,reporterInitials:'RB',
+   subject:'Suspicious Contact Info',subjectId:'POST-0044',type:'fraud',priority:'high',status:'open',
+   date:'2025-07-25',time:'10:05 AM',reportedUser:'Karim Molla',reportedUserId:'USR007',
+   ai:5,postType:4,location:4,
+   timeline:[
+     {icon:'<circle cx="12" cy="12" r="10"/>',bg:'rgba(239,68,68,.12)',col:'#EF4444',t:'Report submitted by Roksana Begum',tm:'10:05 AM, Jul 25'},
+     {icon:'<path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8"/>',bg:'rgba(107,138,255,.12)',col:'#6B8AFF',t:'AI flagged — linked to 3 suspended accounts',tm:'10:06 AM, Jul 25'},
+   ]
+  },
+  {id:'RPT-006',reporterId:'USR005',reporterName:'Mehedi Hasan',reporterAv:4,reporterInitials:'MH',
+   subject:'Fake University ID Card',subjectId:'POST-0302',type:'fraud',priority:'high',status:'reviewing',
+   date:'2025-07-24',time:'08:45 AM',reportedUser:'Unknown User',reportedUserId:'USR010',
+   ai:6,postType:5,location:5,
+   timeline:[
+     {icon:'<circle cx="12" cy="12" r="10"/>',bg:'rgba(239,68,68,.12)',col:'#EF4444',t:'Report submitted by Mehedi Hasan',tm:'08:45 AM, Jul 24'},
+     {icon:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',bg:'rgba(245,158,11,.12)',col:'#F59E0B',t:'Assigned to review queue',tm:'09:00 AM, Jul 24'},
+   ]
+  },
+  {id:'RPT-007',reporterId:'USR001',reporterName:'Md. Rahim Uddin',reporterAv:0,reporterInitials:'RU',
+   subject:'Abusive Language in Comments',subjectId:'POST-0178',type:'inappropriate',priority:'low',status:'rejected',
+   date:'2025-07-23',time:'04:20 PM',reportedUser:'Nusrat Jahan',reportedUserId:'USR002',
+   ai:7,postType:6,location:6,
+   timeline:[
+     {icon:'<circle cx="12" cy="12" r="10"/>',bg:'rgba(107,138,255,.12)',col:'#6B8AFF',t:'Report submitted by Md. Rahim Uddin',tm:'04:20 PM, Jul 23'},
+     {icon:'<line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',bg:'rgba(139,147,169,.12)',col:'#8B93A9',t:'Report rejected — comment was within guidelines',tm:'06:00 PM, Jul 23'},
+   ]
+  },
+  {id:'RPT-008',reporterId:'USR008',reporterName:'Shirin Akter',reporterAv:7,reporterInitials:'SA',
+   subject:'Stolen MacBook Listing',subjectId:'POST-0089',type:'fraud',priority:'high',status:'open',
+   date:'2025-07-22',time:'01:15 PM',reportedUser:'Unknown User',reportedUserId:'USR011',
+   ai:4,postType:7,location:7,
+   timeline:[
+     {icon:'<circle cx="12" cy="12" r="10"/>',bg:'rgba(239,68,68,.12)',col:'#EF4444',t:'Report submitted by Shirin Akter',tm:'01:15 PM, Jul 22'},
+   ]
+  },
+];
+
+
+/* ═══ STATE ═══ */
+let lang='en', theme='dark', collapsed=false;
+let reports=[];
+let selectedId=null, currentPage=1, pageSize=6;
+
+/* ═══ INIT ═══ */
+window.addEventListener('DOMContentLoaded',()=>{
+  buildNav(); renderStats(); renderTable();
+  document.getElementById('page-date').textContent=
+    new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  fetchReportsFromDB();
+});
+
+/* ═══ FETCH FROM DB ═══ */
+async function fetchReportsFromDB(){
+  try{
+    const baseUrl=window.API_BASE_URL||'';
+    const res=await fetch(`${baseUrl}/api/admin/reports-and-complaints`);
+    const data=await res.json();
+    if(data&&Array.isArray(data.reports)){
+      reports=data.reports.map(r=>({...r,adminNote:''}));
+      renderStats(); renderTable();
+      if(selectedId) renderDetail();
+    }
+  }catch(err){ console.error('Error fetching reports:',err); }
+}
+
+
+/* ═══ NAV ═══ */
+const PAGE_MAP={
+  dashboard:'findit_dashboard.html',
+  users:'findit_usermanagement.html',
+  reports:'findit_reports.html',
+  categories:'findit_categories.html',
+  items:'findit_items.html',
+  messages:'findit_messages.html',
+  settings:'findit_settings.html',
+};
+function goPage(key){
+  const url=PAGE_MAP[key];
+  if(url) window.location.href=url;
+}
+function buildNav(){
+  document.getElementById('sidebar-nav').innerHTML=NAV.map(n=>`
+    <button class="nav-item${n.key==='reports'?' active':''}" id="nav-${n.key}" onclick="goPage('${n.key}')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${n.icon}</svg>
+      <span class="nav-label">${lang==='en'?n.label:n.bn}</span>
+    </button>`).join('');
+}
+function toggleSidebar(){
+  collapsed=!collapsed;
+  document.getElementById('sidebar').classList.toggle('collapsed',collapsed);
+}
+
+/* ═══ THEME / LANG ═══ */
+function toggleTheme(){
+  theme=theme==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',theme);
+  const btn=document.getElementById('theme-btn');
+  btn.innerHTML=theme==='dark'
+    ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>'
+    :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+}
+function toggleLang(){
+  lang=lang==='en'?'bn':'en';
+  document.getElementById('lang-btn').lastChild.textContent=' '+(lang==='en'?'বাংলা':'English');
+  buildNav(); renderStats();
+}
+
+/* ═══ STATS ═══ */
+const STAT_DEFS=[
+  {key:'total',label:'Total Reports',bn:'মোট রিপোর্ট',icon:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>',col:'#6B8AFF',bg:'rgba(107,138,255,.12)'},
+  {key:'open',label:'Open',bn:'খোলা',icon:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',col:'#EF4444',bg:'rgba(239,68,68,.10)'},
+  {key:'reviewing',label:'Reviewing',bn:'পর্যালোচনাধীন',icon:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',col:'#F59E0B',bg:'rgba(245,158,11,.12)'},
+  {key:'resolved',label:'Resolved',bn:'সমাধান হয়েছে',icon:'<polyline points="20 6 9 17 4 12"/>',col:'#4ade80',bg:'rgba(74,222,128,.10)'},
+  {key:'rejected',label:'Rejected',bn:'প্রত্যাখ্যাত',icon:'<line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',col:'#8B93A9',bg:'rgba(139,147,169,.10)'},
+  {key:'high',label:'High Priority',bn:'উচ্চ অগ্রাধিকার',icon:'<polyline points="18 15 12 9 6 15"/>',col:'#EF4444',bg:'rgba(239,68,68,.10)'},
+];
+function renderStats(){
+  const cnt={
+    total:reports.length,
+    open:reports.filter(r=>r.status==='open').length,
+    reviewing:reports.filter(r=>r.status==='reviewing').length,
+    resolved:reports.filter(r=>r.status==='resolved').length,
+    rejected:reports.filter(r=>r.status==='rejected').length,
+    high:reports.filter(r=>r.priority==='high').length,
+  };
+  document.getElementById('stats-row').innerHTML=STAT_DEFS.map(s=>`
+    <div class="stat-mini">
+      <div class="stat-mini-top">
+        <div class="stat-mini-icon" style="background:${s.bg}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="${s.col}" stroke-width="2" stroke-linecap="round">${s.icon}</svg>
+        </div>
+      </div>
+      <div class="stat-mini-val">${cnt[s.key]}</div>
+      <div class="stat-mini-label">${lang==='en'?s.label:s.bn}</div>
+    </div>`).join('');
+}
+
+/* ═══ TABLE ═══ */
+function getFiltered(){
+  const q=document.getElementById('search-input').value.toLowerCase();
+  const sf=document.getElementById('status-filter').value;
+  const pf=document.getElementById('priority-filter').value;
+  const tf=document.getElementById('type-filter').value;
+  return reports.filter(r=>{
+    const m=!q||(r.id.toLowerCase().includes(q)||r.reporterName.toLowerCase().includes(q)||r.subject.toLowerCase().includes(q)||r.reportedUser.toLowerCase().includes(q));
+    return m&&(sf==='all'||r.status===sf)&&(pf==='all'||r.priority===pf)&&(tf==='all'||r.type===tf);
+  });
+}
+function filterReports(){ currentPage=1; renderTable(); }
+
+function renderTable(){
+  const filtered=getFiltered();
+  const total=filtered.length;
+  const start=(currentPage-1)*pageSize;
+  const paged=filtered.slice(start,start+pageSize);
+  const tbody=document.getElementById('table-body');
+  if(!paged.length){
+    tbody.innerHTML=`<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/></svg><p>No reports found matching your filters.</p></div>`;
+  } else {
+    tbody.innerHTML=paged.map(rowHTML).join('');
+  }
+  document.getElementById('page-info').textContent=`Showing ${Math.min(start+1,total)}–${Math.min(start+pageSize,total)} of ${total}`;
+  renderPager(total);
+}
+
+const PRIORITY_CLASS={high:'p-high',medium:'p-medium',low:'p-low'};
+const STATUS_CLASS={open:'s-open',reviewing:'s-reviewing',resolved:'s-resolved',rejected:'s-rejected'};
+const STATUS_LABEL={open:'Open',reviewing:'Reviewing',resolved:'Resolved',rejected:'Rejected'};
+const TYPE_LABEL={fraud:'Fraud',spam:'Spam',inappropriate:'Inappropriate',duplicate:'Duplicate',other:'Other'};
+function getTypeLabel(r){
+  return r.typeLabel || TYPE_LABEL[r.type] || r.type || 'Other';
+}
+
+function rowHTML(r){
+  const sel=r.id===selectedId;
+  return `<div class="table-row${sel?' selected':''}" onclick="selectReport('${r.id}')">
+    <div><div class="row-check${sel?' checked':''}"></div></div>
+    <div class="td-id">${r.id}</div>
+    <div>
+      <div class="reporter-cell">
+        <div class="rep-av" style="background:${AVATARS[r.reporterAv]}">${r.reporterInitials}</div>
+        <div class="rep-info">
+          <div class="rep-name">${r.reporterName}</div>
+          <div class="rep-sub">${r.subject.length>32?r.subject.slice(0,32)+'…':r.subject}</div>
+        </div>
+      </div>
+    </div>
+    <div><span class="priority-chip" style="background:rgba(139,147,169,.12);color:var(--muted);">${getTypeLabel(r)}</span></div>
+    <div><span class="priority-chip ${PRIORITY_CLASS[r.priority]}">${r.priority}</span></div>
+    <div><span class="status-chip ${STATUS_CLASS[r.status]}">${STATUS_LABEL[r.status]}</span></div>
+    <div class="row-actions" onclick="event.stopPropagation()">
+      <button class="row-btn" title="View" onclick="selectReport('${r.id}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+      <button class="row-btn" title="Resolve" onclick="quickResolve('${r.id}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+      <button class="row-btn" title="Reject" onclick="quickReject('${r.id}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  </div>`;
+}
+
+function quickResolve(id){
+  const r=reports.find(r=>r.id===id);
+  if(!r||r.status==='resolved') return;
+  updateReport(id,{status:'resolved'});
+  showToast(`${id} marked as resolved`,'success');
+}
+function quickReject(id){
+  const r=reports.find(r=>r.id===id);
+  if(!r||r.status==='rejected') return;
+  updateReport(id,{status:'rejected'});
+  showToast(`${id} rejected`,'info');
+}
+
+function renderPager(total){
+  const pages=Math.ceil(total/pageSize)||1;
+  const wrap=document.getElementById('page-btns');
+  let html='';
+  const prevDis=currentPage===1?'disabled style="opacity:.35;pointer-events:none;"':'';
+  const nextDis=currentPage===pages?'disabled style="opacity:.35;pointer-events:none;"':'';
+  html+=`<button class="page-btn" onclick="changePage(${currentPage-1})" ${prevDis}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg></button>`;
+  for(let i=1;i<=pages;i++) html+=`<button class="page-btn${i===currentPage?' active':''}" onclick="changePage(${i})">${i}</button>`;
+  html+=`<button class="page-btn" onclick="changePage(${currentPage+1})" ${nextDis}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg></button>`;
+  wrap.innerHTML=html;
+}
+function changePage(p){ currentPage=p; renderTable(); }
+
+/* ═══ DETAIL ═══ */
+function selectReport(id){
+  selectedId=id; renderTable(); renderDetail();
+  document.getElementById('detail-panel').classList.remove('hidden');
+}
+function closeDetail(){
+  selectedId=null; renderTable();
+  document.getElementById('detail-panel').classList.add('hidden');
+}
+
+function renderDetail(){
+  const r=reports.find(r=>r.id===selectedId);
+  if(!r) return;
+  const ai=AI_SUGGESTIONS[r.ai];
+  const postT=POST_TYPES[r.postType];
+  const postLoc=POST_LOCATIONS[r.location];
+  const pClass=PRIORITY_CLASS[r.priority];
+  const sClass=STATUS_CLASS[r.status];
+  const isActionable=r.status==='open'||r.status==='reviewing';
+
+  const actionBtns=isActionable?`
+    <button class="action-btn btn-resolve" onclick="doAction('${r.id}','resolve')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+      <div><div class="btn-label">Resolve Report</div><div class="btn-sub">Mark as dealt with</div></div>
+    </button>
+    <button class="action-btn btn-reject" onclick="doAction('${r.id}','reject')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <div><div class="btn-label">Reject Report</div><div class="btn-sub">No violation found</div></div>
+    </button>
+    <button class="action-btn btn-warn" onclick="doAction('${r.id}','warn')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <div><div class="btn-label">Warn User</div><div class="btn-sub">Issue formal warning to ${r.reportedUser.split(' ')[0]}</div></div>
+    </button>
+    <button class="action-btn btn-suspend" onclick="doAction('${r.id}','suspend')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <div><div class="btn-label">Suspend User</div><div class="btn-sub">Temporarily block ${r.reportedUser.split(' ')[0]}</div></div>
+    </button>
+    <button class="action-btn btn-delete" onclick="doAction('${r.id}','delete')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+      <div><div class="btn-label">Delete Listing</div><div class="btn-sub">Remove ${r.subjectId} permanently</div></div>
+    </button>`
+  :`<div style="padding:14px;text-align:center;background:var(--muted-bg);border-radius:10px;font-size:11px;color:var(--muted);">This report is <strong style="color:var(--fg)">${r.status}</strong> — no further action required.</div>`;
+
+  document.getElementById('detail-content').innerHTML=`
+    <div class="dp-id-bar">
+      <span class="dp-id-text">${r.id}</span>
+      <div class="dp-id-chips">
+        <span class="priority-chip ${pClass}">${r.priority}</span>
+        <span class="status-chip ${sClass}">${STATUS_LABEL[r.status]}</span>
+      </div>
+    </div>
+
+    <!-- AI Suggestion -->
+    <div class="ai-panel">
+      <div class="ai-panel-top">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2" stroke-linecap="round" width="13" height="13"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+        <span class="ai-chip">AI Analysis</span>
+      </div>
+      <div class="ai-suggestion">${ai.text}</div>
+      <div class="ai-confidence">
+        <span class="ai-conf-label">Confidence</span>
+        <div class="ai-conf-bar"><div class="ai-conf-fill" style="width:${ai.conf}%"></div></div>
+        <span class="ai-conf-pct">${ai.conf}%</span>
+      </div>
+    </div>
+
+    <!-- Post Preview -->
+    <div class="post-preview">
+      <div class="post-preview-top">
+        <span class="post-type-chip ${postT==='lost'?'type-lost':'type-found'}">${postT}</span>
+        <span class="dp-id-text" style="font-size:10px;">${r.subjectId}</span>
+      </div>
+      <div class="post-title">${r.subject}</div>
+      <div class="post-meta">
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>${postLoc}</span>
+        <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>${r.date}</span>
+      </div>
+      <div class="post-img">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      </div>
+    </div>
+
+    <!-- Reporter info -->
+    <div class="dp-section">
+      <div class="dp-section-title">Reporter</div>
+      <div class="dp-info-grid">
+        <div class="dp-info-row">
+          <span class="dp-info-key">Name</span>
+          <span class="dp-info-val">${r.reporterName}</span>
+        </div>
+        <div class="dp-info-row">
+          <span class="dp-info-key">Reporter ID</span>
+          <span class="dp-info-val mono">${r.reporterId}</span>
+        </div>
+        <div class="dp-info-row">
+          <span class="dp-info-key">Submitted</span>
+          <span class="dp-info-val mono">${r.date} · ${r.time}</span>
+        </div>
+        <div class="dp-info-row">
+          <span class="dp-info-key">Type</span>
+          <span class="dp-info-val">${getTypeLabel(r)}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reported user -->
+    <div class="dp-section">
+      <div class="dp-section-title">Reported User</div>
+      <div class="dp-info-grid">
+        <div class="dp-info-row">
+          <span class="dp-info-key">Name</span>
+          <span class="dp-info-val">${r.reportedUser}</span>
+        </div>
+        <div class="dp-info-row">
+          <span class="dp-info-key">User ID</span>
+          <span class="dp-info-val mono">${r.reportedUserId}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reason -->
+    <div class="reason-block">
+      <div class="reason-label">Report Reason</div>
+      <div class="reason-text">${r.reason || REPORT_REASONS[r.type] || 'Other Violation'}</div>
+    </div>
+
+    ${r.reportType==='user_complaint' ? `
+    <div class="dp-section">
+      <div class="dp-section-title">Complaint Details</div>
+      <div class="description-text" style="font-size:11px;line-height:1.6;color:var(--fg);white-space:pre-wrap;">${r.complaintDetails || r.description || 'No details provided.'}</div>
+    </div>` : ''}
+
+    <!-- Admin note -->
+    <div class="admin-note-wrap">
+      <div class="admin-note-label">Admin Note</div>
+      <textarea class="admin-note-input" id="admin-note-${r.id}" rows="3" placeholder="Add an internal note for this report…">${r.adminNote}</textarea>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="dp-section">
+      <div class="dp-section-title">Actions</div>
+      <div class="dp-actions">${actionBtns}</div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="dp-section">
+      <div class="dp-section-title">Timeline</div>
+      <div class="timeline">
+        ${r.timeline.map(tl=>`
+        <div class="tl-item">
+          <div class="tl-icon" style="background:${tl.bg}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="${tl.col}" stroke-width="2" stroke-linecap="round">${tl.icon}</svg>
+          </div>
+          <div class="tl-body">
+            <div class="tl-title">${tl.t}</div>
+            <div class="tl-time">${tl.tm}</div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+/* ═══ ACTIONS ═══ */
+function updateReport(id, patch){
+  reports=reports.map(r=>r.id===id?{...r,...patch}:r);
+  renderStats(); renderTable();
+  if(selectedId===id) renderDetail();
+}
+
+function saveNote(id){
+  const ta=document.getElementById('admin-note-'+id);
+  if(ta) updateReport(id,{adminNote:ta.value});
+}
+
+function doAction(id, type){
+  const r=reports.find(r=>r.id===id);
+  if(!r) return;
+  // Save admin note before acting
+  const ta=document.getElementById('admin-note-'+id);
+  if(ta) updateReport(id,{adminNote:ta.value});
+
+  if(type==='resolve'){
+    showConfirm({
+      icon:'<polyline points="20 6 9 17 4 12"/>',
+      iconBg:'rgba(74,222,128,.12)',iconCol:'#4ade80',
+      title:'Resolve Report',
+      sub:`Mark <strong>${r.id}</strong> as resolved. The reporter and reported user will be notified.`,
+      confirmLabel:'Resolve',confirmClass:'green',
+      onConfirm(){
+        updateReport(id,{status:'resolved',timeline:[...r.timeline,{icon:'<polyline points="20 6 9 17 4 12"/>',bg:'rgba(74,222,128,.12)',col:'#4ade80',t:'Report resolved by admin',tm:nowStr()}]});
+        showToast(`${id} resolved successfully`,'success');
+      }
+    });
+  } else if(type==='reject'){
+    showConfirm({
+      icon:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
+      iconBg:'rgba(139,147,169,.12)',iconCol:'#8B93A9',
+      title:'Reject Report',
+      sub:`Reject <strong>${r.id}</strong> — no policy violation found. The reporter will be notified.`,
+      confirmLabel:'Reject',confirmClass:'neutral',
+      onConfirm(){
+        updateReport(id,{status:'rejected',timeline:[...r.timeline,{icon:'<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',bg:'rgba(139,147,169,.12)',col:'#8B93A9',t:'Report rejected — no violation found',tm:nowStr()}]});
+        showToast(`${id} rejected`,'info');
+      }
+    });
+  } else if(type==='warn'){
+    showConfirm({
+      icon:'<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/>',
+      iconBg:'rgba(245,158,11,.14)',iconCol:'#F59E0B',
+      title:'Warn User',
+      sub:`Issue a formal warning to <strong>${r.reportedUser}</strong>. A notification will be sent to their account.`,
+      confirmLabel:'Send Warning',confirmClass:'amber',
+      onConfirm(){
+        updateReport(id,{status:'resolved',timeline:[...r.timeline,{icon:'<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>',bg:'rgba(245,158,11,.12)',col:'#F59E0B',t:`Warning issued to ${r.reportedUser}`,tm:nowStr()}]});
+        showToast(`Warning sent to ${r.reportedUser}`,'warning');
+      }
+    });
+  } else if(type==='suspend'){
+    showConfirm({
+      icon:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+      iconBg:'rgba(245,158,11,.14)',iconCol:'#F59E0B',
+      title:'Suspend User',
+      sub:`Temporarily suspend <strong>${r.reportedUser}</strong>. They will lose access until reinstated by an admin.`,
+      confirmLabel:'Suspend',confirmClass:'amber',
+      onConfirm(){
+        updateReport(id,{status:'resolved',timeline:[...r.timeline,{icon:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',bg:'rgba(245,158,11,.12)',col:'#F59E0B',t:`${r.reportedUser} account suspended`,tm:nowStr()}]});
+        showToast(`${r.reportedUser} suspended`,'warning');
+      }
+    });
+  } else if(type==='delete'){
+    showConfirm({
+      icon:'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>',
+      iconBg:'rgba(239,68,68,.13)',iconCol:'#EF4444',
+      title:'Delete Listing',
+      sub:`Permanently delete <strong>${r.subjectId}</strong>. This listing will be removed from FindIT and cannot be recovered.`,
+      confirmLabel:'Delete Listing',confirmClass:'red',
+      onConfirm(){
+        updateReport(id,{status:'resolved',timeline:[...r.timeline,{icon:'<polyline points="3 6 5 6 21 6"/>',bg:'rgba(239,68,68,.10)',col:'#EF4444',t:`Listing ${r.subjectId} deleted`,tm:nowStr()}]});
+        showToast(`${r.subjectId} deleted permanently`,'danger');
+      }
+    });
+  }
+}
+
+function nowStr(){
+  return new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})+', '+new Date().toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+}
+
+/* ═══ CONFIRM MODAL ═══ */
+let _cb=null;
+function showConfirm({icon,iconBg,iconCol,title,sub,confirmLabel,confirmClass,onConfirm}){
+  _cb=onConfirm;
+  document.getElementById('modal-container').innerHTML=`
+    <div class="modal-bg" onclick="if(event.target===this)closeModal()">
+      <div class="modal-box">
+        <div class="modal-icon" style="background:${iconBg}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="${iconCol}" stroke-width="2" stroke-linecap="round">${icon}</svg>
+        </div>
+        <div class="modal-title">${title}</div>
+        <div class="modal-sub">${sub}</div>
+        <div class="modal-btns">
+          <button class="modal-btn-cancel" onclick="closeModal()">Cancel</button>
+          <button class="modal-btn-confirm ${confirmClass}" onclick="confirmModal()">${confirmLabel}</button>
+        </div>
+      </div>
+    </div>`;
+}
+function confirmModal(){ closeModal(); if(_cb){_cb();_cb=null;} }
+function closeModal(){ document.getElementById('modal-container').innerHTML=''; _cb=null; }
+
+/* ═══ TOAST ═══ */
+const TICONS={
+  success:'<polyline points="20 6 9 17 4 12"/>',
+  warning:'<path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/>',
+  danger:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
+  info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+};
+function showToast(msg,type='info'){
+  const wrap=document.getElementById('toast-wrap');
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  el.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">${TICONS[type]}</svg>${msg}`;
+  wrap.appendChild(el);
+  setTimeout(()=>el.remove(),3800);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>FindIt — Settings</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="config.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:  #F8FAFC;
+      --cb:  #ffffff;
+      --tc:  #0F172A;
+      --mc:  #64748B;
+      --ib:  #F1F5F9;
+      --div: #F1F5F9;
+      --tog-off: #CBD5E1;
+    }
+    body.dark {
+      --bg:  #0F172A;
+      --cb:  #1E293B;
+      --tc:  #F1F5F9;
+      --mc:  #94A3B8;
+      --ib:  #1E293B;
+      --div: #2D3B4E;
+      --tog-off: #2D3B4E;
+    }
+
+    html, body {
+      height: 100%; overflow: hidden;
+      background: #dfe6ef;
+      font-family: 'Inter', sans-serif;
+    }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    .screen {
+      width: min(100vw, 400px); height: 100dvh; max-height: 100dvh;
+      position: relative;
+      overflow-y: auto; overflow-x: hidden;
+      background: var(--bg); scrollbar-width: none;
+      border-radius: 28px;
+      box-shadow: 0 18px 45px rgba(15,23,42,.18);
+    }
+    .screen::-webkit-scrollbar { display: none; }
+
+    @media (max-width: 600px) {
+      body { background: var(--bg); }
+      .screen {
+        width: 100vw;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+
+    /* ── Header ── */
+    .header { padding: 48px 20px 24px; }
+    .header-row { display: flex; align-items: center; gap: 12px; }
+    .back-btn {
+      width: 40px; height: 40px; border-radius: 16px;
+      background: var(--ib); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .screen-title {
+      font-family: 'Poppins', sans-serif; font-size: 20px; font-weight: 700;
+      color: var(--tc);
+    }
+
+    /* ── Body ── */
+    .body { padding: 0 20px 40px; display: flex; flex-direction: column; gap: 20px; }
+
+    /* ── Section ── */
+    .section-label {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--mc);
+      font-family: 'Inter', sans-serif;
+      margin-bottom: 8px; padding-left: 4px;
+    }
+    .section-card { border-radius: 16px; overflow: hidden; background: var(--cb); }
+
+    /* ── Row ── */
+    .setting-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--div);
+    }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-row.tappable {
+      cursor: pointer; border: none; width: 100%;
+      background: transparent; text-align: left;
+      transition: opacity .1s;
+    }
+    .setting-row.tappable:active { opacity: .7; }
+
+    .row-icon {
+      width: 36px; height: 36px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .row-label {
+      flex: 1; font-size: 14px; font-weight: 500;
+      color: var(--tc); font-family: 'Inter', sans-serif;
+    }
+
+    /* chevron */
+    .chevron { color: var(--mc); flex-shrink: 0; }
+
+    /* ── Toggle ── */
+    .toggle {
+      position: relative; width: 48px; height: 24px;
+      border-radius: 99px; border: none; cursor: pointer;
+      flex-shrink: 0; transition: background .2s;
+    }
+    .toggle-thumb {
+      position: absolute; top: 2px;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: white; box-shadow: 0 1px 4px rgba(0,0,0,.2);
+      transition: left .2s;
+    }
+    .toggle.on  { background: #2563EB; }
+    .toggle.off { background: var(--tog-off); }
+    .toggle.on  .toggle-thumb { left: calc(100% - 22px); }
+    .toggle.off .toggle-thumb { left: 2px; }
+
+    /* ── Language chip ── */
+    .lang-chip {
+      padding: 4px 12px; border-radius: 99px;
+      background: #EFF6FF; color: #2563EB;
+      font-size: 12px; font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      border: none; cursor: pointer; flex-shrink: 0;
+      transition: opacity .1s;
+    }
+    .lang-chip:active { opacity: .7; }
+
+    /* ── Version ── */
+    .version { text-align: center; font-size: 12px; color: var(--mc); }
+  </style>
+</head>
+<body>
+<div class="screen">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-row">
+      <button class="back-btn" onclick="history.back()">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--tc)">
+          <path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>
+        </svg>
+      </button>
+      <h2 class="screen-title">Settings</h2>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="body">
+
+    <!-- Preferences -->
+    <div>
+      <p class="section-label">Preferences</p>
+      <div class="section-card">
+
+        <!-- Dark / Light Mode -->
+        <div class="setting-row">
+          <div class="row-icon" style="background:#F9731618">
+            <!-- Sun icon (shown in dark mode) / Moon icon (shown in light mode) -->
+            <svg id="theme-icon" width="18" height="18" fill="none" stroke="#F97316" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <!-- moon path (default for light mode) -->
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+            </svg>
+          </div>
+          <span class="row-label" id="theme-label">Dark Mode</span>
+          <button class="toggle" id="tog-dark" onclick="toggleDark()">
+            <div class="toggle-thumb"></div>
+          </button>
+        </div>
+
+        <!-- Language -->
+        <div class="setting-row">
+          <div class="row-icon" style="background:#14B8A618">
+            <svg width="18" height="18" fill="none" stroke="#14B8A6" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="2" y1="12" x2="22" y2="12"/>
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+          </div>
+          <span class="row-label">Language</span>
+          <button class="lang-chip" id="lang-chip" onclick="toggleLang()">English</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Account -->
+    <div>
+      <p class="section-label">Account</p>
+      <div class="section-card">
+
+        <!-- Notification Settings -->
+        <button class="setting-row tappable" onclick="location.href='notif-settings.html'">
+          <div class="row-icon" style="background:#7C3AED18">
+            <svg width="18" height="18" fill="none" stroke="#7C3AED" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+          </div>
+          <span class="row-label">Notification Settings</span>
+          <svg class="chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+
+        <!-- Privacy -->
+        <button class="setting-row tappable" onclick="location.href='privacy.html'">
+          <div class="row-icon" style="background:#2563EB18">
+            <svg width="18" height="18" fill="none" stroke="#2563EB" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
+          <span class="row-label">Privacy</span>
+          <svg class="chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Support -->
+    <div>
+      <p class="section-label">Support</p>
+      <div class="section-card">
+
+        <!-- Help & Support -->
+        <button class="setting-row tappable" onclick="location.href='help.html'">
+          <div class="row-icon" style="background:#14B8A618">
+            <svg width="18" height="18" fill="none" stroke="#14B8A6" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
+          <span class="row-label">Help &amp; Support</span>
+          <svg class="chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+
+        <!-- Send Feedback -->
+        <button class="setting-row tappable" onclick="location.href='feedback.html'">
+          <div class="row-icon" style="background:#F9731618">
+            <svg width="18" height="18" fill="none" stroke="#F97316" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </div>
+          <span class="row-label">Send Feedback</span>
+          <svg class="chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Legal -->
+    <div>
+      <p class="section-label">Legal</p>
+      <div class="section-card">
+
+        <!-- Terms & Conditions -->
+        <button class="setting-row tappable" onclick="location.href='terms.html'">
+          <div class="row-icon" style="background:#64748B18">
+            <svg width="18" height="18" fill="none" stroke="#64748B" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+          </div>
+          <span class="row-label">Terms &amp; Conditions</span>
+          <svg class="chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+
+        <!-- About FindIt -->
+        <button class="setting-row tappable" onclick="location.href='about.html'">
+          <div class="row-icon" style="background:#2563EB18">
+            <svg width="18" height="18" fill="none" stroke="#2563EB" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="8" x2="12" y2="12"/>
+              <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+          </div>
+          <span class="row-label">About FindIt</span>
+          <svg class="chevron" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Version -->
+    <p class="version">Version 2.1.0</p>
+
+  </div>
+</div>
+
+<script>
+  // ── Init ──
+  const baseUrl = window.API_BASE_URL || '';
+  const storedUser = JSON.parse(localStorage.getItem('findit_user') || sessionStorage.getItem('findit_user') || 'null');
+  const userId = storedUser && storedUser.id;
+  let dark = localStorage.getItem('findit_dark') === 'true';
+  let lang = localStorage.getItem('findit_lang') || 'en';
+
+  function applyDark() {
+    if (dark) document.body.classList.add('dark');
+    else      document.body.classList.remove('dark');
+
+    const tog = document.getElementById('tog-dark');
+    tog.classList.toggle('on',  dark);
+    tog.classList.toggle('off', !dark);
+
+    // swap icon: moon in light mode, sun in dark mode
+    const icon = document.getElementById('theme-icon');
+    document.getElementById('theme-label').textContent = dark ? 'Light Mode' : 'Dark Mode';
+    if (dark) {
+      icon.innerHTML = `
+        <circle cx="12" cy="12" r="5"/>
+        <line x1="12" y1="1" x2="12" y2="3"/>
+        <line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/>
+        <line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;
+    } else {
+      icon.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
+    }
+  }
+
+  function applyLang() {
+    document.getElementById('lang-chip').textContent = lang === 'en' ? 'English' : 'বাংলা';
+  }
+
+  async function savePreferences() {
+    if (!userId) return;
+    const response = await fetch(`${baseUrl}/api/users/${userId}/preferences`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ preferences: { theme: dark ? 'dark' : 'light', language: lang } })
+    });
+    if (!response.ok) {
+      const result = await response.json().catch(() => ({}));
+      throw new Error(result.message || 'Unable to save settings.');
+    }
+  }
+
+  async function toggleDark() {
+    dark = !dark;
+    localStorage.setItem('findit_dark', dark);
+    applyDark();
+    try {
+      await savePreferences();
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
+  async function toggleLang() {
+    lang = lang === 'en' ? 'bn' : 'en';
+    localStorage.setItem('findit_lang', lang);
+    applyLang();
+    try {
+      await savePreferences();
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
+  async function loadPreferences() {
+    if (!userId) return;
+    try {
+      const response = await fetch(`${baseUrl}/api/users/${userId}/preferences`);
+      if (!response.ok) throw new Error('Unable to load settings.');
+      const result = await response.json();
+      dark = result.preferences.theme === 'dark';
+      lang = result.preferences.language || 'en';
+      localStorage.setItem('findit_dark', dark);
+      localStorage.setItem('findit_lang', lang);
+      applyDark();
+      applyLang();
+    } catch (error) {
+      console.error('Settings load error:', error);
+    }
+  }
+
+  applyDark();
+  applyLang();
+  loadPreferences();
+</script>
+</body>
+</html>

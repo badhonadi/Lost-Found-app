@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>FindIT Admin — Categories</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="config.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+button,input,select,textarea{font-family:inherit;}
+html,body{height:100%;overflow:hidden;}
+
+/* ══ TOKENS ══ */
+:root{
+  --bg:#0B0F1A;--card:#141928;--sidebar:#0D1120;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.04);
+  --primary:#6B8AFF;--primary-d:rgba(107,138,255,.14);--primary-g:rgba(107,138,255,.26);
+  --accent:#00D4AA;--fg:#E8EAF6;--muted:#8B93A9;
+  --muted-bg:rgba(255,255,255,.055);--muted-bg2:rgba(255,255,255,.035);
+  --danger:#EF4444;--danger-d:rgba(239,68,68,.12);
+  --amber:#F59E0B;--amber-d:rgba(245,158,11,.13);
+  --green:#4ade80;--green-d:rgba(74,222,128,.11);
+  --radius:16px;
+  --font-h:'Plus Jakarta Sans',sans-serif;
+  --font-b:'Inter',sans-serif;
+  --font-m:'JetBrains Mono',monospace;
+}
+[data-theme="light"]{
+  --bg:#EEF0F8;--card:#FFFFFF;--sidebar:#0D1120;
+  --border:rgba(0,0,0,.08);--border2:rgba(0,0,0,.04);
+  --primary:#4F6EF7;--primary-d:rgba(79,110,247,.10);--primary-g:rgba(79,110,247,.20);
+  --accent:#00C49F;--fg:#0D1120;--muted:#6B7280;
+  --muted-bg:rgba(0,0,0,.05);--muted-bg2:rgba(0,0,0,.03);
+  --danger-d:rgba(239,68,68,.09);--amber-d:rgba(245,158,11,.09);--green-d:rgba(74,222,128,.08);
+}
+body{font-family:var(--font-b);background:var(--bg);color:var(--fg);font-size:14px;display:flex;}
+.shell{display:flex;height:100vh;width:100%;}
+
+/* ══ SIDEBAR ══ */
+.sidebar{width:232px;height:100vh;display:flex;flex-direction:column;background:var(--sidebar);border-right:1px solid rgba(255,255,255,.05);flex-shrink:0;transition:width .25s;overflow:hidden;z-index:10;}
+.sidebar.collapsed{width:64px;}
+.sidebar-header{height:56px;display:flex;align-items:center;padding:0 16px;border-bottom:1px solid rgba(255,255,255,.05);gap:10px;flex-shrink:0;}
+.logo-mark{width:32px;height:32px;border-radius:9px;flex-shrink:0;background:linear-gradient(135deg,#6B8AFF 0%,#4F6EF7 55%,#00D4AA 100%);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(107,138,255,.38);}
+.logo-mark svg{width:16px;height:16px;}
+.logo-text{overflow:hidden;white-space:nowrap;}
+.logo-name{font-family:var(--font-h);font-size:16px;font-weight:800;color:#fff;letter-spacing:-.3px;display:block;}
+.logo-sub{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.3);display:block;}
+.sidebar-nav{flex:1;overflow-y:auto;padding:12px 8px;display:flex;flex-direction:column;gap:2px;scrollbar-width:none;}
+.sidebar-nav::-webkit-scrollbar{display:none;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;font-size:12px;font-weight:500;color:rgba(255,255,255,.4);cursor:pointer;border:1px solid transparent;transition:all .15s;background:none;width:100%;text-align:left;white-space:nowrap;}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;color:rgba(255,255,255,.3);transition:color .15s;}
+.nav-item:hover{color:rgba(255,255,255,.75);background:rgba(255,255,255,.04);}
+.nav-item:hover svg{color:rgba(255,255,255,.55);}
+.nav-item.active{background:rgba(107,138,255,.13);color:#9BAEFF;border-color:rgba(107,138,255,.22);}
+.nav-item.active svg{color:#6B8AFF;}
+.nav-label{overflow:hidden;}
+.sidebar.collapsed .nav-label{display:none;}
+.sidebar.collapsed .nav-item{justify-content:center;padding:10px;}
+.sidebar-footer{padding:12px 8px;border-top:1px solid rgba(255,255,255,.05);}
+.logout-btn{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;margin-bottom:6px;border:1px solid rgba(239,68,68,.18);border-radius:8px;background:rgba(239,68,68,.08);color:#f87171;cursor:pointer;font-size:12px;font-weight:600;}
+.logout-btn:hover{background:rgba(239,68,68,.15);}
+.logout-btn svg{width:14px;height:14px;flex-shrink:0;}
+.sidebar.collapsed .logout-btn{justify-content:center;padding:10px;}
+.sidebar.collapsed .logout-label{display:none;}
+.collapse-btn{display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:7px 10px;border-radius:8px;border:none;background:none;color:rgba(255,255,255,.28);cursor:pointer;width:100%;font-size:11px;transition:all .15s;}
+.collapse-btn:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.55);}
+.sidebar.collapsed .collapse-btn{justify-content:center;}
+.collapse-btn svg{width:14px;height:14px;flex-shrink:0;transition:transform .25s;}
+.sidebar.collapsed .collapse-btn svg{transform:rotate(180deg);}
+.sidebar.collapsed .collapse-label{display:none;}
+
+/* ══ MAIN ══ */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+.topbar{height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--border);background:color-mix(in srgb,var(--bg) 80%,transparent);backdrop-filter:blur(20px);flex-shrink:0;z-index:9;}
+.topbar-left h2{font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--fg);}
+.topbar-left p{font-size:10px;color:var(--muted);}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.icon-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--muted-bg);color:var(--fg);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;position:relative;}
+.icon-btn:hover{background:var(--muted-bg2);}
+.icon-btn svg{width:14px;height:14px;}
+.notif-dot{position:absolute;top:-3px;right:-3px;width:8px;height:8px;border-radius:50%;background:#EF4444;border:2px solid var(--bg);}
+.lang-btn{display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;border:1px solid var(--border);background:var(--muted-bg);color:var(--fg);font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.lang-btn:hover{background:var(--muted-bg2);}
+.avatar-pill{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#6B8AFF,#8B5CF6);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;}
+
+/* ══ CONTENT ══ */
+.content{flex:1;overflow-y:auto;padding:20px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.content::-webkit-scrollbar{width:4px;}
+.content::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* ══ STATS ══ */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;}
+@media(max-width:800px){.stats-row{grid-template-columns:repeat(2,1fr);}}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+.stat-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;}
+.stat-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;}
+.stat-icon svg{width:15px;height:15px;}
+.stat-trend{font-size:10px;font-weight:700;}
+.up{color:#4ade80;} .dn{color:#f87171;}
+.stat-val{font-family:var(--font-h);font-size:26px;font-weight:800;color:var(--fg);line-height:1;margin-bottom:4px;}
+.stat-label{font-size:11px;color:var(--muted);}
+
+/* ══ TOOLBAR ══ */
+.toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.tool-search{position:relative;flex:1;min-width:200px;}
+.tool-search input{width:100%;padding:8px 12px 8px 34px;border-radius:10px;background:var(--card);border:1px solid var(--border);color:var(--fg);font-size:12px;outline:none;transition:border-color .15s;}
+.tool-search input:focus{border-color:var(--primary);}
+.tool-search input::placeholder{color:var(--muted);}
+.tool-search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:13px;height:13px;color:var(--muted);}
+.filter-select{padding:7px 10px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--fg);font-size:11px;outline:none;cursor:pointer;}
+.filter-select option{background:var(--card);}
+.view-toggle{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;background:var(--card);}
+.vt-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:none;background:none;color:var(--muted);cursor:pointer;transition:all .15s;}
+.vt-btn:hover{color:var(--fg);}
+.vt-btn.active{background:var(--primary-d);color:var(--primary);}
+.vt-btn svg{width:13px;height:13px;}
+.add-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border-radius:10px;background:var(--primary);border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:opacity .15s;white-space:nowrap;}
+.add-btn:hover{opacity:.88;}
+.add-btn svg{width:13px;height:13px;}
+
+/* ══ CATEGORY GRID ══ */
+.cat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;}
+.cat-grid.list-view{grid-template-columns:1fr;}
+
+/* ── Card view ── */
+.cat-card{
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:18px 16px;transition:box-shadow .18s,transform .18s;position:relative;overflow:hidden;
+}
+.cat-card:hover{box-shadow:0 8px 28px rgba(0,0,0,.2);transform:translateY(-1px);}
+.cat-card.disabled-card{opacity:.52;}
+.cat-card-shine{position:absolute;top:0;right:0;width:80px;height:80px;border-radius:50%;opacity:.06;transform:translate(20px,-20px);}
+.cat-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+.cat-emoji-wrap{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;position:relative;}
+.cat-order{position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--bg);border:1px solid var(--border);font-family:var(--font-m);font-size:8px;font-weight:700;color:var(--muted);display:flex;align-items:center;justify-content:center;}
+.cat-controls{display:flex;align-items:center;gap:6px;}
+.toggle-wrap{position:relative;width:36px;height:20px;cursor:pointer;}
+.toggle-track{width:36px;height:20px;border-radius:10px;transition:background .2s;}
+.toggle-thumb{position:absolute;top:3px;width:14px;height:14px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);}
+.cat-name{font-family:var(--font-h);font-size:15px;font-weight:800;color:var(--fg);margin-bottom:4px;line-height:1.2;}
+.cat-desc{font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.4;}
+.cat-footer{display:flex;align-items:center;justify-content:space-between;}
+.cat-stats{display:flex;gap:12px;}
+.cat-stat{display:flex;flex-direction:column;}
+.cat-stat-val{font-family:var(--font-m);font-size:13px;font-weight:700;color:var(--fg);}
+.cat-stat-key{font-size:9px;color:var(--muted);margin-top:1px;}
+.cat-actions{display:flex;gap:6px;}
+.cat-btn{width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--muted-bg);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.cat-btn:hover{background:var(--primary-d);border-color:rgba(107,138,255,.22);color:var(--primary);}
+.cat-btn.danger:hover{background:var(--danger-d);border-color:rgba(239,68,68,.2);color:#EF4444;}
+.cat-btn svg{width:12px;height:12px;}
+.disabled-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:999px;background:rgba(139,147,169,.14);color:#8B93A9;}
+.active-badge{font-size:9px;font-weight:700;padding:2px 7px;border-radius:999px;background:rgba(74,222,128,.12);color:#4ade80;}
+
+/* ── List view ── */
+.cat-list-row{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  display:grid;grid-template-columns:40px 200px 1fr 90px 80px 80px 80px 90px;
+  gap:0;padding:12px 16px;align-items:center;transition:background .12s;
+}
+.cat-list-row:hover{background:var(--muted-bg);}
+.cat-list-head{
+  display:grid;grid-template-columns:40px 200px 1fr 90px 80px 80px 80px 90px;
+  gap:0;padding:6px 16px;margin-bottom:6px;
+}
+.lh{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);}
+.list-emoji{font-size:20px;width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;}
+.list-name{font-size:13px;font-weight:700;color:var(--fg);}
+.list-desc{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:16px;}
+.list-count{font-family:var(--font-m);font-size:12px;font-weight:700;color:var(--fg);}
+.list-stat{font-family:var(--font-m);font-size:12px;color:var(--muted);}
+.list-actions{display:flex;gap:5px;}
+
+/* empty */
+.empty-state{padding:60px 20px;text-align:center;}
+.empty-state svg{width:40px;height:40px;color:var(--muted);opacity:.35;margin:0 auto 14px;display:block;}
+.empty-state h3{font-family:var(--font-h);font-size:14px;font-weight:700;color:var(--fg);margin-bottom:5px;}
+.empty-state p{font-size:12px;color:var(--muted);}
+
+/* drag handle */
+.drag-handle{cursor:grab;color:var(--muted);opacity:.4;display:flex;align-items:center;}
+.drag-handle:hover{opacity:.8;}
+.drag-handle svg{width:14px;height:14px;}
+
+/* ══ MODAL ══ */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(8px);z-index:9990;display:flex;align-items:center;justify-content:center;animation:fadeIn .18s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.modal-box{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:28px;width:480px;max-width:94vw;box-shadow:0 24px 80px rgba(0,0,0,.5);animation:popIn .2s ease;}
+@keyframes popIn{from{opacity:0;transform:scale(.95);}to{opacity:1;transform:scale(1);}}
+.modal-title{font-family:var(--font-h);font-size:18px;font-weight:800;color:var(--fg);margin-bottom:4px;}
+.modal-sub{font-size:12px;color:var(--muted);margin-bottom:22px;}
+
+/* emoji picker */
+.emoji-section{margin-bottom:18px;}
+.emoji-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px;}
+.emoji-preview{width:64px;height:64px;border-radius:18px;display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 14px;border:2px dashed var(--border);cursor:pointer;transition:border-color .15s;}
+.emoji-preview:hover{border-color:var(--primary);}
+.emoji-grid{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;max-height:140px;overflow-y:auto;padding:2px;scrollbar-width:none;}
+.emoji-grid::-webkit-scrollbar{display:none;}
+.emoji-opt{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;cursor:pointer;border:1.5px solid transparent;transition:all .12s;background:var(--muted-bg);}
+.emoji-opt:hover{background:var(--primary-d);border-color:rgba(107,138,255,.25);}
+.emoji-opt.selected{background:var(--primary-d);border-color:var(--primary);}
+
+/* color picker */
+.color-section{margin-bottom:18px;}
+.color-row{display:flex;gap:8px;flex-wrap:wrap;}
+.color-swatch{width:28px;height:28px;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:all .12s;display:flex;align-items:center;justify-content:center;}
+.color-swatch:hover{transform:scale(1.12);}
+.color-swatch.selected{border-color:#fff;box-shadow:0 0 0 2px var(--primary);}
+.color-swatch svg{width:13px;height:13px;color:#fff;display:none;}
+.color-swatch.selected svg{display:block;}
+
+/* form fields */
+.field{margin-bottom:14px;}
+.field-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;}
+.field input,.field textarea,.field select{
+  width:100%;padding:10px 12px;border-radius:10px;background:var(--muted-bg);border:1px solid var(--border);
+  color:var(--fg);font-size:13px;outline:none;transition:border-color .15s;
+}
+.field input:focus,.field textarea:focus,.field select:focus{border-color:var(--primary);}
+.field input::placeholder,.field textarea::placeholder{color:var(--muted);}
+.field textarea{resize:none;line-height:1.5;}
+.field-error{font-size:11px;color:#EF4444;margin-top:4px;display:none;}
+.field-error.show{display:block;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+
+/* modal footer */
+.modal-footer{display:flex;gap:10px;margin-top:6px;}
+.modal-cancel{flex:1;padding:11px;border-radius:11px;border:1px solid var(--border);background:var(--muted-bg);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;transition:all .15s;}
+.modal-cancel:hover{background:var(--muted-bg2);}
+.modal-confirm{flex:2;padding:11px;border-radius:11px;border:none;background:var(--primary);color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .15s;}
+.modal-confirm:hover{opacity:.88;}
+.modal-confirm.danger{background:var(--danger);}
+
+/* confirm modal */
+.confirm-icon{width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+.confirm-icon svg{width:24px;height:24px;}
+.confirm-title{font-family:var(--font-h);font-size:17px;font-weight:800;color:var(--fg);text-align:center;margin-bottom:6px;}
+.confirm-sub{font-size:12px;color:var(--muted);text-align:center;line-height:1.5;margin-bottom:22px;}
+
+/* toast */
+.toast-wrap{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:flex-end;pointer-events:none;}
+.toast{display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:12px;border:1px solid;font-size:12px;font-weight:600;box-shadow:0 12px 40px rgba(0,0,0,.35);pointer-events:all;animation:slideUp .22s ease;min-width:240px;max-width:320px;}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.toast svg{width:14px;height:14px;flex-shrink:0;}
+.toast.success{background:rgba(74,222,128,.11);border-color:rgba(74,222,128,.22);color:#4ade80;}
+.toast.warning{background:rgba(245,158,11,.11);border-color:rgba(245,158,11,.22);color:#F59E0B;}
+.toast.danger{background:rgba(239,68,68,.11);border-color:rgba(239,68,68,.22);color:#EF4444;}
+.toast.info{background:rgba(107,138,255,.11);border-color:rgba(107,138,255,.22);color:var(--primary);}
+body{font-size:15px;}
+.nav-item{font-size:13px;}
+.topbar-left h2{font-size:15px;}
+.topbar-left p{font-size:11px;}
+.section-title{font-size:16px;}
+.section-sub{font-size:12px;}
+.stat-label{font-size:12px;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
+        <circle cx="11" cy="11" r="4"/><line x1="14.5" y1="14.5" x2="19" y2="19"/>
+        <circle cx="11" cy="11" r="1.5" fill="#fff" stroke="none"/>
+      </svg>
+    </div>
+    <div class="logo-text">
+      <span class="logo-name">FindIT</span>
+      <span class="logo-sub">Admin</span>
+    </div>
+  </div>
+  <nav class="sidebar-nav" id="sidebar-nav"></nav>
+  <div class="sidebar-footer">
+    <button class="logout-btn" onclick="localStorage.removeItem('findit_admin_active');sessionStorage.removeItem('findit_admin_active');location.href='findit-otp.html'" title="Log out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/></svg><span class="logout-label">Logout</span></button>
+    <button class="collapse-btn" onclick="toggleSidebar()">
+      <span class="collapse-label">Collapse</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <header class="topbar">
+    <div class="topbar-left">
+      <h2>Categories</h2>
+      <p id="page-date"></p>
+    </div>
+    <div class="topbar-right">
+      <button class="lang-btn" onclick="toggleLang()" id="lang-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+        বাংলা
+      </button>
+      <button class="icon-btn" onclick="toggleTheme()" id="theme-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      </button>
+      <button class="icon-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span class="notif-dot"></span>
+      </button>
+      <button class="avatar-pill" onclick="location.href='findit-settings.html'" title="Admin profile">SA</button>
+    </div>
+  </header>
+
+  <div class="content">
+    <!-- Stats -->
+    <div class="stats-row" id="stats-row"></div>
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="tool-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="search-input" placeholder="Search categories…" oninput="renderCats()"/>
+      </div>
+      <select class="filter-select" id="status-filter" onchange="renderCats()">
+        <option value="all">All Status</option>
+        <option value="enabled">Enabled</option>
+        <option value="disabled">Disabled</option>
+      </select>
+      <select class="filter-select" id="sort-filter" onchange="renderCats()">
+        <option value="order">Sort: Default</option>
+        <option value="name">Sort: Name A–Z</option>
+        <option value="count">Sort: Most Posts</option>
+        <option value="resolved">Sort: Most Resolved</option>
+      </select>
+      <div class="view-toggle">
+        <button class="vt-btn active" id="vt-grid" onclick="setView('grid')" title="Grid view">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        </button>
+        <button class="vt-btn" id="vt-list" onclick="setView('list')" title="List view">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </button>
+      </div>
+      <button class="add-btn" onclick="openAddModal()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Category
+      </button>
+    </div>
+    <!-- Category list -->
+    <div id="cat-list-head" style="display:none;" class="cat-list-head">
+      <div class="lh"></div>
+      <div class="lh">Category</div>
+      <div class="lh">Description</div>
+      <div class="lh">Posts</div>
+      <div class="lh">Lost</div>
+      <div class="lh">Found</div>
+      <div class="lh">Status</div>
+      <div class="lh">Actions</div>
+    </div>
+    <div id="cat-container"></div>
+  </div>
+</div>
+</div>
+
+<div class="toast-wrap" id="toast-wrap"></div>
+<div id="modal-container"></div>
+
+<script>
+/* ═══════════════ NAV ═══════════════ */
+const NAV=[
+  {key:'dashboard',label:'Dashboard',bn:'ড্যাশবোর্ড',icon:'<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'},
+  {key:'users',label:'User Management',bn:'ব্যবহারকারী',icon:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>'},
+  {key:'reports',label:'Reports & Complaints',bn:'রিপোর্ট',icon:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>'},
+  {key:'categories',label:'Categories',bn:'বিভাগ',icon:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>'},
+  {key:'notifications',label:'Notifications',bn:'বিজ্ঞপ্তি',icon:'<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>'},
+  {key:'analytics',label:'Analytics',bn:'বিশ্লেষণ',icon:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'},
+  {key:'settings',label:'Settings',bn:'সেটিংস',icon:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06-.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>'},
+];
+
+/* ═══════════════ EMOJI / COLOR PALETTES ═══════════════ */
+const EMOJIS=['📱','💻','👜','🔑','📔','💳','💎','⌚','🎒','🧳','👓','🎧','📷','🖊','📚','💼','🪪','🎮','🏅','🛂','🌂','🧸','🎁','🔒','📞','🎵','🏠','🚗','🚲','✈️','🗺','🧴','💊','🛍','🌐','🏷'];
+const COLORS=[
+  {val:'rgba(107,138,255,.18)',solid:'#6B8AFF'},
+  {val:'rgba(0,212,170,.15)',solid:'#00D4AA'},
+  {val:'rgba(245,158,11,.16)',solid:'#F59E0B'},
+  {val:'rgba(167,139,250,.15)',solid:'#A78BFA'},
+  {val:'rgba(239,68,68,.14)',solid:'#EF4444'},
+  {val:'rgba(74,222,128,.13)',solid:'#4ade80'},
+  {val:'rgba(251,146,60,.14)',solid:'#fb923c'},
+  {val:'rgba(56,189,248,.14)',solid:'#38bdf8'},
+  {val:'rgba(236,72,153,.14)',solid:'#ec4899'},
+  {val:'rgba(16,185,129,.13)',solid:'#10b981'},
+];
+
+/* ═══════════════ INITIAL DATA ═══════════════ */
+const SEED=[
+  {id:1,name:'Electronics',name_bn:'ইলেকট্রনিক্স',desc:'Phones, laptops, cameras & gadgets',desc_bn:'ফোন, ল্যাপটপ, ক্যামেরা',emoji:'📱',colorIdx:0,count:1204,lost:712,found:492,enabled:true},
+  {id:2,name:'Wallet & Cash',name_bn:'মানিব্যাগ ও নগদ',desc:'Wallets, purses, money & cards',desc_bn:'মানিব্যাগ, পার্স, টাকা',emoji:'💳',colorIdx:1,count:874,lost:501,found:373,enabled:true},
+  {id:3,name:'Keys',name_bn:'চাবি',desc:'House keys, car keys, key chains',desc_bn:'বাড়ির চাবি, গাড়ির চাবি',emoji:'🔑',colorIdx:2,count:692,lost:418,found:274,enabled:true},
+  {id:4,name:'ID & Documents',name_bn:'আইডি ও কাগজপত্র',desc:'National ID, passport, certificates',desc_bn:'জাতীয় পরিচয়পত্র, পাসপোর্ট',emoji:'🪪',colorIdx:3,count:543,lost:332,found:211,enabled:true},
+  {id:5,name:'Bags & Luggage',name_bn:'ব্যাগ ও লাগেজ',desc:'Backpacks, handbags, suitcases',desc_bn:'ব্যাকপ্যাক, হ্যান্ডব্যাগ',emoji:'🎒',colorIdx:4,count:487,lost:298,found:189,enabled:true},
+  {id:6,name:'Jewelry',name_bn:'গহনা',desc:'Rings, necklaces, bracelets, watches',desc_bn:'আংটি, গলার মালা, ঘড়ি',emoji:'💎',colorIdx:5,count:412,lost:254,found:158,enabled:true},
+  {id:7,name:'Glasses & Eyewear',name_bn:'চশমা',desc:'Sunglasses, prescription glasses',desc_bn:'সানগ্লাস, প্রেসক্রিপশন চশমা',emoji:'👓',colorIdx:6,count:318,lost:201,found:117,enabled:true},
+  {id:8,name:'Books & Stationery',name_bn:'বই ও স্টেশনারি',desc:'Notebooks, textbooks, pens, files',desc_bn:'নোটবুক, পাঠ্যবই, কলম',emoji:'📚',colorIdx:7,count:276,lost:165,found:111,enabled:true},
+  {id:9,name:'Clothing',name_bn:'পোশাক',desc:'Jackets, uniforms, scarves, hats',desc_bn:'জ্যাকেট, ইউনিফর্ম, স্কার্ফ',emoji:'🧳',colorIdx:8,count:234,lost:142,found:92,enabled:false},
+  {id:10,name:'Pets',name_bn:'পোষা প্রাণী',desc:'Dogs, cats, birds & other pets',desc_bn:'কুকুর, বিড়াল, পাখি',emoji:'🐾',colorIdx:9,count:98,lost:74,found:24,enabled:false},
+  {id:11,name:'Sports Equipment',name_bn:'ক্রীড়া সরঞ্জাম',desc:'Bicycles, helmets, gear & kits',desc_bn:'সাইকেল, হেলমেট, গিয়ার',emoji:'🏅',colorIdx:5,count:156,lost:89,found:67,enabled:true},
+  {id:12,name:'Other',name_bn:'অন্যান্য',desc:'Anything that does not fit above',desc_bn:'অন্য যেকোনো কিছু',emoji:'🎁',colorIdx:3,count:614,lost:378,found:236,enabled:true},
+];
+
+/* ═══════════════ STATE ═══════════════ */
+let lang='en', theme='dark', collapsed=false, viewMode='grid';
+let cats=[];
+
+/* ═══════════════ INIT ═══════════════ */
+window.addEventListener('DOMContentLoaded',()=>{
+  buildNav(); renderStats(); renderCats();
+  document.getElementById('page-date').textContent=
+    new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  fetchCategoriesFromDB();
+});
+
+/* ═══════════════ FETCH FROM DB ═══════════════ */
+async function fetchCategoriesFromDB(){
+  try{
+    const baseUrl=window.API_BASE_URL||'';
+    const res=await fetch(`${baseUrl}/api/categories?includeDisabled=true`);
+    const data=await res.json();
+    if(!res.ok || !data || !Array.isArray(data.categories)) throw new Error(data?.message || 'Invalid categories response');
+    cats=data.categories;
+    renderStats();
+    renderCats();
+  }catch(err){ console.error('Error fetching categories from DB:',err); showToast('Unable to load categories from MongoDB','danger'); }
+}
+
+/* ═══════════════ NAV ═══════════════ */
+const PAGE_MAP={
+  dashboard:'findit_dashboard.html',
+  users:'findit_usermanagement.html',
+  reports:'findit_reports.html',
+  categories:'findit_categories.html',
+  notifications:'findit_notifications.html',
+  analytics:'findit_analytics.html',
+  map:'findit_map.html',
+  settings:'findit_settings.html',
+};
+function goPage(key){
+  const url=PAGE_MAP[key];
+  if(url) window.location.href=url;
+}
+function buildNav(){
+  document.getElementById('sidebar-nav').innerHTML=NAV.map(n=>`
+    <button class="nav-item${n.key==='categories'?' active':''}" id="nav-${n.key}" onclick="goPage('${n.key}')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${n.icon}</svg>
+      <span class="nav-label">${lang==='en'?n.label:n.bn}</span>
+    </button>`).join('');
+}
+function toggleSidebar(){ collapsed=!collapsed; document.getElementById('sidebar').classList.toggle('collapsed',collapsed); }
+
+/* ═══════════════ THEME / LANG ═══════════════ */
+function toggleTheme(){
+  theme=theme==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',theme);
+  document.getElementById('theme-btn').innerHTML=theme==='dark'
+    ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>'
+    :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+}
+function toggleLang(){
+  lang=lang==='en'?'bn':'en';
+  document.getElementById('lang-btn').lastChild.textContent=' '+(lang==='en'?'বাংলা':'English');
+  buildNav(); renderStats(); renderCats();
+}
+
+/* ═══════════════ VIEW ═══════════════ */
+function setView(v){
+  viewMode=v;
+  document.getElementById('vt-grid').classList.toggle('active',v==='grid');
+  document.getElementById('vt-list').classList.toggle('active',v==='list');
+  renderCats();
+}
+
+/* ═══════════════ STATS ═══════════════ */
+function renderStats(){
+  const total=cats.length;
+  const enabled=cats.filter(c=>c.enabled).length;
+  const totalPosts=cats.reduce((s,c)=>s+(c.count||0),0);
+  const avgPosts=total?Math.round(totalPosts/total):0;
+  const DEFS=[
+    {label:'Total Categories',bn:'মোট বিভাগ',val:total,icon:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>',col:'#6B8AFF',bg:'rgba(107,138,255,.12)'},
+    {label:'Active',bn:'সক্রিয়',val:enabled,icon:'<polyline points="20 6 9 17 4 12"/>',col:'#4ade80',bg:'rgba(74,222,128,.10)'},
+    {label:'Total Posts',bn:'মোট পোস্ট',val:totalPosts.toLocaleString(),icon:'<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>',col:'#00D4AA',bg:'rgba(0,212,170,.12)'},
+    {label:'Avg per Category',bn:'গড় পোস্ট',val:avgPosts,icon:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>',col:'#F59E0B',bg:'rgba(245,158,11,.12)'},
+  ];
+  document.getElementById('stats-row').innerHTML=DEFS.map(s=>`
+    <div class="stat-card">
+      <div class="stat-top">
+        <div class="stat-icon" style="background:${s.bg}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="${s.col}" stroke-width="2" stroke-linecap="round">${s.icon}</svg>
+        </div>
+      </div>
+      <div class="stat-val">${s.val}</div>
+      <div class="stat-label">${lang==='en'?s.label:s.bn}</div>
+    </div>`).join('');
+}
+
+/* ═══════════════ FILTER + RENDER ═══════════════ */
+function getFiltered(){
+  const q=(document.getElementById('search-input').value||'').toLowerCase();
+  const sf=document.getElementById('status-filter').value;
+  const sort=document.getElementById('sort-filter').value;
+  let list=cats.filter(c=>{
+    const name=lang==='en'?c.name:c.name_bn;
+    const match=!q||name.toLowerCase().includes(q)||c.emoji.includes(q);
+    const statusMatch=sf==='all'||(sf==='enabled'&&c.enabled)||(sf==='disabled'&&!c.enabled);
+    return match&&statusMatch;
+  });
+  if(sort==='name') list=[...list].sort((a,b)=>a.name.localeCompare(b.name));
+  else if(sort==='count') list=[...list].sort((a,b)=>b.count-a.count);
+  else if(sort==='resolved') list=[...list].sort((a,b)=>b.found-a.found);
+  else list=[...list].sort((a,b)=>a.order-b.order);
+  return list;
+}
+
+function renderCats(){
+  const filtered=getFiltered();
+  const container=document.getElementById('cat-container');
+  const listHead=document.getElementById('cat-list-head');
+
+  if(!filtered.length){
+    listHead.style.display='none';
+    container.innerHTML=`<div class="empty-state">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      <h3>No categories found</h3>
+      <p>Try adjusting your search or filter, or add a new category.</p>
+    </div>`;
+    return;
+  }
+
+  if(viewMode==='grid'){
+    listHead.style.display='none';
+    container.innerHTML=`<div class="cat-grid">${filtered.map(c=>cardHTML(c)).join('')}</div>`;
+  } else {
+    listHead.style.display='grid';
+    container.innerHTML=`<div style="display:flex;flex-direction:column;gap:6px;">${filtered.map(c=>listRowHTML(c)).join('')}</div>`;
+  }
+}
+
+function cardHTML(c){
+  const col=COLORS[c.colorIdx]||COLORS[0];
+  const name=lang==='en'?c.name:c.name_bn;
+  const desc=lang==='en'?c.desc:c.desc_bn;
+  const trackBg=c.enabled?'#6B8AFF':'rgba(139,147,169,.22)';
+  const thumbLeft=c.enabled?'19px':'3px';
+  return `<div class="cat-card${c.enabled?'':' disabled-card'}" id="card-${c.id}">
+    <div class="cat-card-shine" style="background:${col.solid}"></div>
+    <div class="cat-card-top">
+      <div class="cat-emoji-wrap" style="background:${col.val}">
+        ${c.emoji}
+        <div class="cat-order">${c.order}</div>
+      </div>
+      <div class="cat-controls">
+        <div class="toggle-wrap" onclick="toggleCat(${c.id})" title="${c.enabled?'Disable':'Enable'} category">
+          <div class="toggle-track" style="background:${trackBg}"></div>
+          <div class="toggle-thumb" style="left:${thumbLeft}"></div>
+        </div>
+      </div>
+    </div>
+    <div class="cat-name">${name}</div>
+    <div class="cat-desc">${desc}</div>
+    <div class="cat-footer">
+      <div class="cat-stats">
+        <div class="cat-stat">
+          <div class="cat-stat-val">${c.count.toLocaleString()}</div>
+          <div class="cat-stat-key">Posts</div>
+        </div>
+        <div class="cat-stat">
+          <div class="cat-stat-val">${c.lost}</div>
+          <div class="cat-stat-key">Lost</div>
+        </div>
+        <div class="cat-stat">
+          <div class="cat-stat-val">${c.found}</div>
+          <div class="cat-stat-key">Found</div>
+        </div>
+      </div>
+      <div class="cat-actions">
+        ${c.enabled?`<span class="active-badge">Active</span>`:`<span class="disabled-badge">Off</span>`}
+        <button class="cat-btn" onclick="openEditModal(${c.id})" title="Edit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        </button>
+        <button class="cat-btn danger" onclick="confirmDelete(${c.id})" title="Delete">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function listRowHTML(c){
+  const col=COLORS[c.colorIdx]||COLORS[0];
+  const name=lang==='en'?c.name:c.name_bn;
+  const desc=lang==='en'?c.desc:c.desc_bn;
+  const trackBg=c.enabled?'#6B8AFF':'rgba(139,147,169,.22)';
+  const thumbLeft=c.enabled?'19px':'3px';
+  return `<div class="cat-list-row${c.enabled?'':''}" id="card-${c.id}">
+    <div>
+      <div class="list-emoji" style="background:${col.val}">${c.emoji}</div>
+    </div>
+    <div>
+      <div class="list-name">${name}</div>
+      <div style="font-size:9px;color:var(--muted);font-family:var(--font-m);">#${c.id} · order ${c.order}</div>
+    </div>
+    <div class="list-desc">${desc}</div>
+    <div class="list-count">${c.count.toLocaleString()}</div>
+    <div class="list-stat">${c.lost}</div>
+    <div class="list-stat">${c.found}</div>
+    <div>
+      <div class="toggle-wrap" onclick="toggleCat(${c.id})" style="display:inline-flex;position:relative;">
+        <div class="toggle-track" style="background:${trackBg};width:36px;height:20px;border-radius:10px;transition:background .2s;"></div>
+        <div class="toggle-thumb" style="position:absolute;top:3px;left:${thumbLeft};width:14px;height:14px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.3);"></div>
+      </div>
+    </div>
+    <div class="list-actions">
+      <button class="cat-btn" onclick="openEditModal(${c.id})" title="Edit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      </button>
+      <button class="cat-btn danger" onclick="confirmDelete(${c.id})" title="Delete">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+      </button>
+    </div>
+  </div>`;
+}
+
+/* ═══════════════ TOGGLE ═══════════════ */
+async function toggleCat(id){
+  const c=cats.find(c=>c.id===id);
+  if(!c) return;
+  const newStatus=!c.enabled;
+  try{
+    const baseUrl=window.API_BASE_URL||'';
+    const res=await fetch(`${baseUrl}/api/categories/${id}`,{
+      method:'PATCH',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({enabled:newStatus})
+    });
+    const data=await res.json();
+    if(!res.ok || !data?.category) throw new Error(data?.message || 'Category update failed');
+    cats=cats.map(item=>item.id===id?{...item,...data.category}:item);
+    renderStats(); renderCats();
+    showToast(`"${lang==='en'?c.name:c.name_bn}" ${newStatus?'enabled':'disabled'}`,newStatus?'success':'warning');
+  }catch(err){ console.error('Error toggling category in DB:',err); }
+}
+
+/* ═══════════════ DELETE ═══════════════ */
+function confirmDelete(id){
+  const c=cats.find(c=>c.id===id);
+  const name=lang==='en'?c.name:c.name_bn;
+  document.getElementById('modal-container').innerHTML=`
+    <div class="modal-bg" onclick="if(event.target===this)closeModal()">
+      <div class="modal-box" style="max-width:400px;">
+        <div class="confirm-icon" style="background:var(--danger-d)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#EF4444" stroke-width="2" stroke-linecap="round">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
+            <path d="M10 11v6"/><path d="M14 11v6"/>
+          </svg>
+        </div>
+        <div class="confirm-title">Delete Category</div>
+        <div class="confirm-sub">Are you sure you want to delete <strong style="color:var(--fg)">${name}</strong>? This will affect <strong style="color:#EF4444">${c.count.toLocaleString()} posts</strong> and cannot be undone.</div>
+        <div class="modal-footer">
+          <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+          <button class="modal-confirm danger" onclick="deleteCategory(${id})">Delete</button>
+        </div>
+      </div>
+    </div>`;
+}
+async function deleteCategory(id){
+  const c=cats.find(c=>c.id===id);
+  const name=c?(lang==='en'?c.name:c.name_bn):'Category';
+  try{
+    const baseUrl=window.API_BASE_URL||'';
+    const res=await fetch(`${baseUrl}/api/categories/${id}`,{ method:'DELETE' });
+    const data=await res.json();
+    if(!res.ok || !data?.success) throw new Error(data?.message || 'Category deletion failed');
+    cats=cats.filter(item=>item.id!==id);
+    closeModal(); renderStats(); renderCats();
+    showToast(`"${name}" deleted`,'danger');
+  }catch(err){ console.error('Error deleting category from DB:',err); showToast('Failed to delete from database','danger'); }
+}
+
+/* ═══════════════ ADD MODAL ═══════════════ */
+let modalEmoji='📦', modalColorIdx=0;
+
+function openAddModal(){
+  modalEmoji='📦'; modalColorIdx=0;
+  document.getElementById('modal-container').innerHTML=buildFormModal({
+    title:'Add New Category',
+    sub:'Create a new category for the FindIT platform.',
+    id:null, name:'', name_bn:'', desc:'', desc_bn:'',
+    emoji:'📦', colorIdx:0, count:0
+  });
+}
+
+function openEditModal(id){
+  const c=cats.find(c=>c.id===id);
+  modalEmoji=c.emoji; modalColorIdx=c.colorIdx;
+  document.getElementById('modal-container').innerHTML=buildFormModal({
+    title:'Edit Category',
+    sub:`Editing "${lang==='en'?c.name:c.name_bn}" — changes apply immediately.`,
+    id, name:c.name, name_bn:c.name_bn, desc:c.desc, desc_bn:c.desc_bn,
+    emoji:c.emoji, colorIdx:c.colorIdx, count:c.count
+  });
+}
+
+function buildFormModal({title,sub,id,name,name_bn,desc,desc_bn,emoji,colorIdx,count}){
+  const emojiGrid=EMOJIS.map(e=>`<div class="emoji-opt${e===emoji?' selected':''}" onclick="pickEmoji('${e}')">${e}</div>`).join('');
+  const colorSwatches=COLORS.map((c,i)=>`
+    <div class="color-swatch${i===colorIdx?' selected':''}" style="background:${c.solid}" onclick="pickColor(${i})" title="${c.solid}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>`).join('');
+  return `<div class="modal-bg" onclick="if(event.target===this)closeModal()">
+    <div class="modal-box">
+      <div class="modal-title">${title}</div>
+      <div class="modal-sub">${sub}</div>
+
+      <div class="emoji-section">
+        <div class="emoji-label">Icon & Color</div>
+        <div class="emoji-preview" id="emoji-preview" style="background:${COLORS[colorIdx].val};font-size:28px;" onclick="document.getElementById('emoji-grid-wrap').scrollIntoView({behavior:'smooth'})">${emoji}</div>
+        <div class="color-row" style="justify-content:center;margin-bottom:12px;">${colorSwatches}</div>
+        <div id="emoji-grid-wrap" class="emoji-grid">${emojiGrid}</div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <div class="field-label">Name (English) *</div>
+          <input type="text" id="f-name" value="${name}" placeholder="e.g. Electronics"/>
+          <div class="field-error" id="err-name">Name is required.</div>
+        </div>
+        <div class="field">
+          <div class="field-label">Name (বাংলা)</div>
+          <input type="text" id="f-name-bn" value="${name_bn}" placeholder="যেমন: ইলেকট্রনিক্স"/>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <div class="field-label">Description (EN)</div>
+          <input type="text" id="f-desc" value="${desc}" placeholder="Short description"/>
+        </div>
+        <div class="field">
+          <div class="field-label">Description (BN)</div>
+          <input type="text" id="f-desc-bn" value="${desc_bn}" placeholder="সংক্ষিপ্ত বিবরণ"/>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+        <button class="modal-confirm" onclick="submitForm(${id??'null'})">${id?'Save Changes':'Add Category'}</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function pickEmoji(e){
+  modalEmoji=e;
+  document.querySelectorAll('.emoji-opt').forEach(el=>el.classList.toggle('selected',el.textContent===e));
+  const prev=document.getElementById('emoji-preview');
+  if(prev){ prev.textContent=e; }
+}
+function pickColor(idx){
+  modalColorIdx=idx;
+  document.querySelectorAll('.color-swatch').forEach((el,i)=>el.classList.toggle('selected',i===idx));
+  const prev=document.getElementById('emoji-preview');
+  if(prev) prev.style.background=COLORS[idx].val;
+}
+
+async function submitForm(id){
+  const nameVal=(document.getElementById('f-name').value||'').trim();
+  const errEl=document.getElementById('err-name');
+  if(!nameVal){ errEl.classList.add('show'); return; }
+  errEl&&errEl.classList.remove('show');
+
+  const payload={
+    name:nameVal,
+    name_bn:(document.getElementById('f-name-bn').value||'').trim()||nameVal,
+    desc:(document.getElementById('f-desc').value||'').trim(),
+    desc_bn:(document.getElementById('f-desc-bn').value||'').trim(),
+    emoji:modalEmoji,
+    colorIdx:modalColorIdx,
+  };
+
+  const baseUrl=window.API_BASE_URL||'';
+  closeModal();
+
+  try{
+    if(id===null){
+      const res=await fetch(`${baseUrl}/api/categories`,{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(payload)
+      });
+      const data=await res.json();
+      if(res.ok&&data&&data.category){
+        cats.push(data.category);
+        showToast(`"${payload.name}" added`,'success');
+      } else throw new Error(data?.message || 'Category creation failed');
+    }else{
+      const res=await fetch(`${baseUrl}/api/categories/${id}`,{
+        method:'PATCH',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(payload)
+      });
+      const data=await res.json();
+      if(res.ok&&data&&data.category){
+        cats=cats.map(c=>c.id===id?{...c,...data.category}:c);
+        showToast(`"${payload.name}" updated`,'success');
+      } else throw new Error(data?.message || 'Category update failed');
+    }
+  }catch(err){
+    console.error('Error saving category to DB:',err);
+    showToast('Failed to save to database','danger');
+  }
+  renderStats(); renderCats();
+}
+
+
+/* ═══════════════ MODAL / TOAST ═══════════════ */
+function closeModal(){ document.getElementById('modal-container').innerHTML=''; }
+
+const TICONS={
+  success:'<polyline points="20 6 9 17 4 12"/>',
+  warning:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
+  danger:'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>',
+  info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/>',
+};
+function showToast(msg,type='info'){
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  el.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">${TICONS[type]}</svg>${msg}`;
+  document.getElementById('toast-wrap').appendChild(el);
+  setTimeout(()=>el.remove(),3600);
+}
+</script>
+</body>
+</html>

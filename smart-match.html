@@ -216,6 +216,15 @@
       </div>
     </div>
 
+    <!-- Smart Keyword Search Input Bar -->
+    <div class="smart-search-wrapper" style="margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:10px;background:var(--cb);border:1px solid var(--border);border-radius:16px;padding:0 14px;height:48px;box-shadow:0 2px 8px rgba(0,0,0,.04);">
+        <svg width="18" height="18" fill="none" stroke="#2563EB" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="smart-keyword-input" placeholder="Search phone model, smart watch, or item..." style="flex:1;background:transparent;border:none;outline:none;font-size:13px;font-family:'Inter',sans-serif;color:var(--tc);" oninput="onLiveQuerySearch(this.value)">
+        <button id="smart-keyword-clear" onclick="clearLiveQuerySearch()" style="display:none;background:none;border:none;cursor:pointer;color:var(--mc);font-size:16px;font-weight:700;">✕</button>
+      </div>
+    </div>
+
     <!-- Lost Item Selector -->
     <div class="selector-card" id="selector-wrapper" style="display:none;">
       <span class="selector-lbl">Matching for:</span>
@@ -340,20 +349,56 @@
     document.getElementById('banner-count').textContent = '0 Matches';
   }
 
+  let liveSearchDebounce = null;
+  async function onLiveQuerySearch(val) {
+    const q = (val || '').trim();
+    const clearBtn = document.getElementById('smart-keyword-clear');
+    if (clearBtn) clearBtn.style.display = q ? 'block' : 'none';
+
+    if (liveSearchDebounce) clearTimeout(liveSearchDebounce);
+    liveSearchDebounce = setTimeout(async () => {
+      if (!q) {
+        loadMatches(currentLostId);
+        return;
+      }
+
+      document.getElementById('banner-target').textContent = `AI Matches for "${q}"`;
+      document.getElementById('banner-count').textContent = 'Analyzing matches...';
+
+      try {
+        const url = `${window.API_BASE_URL || ''}/api/smart-match?q=${encodeURIComponent(q)}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        activeMatches = data.matches || [];
+        renderMatches();
+      } catch (err) {
+        console.error('Error fetching live matches:', err);
+      }
+    }, 200);
+  }
+
+  function clearLiveQuerySearch() {
+    const input = document.getElementById('smart-keyword-input');
+    if (input) input.value = '';
+    const clearBtn = document.getElementById('smart-keyword-clear');
+    if (clearBtn) clearBtn.style.display = 'none';
+    loadMatches(currentLostId);
+  }
+
   function renderNoLostReports() {
     document.getElementById('selector-wrapper').style.display = 'none';
     document.getElementById('banner-target').textContent = 'AI Smart Matching';
-    document.getElementById('banner-count').textContent = 'No Lost Reports';
+    document.getElementById('banner-count').textContent = 'Search Any Item';
     const body = document.getElementById('cards-body');
     body.innerHTML = `
       <div class="empty">
-        <div class="empty-icon" style="background:#FEF2F2;">
-          <svg width="32" height="32" fill="none" stroke="#EF4444" stroke-width="2" viewBox="0 0 24 24">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        <div class="empty-icon" style="background:#EFF6FF;">
+          <svg width="32" height="32" fill="none" stroke="#2563EB" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
           </svg>
         </div>
-        <p class="empty-title">You haven't posted any lost items</p>
-        <p class="empty-sub">Post a report for your lost item first so our AI engine can find matching found items across campus.</p>
+        <p class="empty-title">Search & Match Any Device</p>
+        <p class="empty-sub">Type a phone model, smartwatch, or lost item name above to see instant AI match percentage (90%, 93%, 100%) against all found items.</p>
         <button type="button" class="btn-report" onclick="location.href='report-lost.html'">+ Report Lost Item</button>
       </div>`;
   }

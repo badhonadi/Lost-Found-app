@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>FindIt — Help & Support</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="config.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:  #F8FAFC;
+      --cb:  #ffffff;
+      --tc:  #0F172A;
+      --mc:  #64748B;
+      --ib:  #F1F5F9;
+      --div: #F1F5F9;
+    }
+    body.dark {
+      --bg:  #0F172A;
+      --cb:  #1E293B;
+      --tc:  #F1F5F9;
+      --mc:  #94A3B8;
+      --ib:  #1E293B;
+      --div: #2D3B4E;
+    }
+
+    html, body {
+      height: 100%; overflow: hidden;
+      background: #dfe6ef;
+      font-family: 'Inter', sans-serif;
+    }
+    body { display: flex; align-items: center; justify-content: center; }
+
+    .screen {
+      width: min(100vw, 400px); height: 100dvh; max-height: 100dvh;
+      position: relative;
+      overflow-y: auto; overflow-x: hidden;
+      background: var(--bg); scrollbar-width: none;
+      border-radius: 28px;
+      box-shadow: 0 18px 45px rgba(15,23,42,.18);
+    }
+    .screen::-webkit-scrollbar { display: none; }
+
+    @media (max-width: 600px) {
+      body { background: var(--bg); }
+      .screen {
+        width: 100vw;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+
+    /* ── Header ── */
+    .header { padding: 48px 20px 24px; }
+    .header-row { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+    .back-btn {
+      width: 40px; height: 40px; border-radius: 16px;
+      background: var(--ib); border: none; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .screen-title {
+      font-family: 'Poppins', sans-serif; font-size: 20px; font-weight: 700;
+      color: var(--tc);
+    }
+    .screen-sub { font-size: 12px; color: var(--mc); margin-top: 1px; }
+
+    /* ── Contact cards grid ── */
+    .contact-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 12px; margin-bottom: 24px;
+    }
+    .contact-card {
+      padding: 16px; border-radius: 16px;
+      display: flex; flex-direction: column; gap: 8px;
+      border: none; cursor: pointer; text-align: left;
+      transition: transform .1s;
+    }
+    .contact-card:active { transform: scale(.96); }
+    .contact-icon {
+      width: 40px; height: 40px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .contact-label {
+      font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 600;
+      color: var(--tc);
+    }
+    .contact-sub { font-size: 12px; color: var(--mc); margin-top: 1px; }
+
+    /* ── FAQ section ── */
+    .faq-title {
+      font-family: 'Poppins', sans-serif; font-size: 15px; font-weight: 700;
+      color: var(--tc); margin-bottom: 12px;
+    }
+    .faq-list { display: flex; flex-direction: column; gap: 8px; padding-bottom: 32px; }
+
+    /* ── FAQ item (accordion) ── */
+    .faq-item { border-radius: 16px; overflow: hidden; background: var(--cb); }
+
+    .faq-btn {
+      width: 100%; display: flex; align-items: center;
+      justify-content: space-between; gap: 12px;
+      padding: 16px; background: transparent; border: none;
+      cursor: pointer; text-align: left;
+    }
+    .faq-btn:active { opacity: .8; }
+    .faq-question {
+      flex: 1; font-size: 14px; font-weight: 600;
+      color: var(--tc); font-family: 'Inter', sans-serif;
+      line-height: 1.4;
+    }
+    .faq-chevron-wrap {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--ib);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: background .2s;
+    }
+    .faq-chevron-wrap.open { background: #2563EB; }
+    .faq-chevron {
+      transition: transform .2s; color: var(--mc);
+    }
+    .faq-chevron.open { transform: rotate(90deg); color: white; }
+
+    .faq-answer {
+      display: none;
+      padding: 0 16px 16px;
+      font-size: 14px; line-height: 1.6;
+      color: var(--mc); font-family: 'Inter', sans-serif;
+    }
+    .faq-answer.open { display: block; }
+  </style>
+</head>
+<body>
+<div class="screen">
+
+  <div class="header">
+
+    <!-- Header row -->
+    <div class="header-row">
+      <button class="back-btn" onclick="history.back()">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" style="color:var(--tc)">
+          <path d="M19 12H5"/><path d="m12 19-7-7 7-7"/>
+        </svg>
+      </button>
+      <div>
+        <h2 class="screen-title">Help &amp; Support</h2>
+        <p class="screen-sub">We're here to help you</p>
+      </div>
+    </div>
+
+    <!-- Contact cards -->
+    <div class="contact-grid">
+
+      <!-- Live Chat -->
+      <button class="contact-card" id="chat-card" onclick="contactSupport('live_chat')" style="background:#EFF6FF">
+        <div class="contact-icon" style="background:white">
+          <svg width="20" height="20" fill="none" stroke="#2563EB" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="contact-label">Live Chat</p>
+          <p class="contact-sub">Avg. 2 min reply</p>
+        </div>
+      </button>
+
+      <!-- Email Us -->
+      <button class="contact-card" id="email-card" onclick="contactSupport('email')" style="background:#ECFDF5">
+        <div class="contact-icon" style="background:white">
+          <svg width="20" height="20" fill="none" stroke="#14B8A6" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+            <polyline points="22,6 12,13 2,6"/>
+          </svg>
+        </div>
+        <div>
+          <p class="contact-label">Email Us</p>
+          <p class="contact-sub">support@findit.app</p>
+        </div>
+      </button>
+
+    </div>
+
+    <!-- FAQ heading -->
+    <h3 class="faq-title">Frequently Asked Questions</h3>
+
+    <!-- FAQ list -->
+    <div class="faq-list">
+
+      <div class="faq-item">
+        <button class="faq-btn" onclick="toggleFaq(0)">
+          <span class="faq-question">How do I report a lost item?</span>
+          <div class="faq-chevron-wrap" id="wrap-0">
+            <svg class="faq-chevron" id="chev-0" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </button>
+        <div class="faq-answer" id="ans-0">
+          Tap the '+' button or 'Report Lost Item' on the home screen, fill in the details, add photos, and submit.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-btn" onclick="toggleFaq(1)">
+          <span class="faq-question">How does Smart Match work?</span>
+          <div class="faq-chevron-wrap" id="wrap-1">
+            <svg class="faq-chevron" id="chev-1" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </button>
+        <div class="faq-answer" id="ans-1">
+          Our AI compares your lost item report against all found item reports using keywords, location, category, and description similarity.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-btn" onclick="toggleFaq(2)">
+          <span class="faq-question">How do I claim a found item?</span>
+          <div class="faq-chevron-wrap" id="wrap-2">
+            <svg class="faq-chevron" id="chev-2" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </button>
+        <div class="faq-answer" id="ans-2">
+          Open the item detail, tap 'Claim This Item', and provide identifying details. The finder will review your claim.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-btn" onclick="toggleFaq(3)">
+          <span class="faq-question">Is my personal information safe?</span>
+          <div class="faq-chevron-wrap" id="wrap-3">
+            <svg class="faq-chevron" id="chev-3" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </button>
+        <div class="faq-answer" id="ans-3">
+          Yes. Your contact details are only shared after a claim is verified. We never display your full phone number publicly.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-btn" onclick="toggleFaq(4)">
+          <span class="faq-question">How do I delete my post?</span>
+          <div class="faq-chevron-wrap" id="wrap-4">
+            <svg class="faq-chevron" id="chev-4" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </button>
+        <div class="faq-answer" id="ans-4">
+          Go to My Posts, find the item, and tap the 'Delete' button.
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const baseUrl = window.API_BASE_URL || '';
+  const storedUser = JSON.parse(localStorage.getItem('findit_user') || sessionStorage.getItem('findit_user') || 'null');
+
+  if (localStorage.getItem('findit_dark') === 'true') {
+    document.body.classList.add('dark');
+    // in dark mode the contact card backgrounds use --cb
+    document.getElementById('chat-card').style.background  = 'var(--cb)';
+    document.getElementById('email-card').style.background = 'var(--cb)';
+    // icon wraps use color+22 tint
+    document.getElementById('chat-card').querySelector('.contact-icon').style.background  = 'rgba(37,99,235,.13)';
+    document.getElementById('email-card').querySelector('.contact-icon').style.background = 'rgba(20,184,166,.13)';
+  }
+
+  let openIdx = null;
+
+  async function contactSupport(type) {
+    const isChat = type === 'live_chat';
+    try {
+      const response = await fetch(`${baseUrl}/api/support-requests`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: storedUser && storedUser.id,
+          type,
+          subject: isChat ? 'Live chat request' : 'Email support request',
+          message: isChat
+            ? 'User requested live chat support from the Help & Support page.'
+            : 'User requested email support from the Help & Support page.'
+        })
+      });
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        throw new Error(result.message || 'Unable to save support request.');
+      }
+      if (isChat) {
+        alert('Your support request has been saved. Our team will contact you shortly.');
+      } else {
+        window.location.href = 'mailto:support@findit.app';
+      }
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
+  function toggleFaq(i) {
+    // close previously open
+    if (openIdx !== null && openIdx !== i) {
+      document.getElementById('ans-' + openIdx).classList.remove('open');
+      document.getElementById('wrap-' + openIdx).classList.remove('open');
+      document.getElementById('chev-' + openIdx).classList.remove('open');
+    }
+
+    const isOpen = openIdx === i;
+    openIdx = isOpen ? null : i;
+
+    document.getElementById('ans-' + i).classList.toggle('open', !isOpen);
+    document.getElementById('wrap-' + i).classList.toggle('open', !isOpen);
+    document.getElementById('chev-' + i).classList.toggle('open', !isOpen);
+  }
+</script>
+</body>
+</html>

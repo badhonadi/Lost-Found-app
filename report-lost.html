@@ -634,11 +634,12 @@
   <script>
     if (localStorage.getItem('findit_dark') === 'true') document.body.classList.add('dark');
 
-    const CATS = ['Electronics','Wallet','Phone','Keys','ID Card','Documents','Bags','Clothing','Others'];
-    let selCat = 'Electronics';
+    let CATS = [];
+    let selCat = '';
 
     function renderCats() {
       const wrap = document.getElementById('cats');
+      if (!wrap) return;
       wrap.innerHTML = '';
       CATS.forEach(c => {
         const btn = document.createElement('button');
@@ -648,7 +649,26 @@
         wrap.appendChild(btn);
       });
     }
+
+    async function loadCategoriesFromDB() {
+      try {
+        const baseUrl = (typeof window.API_BASE_URL !== 'undefined') ? window.API_BASE_URL : '';
+        const res = await fetch(`${baseUrl}/api/categories`);
+        const data = await res.json();
+        if (data && Array.isArray(data.categories)) {
+          const activeCats = data.categories.filter(c => c.enabled !== false);
+          if (activeCats.length > 0) {
+            CATS = activeCats.map(c => c.name);
+            if (!CATS.includes(selCat)) selCat = CATS[0];
+            renderCats();
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load categories from DB:', err);
+      }
+    }
     renderCats();
+    loadCategoriesFromDB();
 
     function addPhotos(input) {
       const row = document.getElementById('photo-row');

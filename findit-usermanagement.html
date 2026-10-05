@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>FindIT Admin — User Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="config.js"></script>
+<style>
+/* ════════════════════════════════
+   RESET
+════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+button,input,select,textarea{font-family:inherit;}
+html,body{height:100%;overflow:hidden;}
+
+/* ════════════════════════════════
+   TOKENS — dark
+════════════════════════════════ */
+:root{
+  --bg:        #0B0F1A;
+  --card:      #141928;
+  --sidebar:   #0D1120;
+  --border:    rgba(255,255,255,0.07);
+  --border2:   rgba(255,255,255,0.04);
+  --primary:   #6B8AFF;
+  --primary-d: rgba(107,138,255,0.14);
+  --primary-g: rgba(107,138,255,0.26);
+  --accent:    #00D4AA;
+  --fg:        #E8EAF6;
+  --muted:     #8B93A9;
+  --muted-bg:  rgba(255,255,255,0.055);
+  --muted-bg2: rgba(255,255,255,0.035);
+  --danger:    #EF4444;
+  --danger-d:  rgba(239,68,68,0.12);
+  --amber:     #F59E0B;
+  --amber-d:   rgba(245,158,11,0.13);
+  --green:     #4ade80;
+  --green-d:   rgba(74,222,128,0.11);
+  --violet:    #A78BFA;
+  --violet-d:  rgba(167,139,250,0.12);
+  --radius:    16px;
+  --font-h:    'Plus Jakarta Sans',sans-serif;
+  --font-b:    'Inter',sans-serif;
+  --font-m:    'JetBrains Mono',monospace;
+}
+[data-theme="light"]{
+  --bg:        #EEF0F8;
+  --card:      #FFFFFF;
+  --sidebar:   #0D1120;
+  --border:    rgba(0,0,0,0.08);
+  --border2:   rgba(0,0,0,0.04);
+  --primary:   #4F6EF7;
+  --primary-d: rgba(79,110,247,0.10);
+  --primary-g: rgba(79,110,247,0.20);
+  --accent:    #00C49F;
+  --fg:        #0D1120;
+  --muted:     #6B7280;
+  --muted-bg:  rgba(0,0,0,0.05);
+  --muted-bg2: rgba(0,0,0,0.03);
+  --danger-d:  rgba(239,68,68,0.09);
+  --amber-d:   rgba(245,158,11,0.09);
+  --green-d:   rgba(74,222,128,0.08);
+  --violet-d:  rgba(167,139,250,0.09);
+}
+
+/* ════════════════════════════════
+   LAYOUT
+════════════════════════════════ */
+body{font-family:var(--font-b);background:var(--bg);color:var(--fg);font-size:14px;display:flex;}
+.shell{display:flex;height:100vh;width:100%;}
+
+/* ════════════════════════════════
+   SIDEBAR
+════════════════════════════════ */
+.sidebar{
+  width:232px;height:100vh;display:flex;flex-direction:column;
+  background:var(--sidebar);border-right:1px solid rgba(255,255,255,.05);
+  flex-shrink:0;transition:width .25s ease;overflow:hidden;z-index:10;
+}
+.sidebar.collapsed{width:64px;}
+.sidebar-header{
+  height:56px;display:flex;align-items:center;padding:0 16px;
+  border-bottom:1px solid rgba(255,255,255,.05);flex-shrink:0;gap:10px;
+}
+.logo-mark{
+  width:32px;height:32px;border-radius:9px;flex-shrink:0;
+  background:linear-gradient(135deg,#6B8AFF 0%,#4F6EF7 55%,#00D4AA 100%);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 12px rgba(107,138,255,.38);
+}
+.logo-mark svg{width:16px;height:16px;}
+.logo-text{overflow:hidden;white-space:nowrap;}
+.logo-name{font-family:var(--font-h);font-size:16px;font-weight:800;color:#fff;letter-spacing:-.3px;display:block;}
+.logo-sub{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.3);display:block;}
+.sidebar-nav{flex:1;overflow-y:auto;padding:12px 8px;display:flex;flex-direction:column;gap:2px;scrollbar-width:none;}
+.sidebar-nav::-webkit-scrollbar{display:none;}
+.nav-item{
+  display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:10px;
+  font-size:12px;font-weight:500;color:rgba(255,255,255,.4);
+  cursor:pointer;border:1px solid transparent;transition:all .15s;
+  background:none;width:100%;text-align:left;white-space:nowrap;
+}
+.nav-item svg{width:16px;height:16px;flex-shrink:0;color:rgba(255,255,255,.3);transition:color .15s;}
+.nav-item:hover{color:rgba(255,255,255,.75);background:rgba(255,255,255,.04);}
+.nav-item:hover svg{color:rgba(255,255,255,.55);}
+.nav-item.active{background:rgba(107,138,255,.13);color:#9BAEFF;border-color:rgba(107,138,255,.22);}
+.nav-item.active svg{color:#6B8AFF;}
+.nav-label{overflow:hidden;}
+.sidebar.collapsed .nav-label{display:none;}
+.sidebar.collapsed .nav-item{justify-content:center;padding:10px;}
+.sidebar-footer{padding:12px 8px;border-top:1px solid rgba(255,255,255,.05);}
+.logout-btn{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;margin-bottom:6px;border:1px solid rgba(239,68,68,.18);border-radius:8px;background:rgba(239,68,68,.08);color:#f87171;cursor:pointer;font-size:12px;font-weight:600;}
+.logout-btn:hover{background:rgba(239,68,68,.15);}
+.logout-btn svg{width:14px;height:14px;flex-shrink:0;}
+.sidebar.collapsed .logout-btn{justify-content:center;padding:10px;}
+.sidebar.collapsed .logout-label{display:none;}
+.collapse-btn{
+  display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:7px 10px;
+  border-radius:8px;border:none;background:none;color:rgba(255,255,255,.28);
+  cursor:pointer;width:100%;font-size:11px;font-weight:500;transition:all .15s;
+}
+.collapse-btn:hover{background:rgba(255,255,255,.04);color:rgba(255,255,255,.55);}
+.sidebar.collapsed .collapse-btn{justify-content:center;}
+.collapse-btn svg{width:14px;height:14px;flex-shrink:0;transition:transform .25s;}
+.sidebar.collapsed .collapse-btn svg{transform:rotate(180deg);}
+.sidebar.collapsed .collapse-label{display:none;}
+
+/* ════════════════════════════════
+   MAIN
+════════════════════════════════ */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden;}
+
+/* TOP BAR */
+.topbar{
+  height:56px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;border-bottom:1px solid var(--border);
+  background:color-mix(in srgb,var(--bg) 80%,transparent);
+  backdrop-filter:blur(20px);position:sticky;top:0;z-index:9;flex-shrink:0;
+}
+.topbar-left h2{font-family:var(--font-h);font-size:13px;font-weight:700;color:var(--fg);}
+.topbar-left p{font-size:10px;color:var(--muted);}
+.topbar-right{display:flex;align-items:center;gap:8px;}
+.search-wrap{position:relative;}
+.search-wrap input{
+  padding:6px 12px 6px 32px;border-radius:10px;font-size:11px;
+  background:var(--muted-bg);border:1px solid var(--border);color:var(--fg);
+  width:180px;outline:none;transition:border-color .15s;
+}
+.search-wrap input:focus{border-color:var(--primary);}
+.search-wrap input::placeholder{color:var(--muted);}
+.search-icon{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:12px;height:12px;color:var(--muted);}
+.icon-btn{
+  width:32px;height:32px;border-radius:8px;border:1px solid var(--border);
+  background:var(--muted-bg);color:var(--fg);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;position:relative;
+}
+.icon-btn:hover{background:var(--muted-bg2);}
+.icon-btn svg{width:14px;height:14px;}
+.notif-badge-dot{
+  position:absolute;top:-3px;right:-3px;width:8px;height:8px;
+  border-radius:50%;background:#EF4444;border:2px solid var(--bg);
+}
+.lang-btn{
+  display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;
+  border:1px solid var(--border);background:var(--muted-bg);color:var(--fg);
+  font-size:11px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.lang-btn:hover{background:var(--muted-bg2);}
+.avatar-pill{
+  width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,#6B8AFF,#8B5CF6);
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;color:#fff;flex-shrink:0;
+}
+
+/* ════════════════════════════════
+   CONTENT AREA
+════════════════════════════════ */
+.content-wrap{flex:1;display:flex;overflow:hidden;}
+
+/* LEFT PANEL — user list */
+.user-panel{
+  flex:1;min-width:0;overflow-y:auto;padding:20px;
+  scrollbar-width:thin;scrollbar-color:var(--border) transparent;
+}
+.user-panel::-webkit-scrollbar{width:4px;}
+.user-panel::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* RIGHT PANEL — detail */
+.detail-panel{
+  width:360px;flex-shrink:0;overflow-y:auto;padding:20px;
+  border-left:1px solid var(--border);
+  background:color-mix(in srgb,var(--card) 70%,transparent);
+  scrollbar-width:none;
+}
+.detail-panel::-webkit-scrollbar{display:none;}
+.detail-panel.hidden{display:none;}
+@media(max-width:1000px){.detail-panel{width:300px;}}
+
+/* ════════════════════════════════
+   STAT ROW
+════════════════════════════════ */
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px;}
+@media(max-width:900px){.stats-row{grid-template-columns:repeat(3,1fr);}}
+.stat-mini{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:12px 14px;cursor:default;
+}
+.stat-mini-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.stat-mini-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;}
+.stat-mini-icon svg{width:12px;height:12px;}
+.stat-mini-val{font-family:var(--font-h);font-size:20px;font-weight:800;color:var(--fg);line-height:1;}
+.stat-mini-label{font-size:10px;color:var(--muted);margin-top:3px;}
+.stat-mini-trend{font-size:9px;font-weight:700;}
+.up{color:#4ade80;} .dn{color:#f87171;} .neu{color:var(--muted);}
+
+/* ════════════════════════════════
+   TOOLBAR
+════════════════════════════════ */
+.toolbar{
+  display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;
+}
+.tool-search{position:relative;flex:1;min-width:180px;}
+.tool-search input{
+  width:100%;padding:8px 12px 8px 34px;border-radius:10px;
+  background:var(--card);border:1px solid var(--border);color:var(--fg);
+  font-size:12px;outline:none;transition:border-color .15s;
+}
+.tool-search input:focus{border-color:var(--primary);}
+.tool-search input::placeholder{color:var(--muted);}
+.tool-search svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);width:13px;height:13px;color:var(--muted);}
+.filter-select{
+  padding:7px 10px;border-radius:10px;border:1px solid var(--border);
+  background:var(--card);color:var(--fg);font-size:11px;outline:none;cursor:pointer;
+}
+.filter-select option{background:var(--card);}
+.add-user-btn{
+  display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:10px;
+  background:var(--primary-d);border:1px solid rgba(107,138,255,.25);
+  color:var(--primary);font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.add-user-btn:hover{background:var(--primary-g);}
+.add-user-btn svg{width:13px;height:13px;}
+
+/* ════════════════════════════════
+   TABLE
+════════════════════════════════ */
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.table-head{
+  display:grid;
+  grid-template-columns:32px 1fr 1fr 110px 96px 80px;
+  gap:0;padding:10px 16px;border-bottom:1px solid var(--border);
+}
+.th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:flex;align-items:center;gap:4px;}
+.th svg{width:10px;height:10px;cursor:pointer;}
+.table-body{display:flex;flex-direction:column;}
+.table-row{
+  display:grid;
+  grid-template-columns:32px 1fr 1fr 110px 96px 80px;
+  gap:0;padding:10px 16px;border-bottom:1px solid var(--border2);
+  cursor:pointer;transition:background .12s;align-items:center;
+}
+.table-row:last-child{border-bottom:none;}
+.table-row:hover{background:var(--muted-bg);}
+.table-row.selected{background:var(--primary-d);border-left:3px solid var(--primary);}
+.table-row.selected:hover{background:var(--primary-g);}
+
+.row-check{
+  width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border);
+  background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;
+}
+.row-check.checked{background:var(--primary);border-color:var(--primary);}
+.row-check.checked::after{content:'✓';font-size:9px;color:#fff;font-weight:700;}
+
+.user-cell{display:flex;align-items:center;gap:10px;min-width:0;}
+.user-av{
+  width:30px;height:30px;border-radius:9px;display:flex;align-items:center;
+  justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;
+}
+.user-cell-info{min-width:0;}
+.user-cell-name{font-size:12px;font-weight:600;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-cell-id{font-size:10px;color:var(--muted);font-family:var(--font-m);}
+
+.td{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:4px;overflow:hidden;}
+.td-email{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+
+.role-chip{font-size:9px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap;}
+.role-admin{background:rgba(107,138,255,.16);color:#6B8AFF;}
+.role-moderator{background:rgba(167,139,250,.14);color:#A78BFA;}
+.role-user{background:rgba(139,147,169,.12);color:#8B93A9;}
+
+.status-chip{font-size:9px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap;}
+.s-active{background:rgba(74,222,128,.12);color:#4ade80;}
+.s-suspended{background:rgba(245,158,11,.14);color:#F59E0B;}
+.s-banned{background:rgba(239,68,68,.13);color:#EF4444;}
+.s-pending{background:rgba(107,138,255,.14);color:#6B8AFF;}
+
+.row-actions{display:flex;align-items:center;gap:4px;}
+.row-btn{
+  width:26px;height:26px;border-radius:7px;border:1px solid var(--border);
+  background:var(--muted-bg);color:var(--muted);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.row-btn:hover{background:var(--primary-d);border-color:rgba(107,138,255,.22);color:var(--primary);}
+.row-btn svg{width:11px;height:11px;}
+
+/* pagination */
+.pagination{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--border);}
+.page-info{font-size:11px;color:var(--muted);}
+.page-btns{display:flex;gap:4px;}
+.page-btn{
+  width:28px;height:28px;border-radius:7px;border:1px solid var(--border);
+  background:var(--muted-bg);color:var(--fg);font-size:11px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.page-btn:hover{background:var(--primary-d);border-color:rgba(107,138,255,.22);color:var(--primary);}
+.page-btn.active{background:var(--primary-d);border-color:rgba(107,138,255,.28);color:var(--primary);font-weight:700;}
+.page-btn svg{width:11px;height:11px;}
+
+/* ════════════════════════════════
+   DETAIL PANEL
+════════════════════════════════ */
+.dp-close{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;
+}
+.dp-close-btn{
+  width:28px;height:28px;border-radius:8px;border:1px solid var(--border);
+  background:var(--muted-bg);color:var(--muted);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.dp-close-btn:hover{background:var(--muted-bg2);}
+.dp-close-btn svg{width:13px;height:13px;}
+.dp-close-label{font-size:11px;font-weight:700;color:var(--muted);}
+
+.dp-avatar-wrap{display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:20px;}
+.dp-avatar{
+  width:72px;height:72px;border-radius:20px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;font-weight:800;color:#fff;position:relative;
+}
+.dp-avatar-badge{
+  position:absolute;bottom:-4px;right:-4px;width:20px;height:20px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;border:2px solid var(--card);
+}
+.dp-avatar-badge svg{width:9px;height:9px;}
+.dp-name{font-family:var(--font-h);font-size:16px;font-weight:800;color:var(--fg);text-align:center;}
+.dp-id{font-family:var(--font-m);font-size:10px;color:var(--muted);text-align:center;}
+
+.dp-chips{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;}
+.dp-chip{font-size:10px;font-weight:700;padding:3px 10px;border-radius:999px;}
+
+.dp-section{margin-bottom:18px;}
+.dp-section-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px;}
+.dp-info-grid{display:flex;flex-direction:column;gap:6px;}
+.dp-info-row{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:8px;
+  padding:7px 10px;border-radius:9px;background:var(--muted-bg);
+}
+.dp-info-key{font-size:10px;color:var(--muted);white-space:nowrap;}
+.dp-info-val{font-size:11px;font-weight:600;color:var(--fg);text-align:right;word-break:break-all;}
+.dp-info-val.mono{font-family:var(--font-m);font-size:10px;}
+
+/* action buttons */
+.dp-actions{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
+.action-btn{
+  width:100%;padding:10px 14px;border-radius:11px;font-size:12px;font-weight:700;
+  cursor:pointer;border:1px solid;display:flex;align-items:center;gap:8px;
+  transition:all .15s;text-align:left;
+}
+.action-btn svg{width:14px;height:14px;flex-shrink:0;}
+.action-btn .btn-label{flex:1;}
+.action-btn .btn-sub{font-size:10px;font-weight:400;opacity:.7;}
+.btn-approve{
+  background:var(--green-d);border-color:rgba(74,222,128,.2);color:#4ade80;
+}
+.btn-approve:hover{background:rgba(74,222,128,.18);}
+.btn-suspend{
+  background:var(--amber-d);border-color:rgba(245,158,11,.22);color:#F59E0B;
+}
+.btn-suspend:hover{background:rgba(245,158,11,.2);}
+.btn-ban{
+  background:var(--danger-d);border-color:rgba(239,68,68,.2);color:#EF4444;
+}
+.btn-ban:hover{background:rgba(239,68,68,.18);}
+.btn-reset{
+  background:var(--violet-d);border-color:rgba(167,139,250,.2);color:#A78BFA;
+}
+.btn-reset:hover{background:rgba(167,139,250,.18);}
+.btn-notif{
+  background:var(--primary-d);border-color:rgba(107,138,255,.22);color:var(--primary);
+}
+.btn-notif:hover{background:var(--primary-g);}
+.btn-view{
+  background:var(--muted-bg);border-color:var(--border);color:var(--muted);
+}
+.btn-view:hover{background:var(--muted-bg2);}
+
+/* activity mini */
+.dp-activity{display:flex;flex-direction:column;gap:8px;}
+.dp-act-item{display:flex;align-items:flex-start;gap:8px;}
+.dp-act-dot{
+  width:24px;height:24px;border-radius:7px;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;
+}
+.dp-act-dot svg{width:10px;height:10px;}
+.dp-act-text{font-size:11px;color:var(--fg);line-height:1.35;}
+.dp-act-time{font-size:10px;color:var(--muted);margin-top:1px;}
+
+/* toast */
+.toast-wrap{
+  position:fixed;bottom:24px;right:24px;z-index:9999;
+  display:flex;flex-direction:column;gap:8px;align-items:flex-end;pointer-events:none;
+}
+.toast{
+  display:flex;align-items:center;gap:10px;padding:11px 16px;border-radius:12px;
+  border:1px solid;font-size:12px;font-weight:600;
+  box-shadow:0 12px 40px rgba(0,0,0,.35);pointer-events:all;
+  animation:slideUp .22s ease;min-width:260px;max-width:320px;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+.toast svg{width:14px;height:14px;flex-shrink:0;}
+.toast.success{background:rgba(74,222,128,.11);border-color:rgba(74,222,128,.22);color:#4ade80;}
+.toast.warning{background:rgba(245,158,11,.11);border-color:rgba(245,158,11,.22);color:#F59E0B;}
+.toast.danger{background:rgba(239,68,68,.11);border-color:rgba(239,68,68,.22);color:#EF4444;}
+.toast.info{background:rgba(107,138,255,.11);border-color:rgba(107,138,255,.22);color:var(--primary);}
+
+/* modal */
+.modal-bg{
+  position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);
+  z-index:9990;display:flex;align-items:center;justify-content:center;
+  animation:fadeIn .18s ease;
+}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.modal-box{
+  background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:28px;width:420px;max-width:94vw;box-shadow:0 24px 80px rgba(0,0,0,.5);
+  animation:popIn .2s ease;
+}
+@keyframes popIn{from{opacity:0;transform:scale(.95);}to{opacity:1;transform:scale(1);}}
+.modal-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+.modal-icon svg{width:22px;height:22px;}
+.modal-title{font-family:var(--font-h);font-size:17px;font-weight:800;color:var(--fg);text-align:center;margin-bottom:6px;}
+.modal-sub{font-size:12px;color:var(--muted);text-align:center;line-height:1.5;margin-bottom:20px;}
+.modal-textarea{
+  width:100%;padding:10px 12px;border-radius:10px;background:var(--muted-bg);
+  border:1px solid var(--border);color:var(--fg);font-size:12px;resize:none;
+  outline:none;transition:border-color .15s;margin-bottom:16px;
+}
+.modal-textarea:focus{border-color:var(--primary);}
+.modal-textarea::placeholder{color:var(--muted);}
+.modal-btns{display:flex;gap:10px;}
+.modal-btn-cancel{
+  flex:1;padding:10px;border-radius:11px;border:1px solid var(--border);
+  background:var(--muted-bg);color:var(--muted);font-size:12px;font-weight:700;cursor:pointer;
+  transition:all .15s;
+}
+.modal-btn-cancel:hover{background:var(--muted-bg2);}
+.modal-btn-confirm{
+  flex:1;padding:10px;border-radius:11px;border:1px solid;
+  font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;
+}
+.modal-btn-confirm.green{background:var(--green-d);border-color:rgba(74,222,128,.22);color:#4ade80;}
+.modal-btn-confirm.amber{background:var(--amber-d);border-color:rgba(245,158,11,.22);color:#F59E0B;}
+.modal-btn-confirm.red{background:var(--danger-d);border-color:rgba(239,68,68,.2);color:#EF4444;}
+.modal-btn-confirm.violet{background:var(--violet-d);border-color:rgba(167,139,250,.2);color:#A78BFA;}
+.modal-btn-confirm.blue{background:var(--primary-d);border-color:rgba(107,138,255,.22);color:var(--primary);}
+.modal-btn-confirm:hover{opacity:.85;}
+body{font-size:15px;}
+.avatar-pill{border:0;cursor:pointer;}
+.nav-item{font-size:13px;}
+.topbar-left h2{font-size:15px;}
+.topbar-left p{font-size:11px;}
+.section-title{font-size:16px;}
+.section-sub{font-size:12px;}
+.stat-label{font-size:12px;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- ══════════ SIDEBAR ══════════ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
+        <circle cx="11" cy="11" r="4"/><line x1="14.5" y1="14.5" x2="19" y2="19"/>
+        <circle cx="11" cy="11" r="1.5" fill="#fff" stroke="none"/>
+      </svg>
+    </div>
+    <div class="logo-text">
+      <span class="logo-name">FindIT</span>
+      <span class="logo-sub">Admin</span>
+    </div>
+  </div>
+  <nav class="sidebar-nav" id="sidebar-nav"></nav>
+  <div class="sidebar-footer">
+    <button class="logout-btn" onclick="localStorage.removeItem('findit_admin_active');sessionStorage.removeItem('findit_admin_active');location.href='findit-otp.html'" title="Log out"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1 2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg><span class="logout-label">Logout</span></button>
+    <button class="collapse-btn" onclick="toggleSidebar()">
+      <span class="collapse-label">Collapse</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+  </div>
+</aside>
+
+<!-- ══════════ MAIN ══════════ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <h2>User Management</h2>
+      <p id="page-date"></p>
+    </div>
+    <div class="topbar-right">
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Search users…" id="top-search" oninput="filterUsers()"/>
+      </div>
+      <button class="lang-btn" onclick="toggleLang()" id="lang-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+        বাংলা
+      </button>
+      <button class="icon-btn" onclick="toggleTheme()" id="theme-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+      </button>
+      <button class="icon-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+        <span class="notif-badge-dot"></span>
+      </button>
+      <button class="avatar-pill" onclick="location.href='findit-settings.html'" title="Admin profile">SA</button>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="content-wrap">
+
+    <!-- LEFT: USER LIST -->
+    <div class="user-panel">
+
+      <!-- Stat row -->
+      <div class="stats-row" id="stats-row"></div>
+
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="tool-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" placeholder="Search by name, email, phone…" id="main-search" oninput="filterUsers()"/>
+        </div>
+        <select class="filter-select" id="status-filter" onchange="filterUsers()">
+          <option value="all">All Status</option>
+          <option value="active">Active</option>
+          <option value="suspended">Suspended</option>
+          <option value="banned">Banned</option>
+          <option value="pending">Pending</option>
+        </select>
+        <select class="filter-select" id="role-filter" onchange="filterUsers()">
+          <option value="all">All Roles</option>
+          <option value="admin">Admin</option>
+          <option value="moderator">Moderator</option>
+          <option value="user">User</option>
+        </select>
+        <button class="add-user-btn" onclick="showAddUserModal()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add User
+        </button>
+      </div>
+
+      <!-- Table -->
+      <div class="table-wrap">
+        <div class="table-head">
+          <div class="th"></div>
+          <div class="th">User</div>
+          <div class="th">Email / Phone</div>
+          <div class="th">Role</div>
+          <div class="th">Status</div>
+          <div class="th">Actions</div>
+        </div>
+        <div class="table-body" id="table-body"></div>
+        <div class="pagination">
+          <span class="page-info" id="page-info">Showing 1–10 of 24</span>
+          <div class="page-btns" id="page-btns"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: DETAIL PANEL -->
+    <div class="detail-panel hidden" id="detail-panel">
+      <div class="dp-close">
+        <span class="dp-close-label">User Details</span>
+        <button class="dp-close-btn" onclick="closeDetail()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div id="detail-content"></div>
+    </div>
+
+  </div><!-- /content-wrap -->
+</div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- Toast container -->
+<div class="toast-wrap" id="toast-wrap"></div>
+
+<!-- Modal container -->
+<div id="modal-container"></div>
+
+<script>
+/* ═══════════════════════════
+   DATA
+═══════════════════════════ */
+const NAV_ITEMS=[
+  {key:'dashboard',label:'Dashboard',label_bn:'ড্যাশবোর্ড',icon:'<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'},
+  {key:'users',label:'User Management',label_bn:'ব্যবহারকারী ব্যবস্থাপনা',icon:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>'},
+  {key:'reports',label:'Reports & Complaints',label_bn:'রিপোর্ট ও অভিযোগ',icon:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>'},
+  {key:'categories',label:'Categories',label_bn:'বিভাগসমূহ',icon:'<line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/>'},
+  {key:'notifications',label:'Notifications',label_bn:'বিজ্ঞপ্তি',icon:'<path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/>'},
+  {key:'analytics',label:'Analytics',label_bn:'বিশ্লেষণ',icon:'<line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>'},
+  {key:'settings',label:'Settings',label_bn:'সেটিংস',icon:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>'},
+];
+
+const AVATARS=[
+  'linear-gradient(135deg,#6B8AFF,#4F6EF7)',
+  'linear-gradient(135deg,#f43f5e,#ec4899)',
+  'linear-gradient(135deg,#F59E0B,#f97316)',
+  'linear-gradient(135deg,#00D4AA,#06b6d4)',
+  'linear-gradient(135deg,#A78BFA,#8B5CF6)',
+  'linear-gradient(135deg,#4ade80,#22c55e)',
+  'linear-gradient(135deg,#fb923c,#f43f5e)',
+  'linear-gradient(135deg,#38bdf8,#818cf8)',
+];
+
+const MOCK_USERS=[
+  {id:'USR001',name:'Md. Rahim Uddin',initials:'RU',av:0,email:'rahim.uddin@gmail.com',phone:'+88 017 1234 5678',role:'admin',status:'active',joined:'2024-03-15',location:'Dhaka',posts:24,resolved:18,reports:0,lastActive:'2 min ago',verified:true,
+   activity:[
+     {icon:'<polyline points="20 6 9 17 4 12"/>',bg:'rgba(74,222,128,.12)',col:'#4ade80',t:'Post approved',s:'MacBook Air M2 — Airport',tm:'2 hr ago'},
+     {icon:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>',bg:'rgba(107,138,255,.12)',col:'#6B8AFF',t:'Profile updated',s:'Email verified',tm:'1 day ago'},
+   ]
+  },
+  {id:'USR002',name:'Nusrat Jahan',initials:'NJ',av:1,email:'nusrat.j@yahoo.com',phone:'+88 018 9876 5432',role:'moderator',status:'active',joined:'2024-05-20',location:'Chattogram',posts:11,resolved:9,reports:1,lastActive:'15 min ago',verified:true,
+   activity:[
+     {icon:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3"/>',bg:'rgba(239,68,68,.10)',col:'#EF4444',t:'Report submitted',s:'Fake Gold Necklace',tm:'8 min ago'},
+     {icon:'<path d="M14 2H6a2 2 0 00-2 2v16"/>',bg:'rgba(245,158,11,.12)',col:'#F59E0B',t:'Post flagged',s:'iPhone listing — possible duplicate',tm:'3 hr ago'},
+   ]
+  },
+  {id:'USR003',name:'Tanvir Hasan',initials:'TH',av:2,email:'tanvir.h@outlook.com',phone:'+88 019 5555 1234',role:'user',status:'suspended',joined:'2024-01-08',location:'Rajshahi',posts:7,resolved:3,reports:3,lastActive:'2 days ago',verified:false,
+   activity:[
+     {icon:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/>',bg:'rgba(239,68,68,.10)',col:'#EF4444',t:'Account suspended',s:'Multiple policy violations',tm:'2 days ago'},
+     {icon:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3"/>',bg:'rgba(239,68,68,.10)',col:'#EF4444',t:'Report received',s:'Spam listings detected',tm:'3 days ago'},
+   ]
+  },
+  {id:'USR004',name:'Ayesha Akter',initials:'AA',av:3,email:'ayesha.a@gmail.com',phone:'+88 017 8888 9999',role:'user',status:'active',joined:'2024-07-01',location:'Khulna',posts:5,resolved:4,reports:0,lastActive:'1 hr ago',verified:true,
+   activity:[
+     {icon:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>',bg:'rgba(107,138,255,.12)',col:'#6B8AFF',t:'Joined FindIT',s:'Account created',tm:'27 days ago'},
+   ]
+  },
+  {id:'USR005',name:'Mehedi Hasan',initials:'MH',av:4,email:'mehedi.h@bd.com',phone:'+88 016 7777 2222',role:'user',status:'active',joined:'2024-06-14',location:'Sylhet',posts:19,resolved:15,reports:0,lastActive:'30 min ago',verified:true,
+   activity:[
+     {icon:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',bg:'rgba(167,139,250,.12)',col:'#A78BFA',t:'Case resolved',s:'Leather Wallet — smart match',tm:'1 hr ago'},
+   ]
+  },
+  {id:'USR006',name:'Roksana Begum',initials:'RB',av:5,email:'roksana.b@gmail.com',phone:'+88 015 3333 6666',role:'user',status:'pending',joined:'2024-07-27',location:'Mymensingh',posts:0,resolved:0,reports:0,lastActive:'Just now',verified:false,
+   activity:[
+     {icon:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>',bg:'rgba(107,138,255,.12)',col:'#6B8AFF',t:'Account created',s:'Awaiting verification',tm:'5 min ago'},
+   ]
+  },
+  {id:'USR007',name:'Karim Molla',initials:'KM',av:6,email:'karim.m@mail.com',phone:'+88 017 2244 8866',role:'user',status:'banned',joined:'2023-11-03',location:'Barishal',posts:2,resolved:0,reports:8,lastActive:'14 days ago',verified:false,
+   activity:[
+     {icon:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/>',bg:'rgba(239,68,68,.10)',col:'#EF4444',t:'Account banned',s:'Fraudulent activity confirmed',tm:'14 days ago'},
+   ]
+  },
+  {id:'USR008',name:'Shirin Akter',initials:'SA',av:7,email:'shirin.a@yahoo.com',phone:'+88 018 1111 4444',role:'moderator',status:'active',joined:'2024-02-28',location:'Rangpur',posts:32,resolved:28,reports:0,lastActive:'5 min ago',verified:true,
+   activity:[
+     {icon:'<polyline points="20 6 9 17 4 12"/>',bg:'rgba(74,222,128,.12)',col:'#4ade80',t:'Post approved',s:'Samsung Galaxy S24',tm:'5 min ago'},
+   ]
+  },
+];
+
+/* ═══════════════════════════
+   STATE
+═══════════════════════════ */
+let lang='en', theme='dark', collapsed=false;
+let selectedId=null;
+let users=[];
+let currentPage=1, pageSize=8;
+
+/* ═══════════════════════════
+   INIT
+═══════════════════════════ */
+window.addEventListener('DOMContentLoaded',()=>{
+  buildNav(); renderStats(); renderTable(); setDate();
+  fetchUsersFromDB();
+});
+
+async function fetchUsersFromDB() {
+  try {
+    const baseUrl = window.API_BASE_URL || '';
+    const res = await fetch(`${baseUrl}/api/admin/users`);
+    const data = await res.json();
+    if (data && Array.isArray(data.users)) {
+      // Exclude admin user from User Management list
+      users = data.users.filter(u => u.email !== 'admin@gmail.com' && u.role !== 'admin');
+      renderStats();
+      renderTable();
+      if (selectedId) renderDetail();
+    }
+  } catch (err) {
+    console.error('Error fetching users from MongoDB:', err);
+  }
+}
+
+function setDate(){
+  document.getElementById('page-date').textContent=
+    new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+
+/* ═══════════════════════════
+   NAV
+═══════════════════════════ */
+function buildNav(){
+  document.getElementById('sidebar-nav').innerHTML=NAV_ITEMS.map(n=>`
+    <button class="nav-item${n.key==='users'?' active':''}" id="nav-${n.key}" onclick="goPage('${n.key}')">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${n.icon}</svg>
+      <span class="nav-label">${lang==='en'?n.label:n.label_bn}</span>
+    </button>`).join('');
+}
+
+function goPage(key){
+  if (key === 'dashboard') window.location.href = 'findit_dashboard.html';
+  else if (key === 'users') window.location.href = 'findit_usermanagement.html';
+  else if (key === 'reports') window.location.href = 'findit_reports.html';
+  else if (key === 'categories') window.location.href = 'findit_categories.html';
+  else if (key === 'analytics') window.location.href = 'findit_analytics.html';
+  else if (key === 'map') window.location.href = 'findit_map.html';
+  else if (key === 'settings') window.location.href = 'findit_settings.html';
+  else if (key === 'notifications') window.location.href = 'findit_notifications.html';
+}
+
+function toggleSidebar(){
+  collapsed=!collapsed;
+  document.getElementById('sidebar').classList.toggle('collapsed',collapsed);
+}
+
+/* ═══════════════════════════
+   THEME / LANG
+═══════════════════════════ */
+function toggleTheme(){
+  theme=theme==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',theme);
+  const btn=document.getElementById('theme-btn');
+  btn.innerHTML=theme==='dark'
+    ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>'
+    :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
+}
+function toggleLang(){
+  lang=lang==='en'?'bn':'en';
+  document.getElementById('lang-btn').lastChild.textContent=' '+(lang==='en'?'বাংলা':'English');
+  buildNav(); renderStats();
+}
+
+/* ═══════════════════════════
+   STATS
+═══════════════════════════ */
+const STATS_DEF=[
+  {key:'total',label:'Total Users',label_bn:'মোট ব্যবহারকারী',icon:'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>',col:'#6B8AFF',bg:'rgba(107,138,255,.12)'},
+  {key:'active',label:'Active',label_bn:'সক্রিয়',icon:'<path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>',col:'#4ade80',bg:'rgba(74,222,128,.10)'},
+  {key:'suspended',label:'Suspended',label_bn:'স্থগিত',icon:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',col:'#F59E0B',bg:'rgba(245,158,11,.12)'},
+  {key:'banned',label:'Banned',label_bn:'নিষিদ্ধ',icon:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',col:'#EF4444',bg:'rgba(239,68,68,.10)'},
+  {key:'pending',label:'Pending',label_bn:'বাকি',icon:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',col:'#A78BFA',bg:'rgba(167,139,250,.12)'},
+];
+function renderStats(){
+  const counts={
+    total:users.length,
+    active:users.filter(u=>u.status==='active').length,
+    suspended:users.filter(u=>u.status==='suspended').length,
+    banned:users.filter(u=>u.status==='banned').length,
+    pending:users.filter(u=>u.status==='pending').length,
+  };
+  document.getElementById('stats-row').innerHTML=STATS_DEF.map(s=>`
+    <div class="stat-mini">
+      <div class="stat-mini-top">
+        <div class="stat-mini-icon" style="background:${s.bg}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="${s.col}" stroke-width="2" stroke-linecap="round">${s.icon}</svg>
+        </div>
+      </div>
+      <div class="stat-mini-val">${counts[s.key]}</div>
+      <div class="stat-mini-label">${lang==='en'?s.label:s.label_bn}</div>
+    </div>`).join('');
+}
+
+/* ═══════════════════════════
+   TABLE
+═══════════════════════════ */
+function getFiltered(){
+  const q=(document.getElementById('main-search')||document.getElementById('top-search')).value.toLowerCase();
+  const sf=document.getElementById('status-filter').value;
+  const rf=document.getElementById('role-filter').value;
+  return users.filter(u=>{
+    const match=!q||(u.name.toLowerCase().includes(q)||u.email.toLowerCase().includes(q)||u.phone.includes(q)||u.id.toLowerCase().includes(q));
+    const statusMatch=sf==='all'||u.status===sf;
+    const roleMatch=rf==='all'||u.role===rf;
+    return match&&statusMatch&&roleMatch;
+  });
+}
+
+function filterUsers(){
+  currentPage=1; renderTable();
+}
+
+function renderTable(){
+  const filtered=getFiltered();
+  const total=filtered.length;
+  const start=(currentPage-1)*pageSize;
+  const paged=filtered.slice(start,start+pageSize);
+
+  const tbody=document.getElementById('table-body');
+  if(!paged.length){
+    tbody.innerHTML=`<div style="padding:40px;text-align:center;color:var(--muted);font-size:12px;">No users found.</div>`;
+  } else {
+    tbody.innerHTML=paged.map(u=>rowHTML(u)).join('');
+  }
+
+  document.getElementById('page-info').textContent=
+    `Showing ${Math.min(start+1,total)}–${Math.min(start+pageSize,total)} of ${total}`;
+  renderPager(total);
+}
+
+function rowHTML(u){
+  const statusMap={active:'s-active',suspended:'s-suspended',banned:'s-banned',pending:'s-pending'};
+  const roleMap={admin:'role-admin',moderator:'role-moderator',user:'role-user'};
+  const isSelected=u.id===selectedId;
+  return `<div class="table-row${isSelected?' selected':''}" onclick="selectUser('${u.id}')">
+    <div>
+      <div class="row-check${isSelected?' checked':''}"></div>
+    </div>
+    <div class="user-cell">
+      <div class="user-av" style="background:${AVATARS[u.av]}">${u.initials}</div>
+      <div class="user-cell-info">
+        <div class="user-cell-name">${u.name}</div>
+        <div class="user-cell-id">${u.id}</div>
+      </div>
+    </div>
+    <div class="td">
+      <div class="td-email">${u.email}</div>
+    </div>
+    <div class="td">
+      <span class="role-chip ${roleMap[u.role]}">${u.role}</span>
+    </div>
+    <div class="td">
+      <span class="status-chip ${statusMap[u.status]}">${u.status}</span>
+    </div>
+    <div class="row-actions" onclick="event.stopPropagation()">
+      <button class="row-btn" title="View details" onclick="selectUser('${u.id}')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+      <button class="row-btn" title="Suspend" onclick="quickAction('${u.id}','suspend')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </button>
+      <button class="row-btn" title="Delete" onclick="quickAction('${u.id}','delete')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+      </button>
+    </div>
+  </div>`;
+}
+
+function quickAction(id, type){
+  const u=users.find(u=>u.id===id);
+  if(!u) return;
+  if(type==='suspend'){
+    if(u.status==='suspended'){
+      updateStatus(id,'active'); showToast('Account reactivated','success');
+    } else {
+      updateStatus(id,'suspended'); showToast(`${u.name} suspended`,'warning');
+    }
+  } else if(type==='delete'){
+    showConfirmModal({
+      icon:'<polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>',
+      iconBg:'rgba(239,68,68,.12)',iconCol:'#EF4444',
+      title:'Remove User',
+      sub:`Are you sure you want to remove <strong>${u.name}</strong> from MongoDB? This action cannot be undone.`,
+      confirmLabel:'Remove',confirmClass:'red',
+      onConfirm: async ()=>{
+        users=users.filter(userItem=>userItem.id!==id);
+        if(selectedId===id) closeDetail();
+        renderStats(); renderTable();
+        showToast(`${u.name} removed from MongoDB`,'danger');
+        try {
+          const baseUrl = window.API_BASE_URL || '';
+          await fetch(`${baseUrl}/api/admin/users/${id}`, { method: 'DELETE' });
+        } catch (e) {
+          console.warn('Delete sync error:', e);
+        }
+      }
+    });
+  }
+}
+
+function renderPager(total){
+  const pages=Math.ceil(total/pageSize);
+  const wrap=document.getElementById('page-btns');
+  let html='';
+  html+=`<button class="page-btn" onclick="changePage(${currentPage-1})" ${currentPage===1?'disabled style="opacity:.35;pointer-events:none;"':''}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+  </button>`;
+  for(let i=1;i<=pages;i++){
+    html+=`<button class="page-btn${i===currentPage?' active':''}" onclick="changePage(${i})">${i}</button>`;
+  }
+  html+=`<button class="page-btn" onclick="changePage(${currentPage+1})" ${currentPage===pages?'disabled style="opacity:.35;pointer-events:none;"':''}>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="9 18 15 12 9 6"/></svg>
+  </button>`;
+  wrap.innerHTML=html;
+}
+function changePage(p){ currentPage=p; renderTable(); }
+
+/* ═══════════════════════════
+   DETAIL PANEL
+═══════════════════════════ */
+function selectUser(id){
+  selectedId=id;
+  renderTable();
+  renderDetail();
+  document.getElementById('detail-panel').classList.remove('hidden');
+}
+function closeDetail(){
+  selectedId=null;
+  document.getElementById('detail-panel').classList.add('hidden');
+  renderTable();
+}
+
+function renderDetail(){
+  const u=users.find(u=>u.id===selectedId);
+  if(!u) return;
+  const statusMap={active:'s-active',suspended:'s-suspended',banned:'s-banned',pending:'s-pending'};
+  const roleMap={admin:'role-admin',moderator:'role-moderator',user:'role-user'};
+  const badgeMap={
+    active:{bg:'rgba(74,222,128,.12)',col:'#4ade80',icon:'<polyline points="20 6 9 17 4 12"/>'},
+    suspended:{bg:'rgba(245,158,11,.14)',col:'#F59E0B',icon:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'},
+    banned:{bg:'rgba(239,68,68,.13)',col:'#EF4444',icon:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/>'},
+    pending:{bg:'rgba(107,138,255,.14)',col:'#6B8AFF',icon:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>'},
+  };
+  const b=badgeMap[u.status];
+  const activBtn=u.status!=='active'
+    ?`<button class="action-btn btn-approve" onclick="doAction('${u.id}','activate')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <div><div class="btn-label">Activate Account</div><div class="btn-sub">Restore full access</div></div>
+      </button>` : '';
+  const suspBtn=u.status!=='suspended'
+    ?`<button class="action-btn btn-suspend" onclick="doAction('${u.id}','suspend')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <div><div class="btn-label">Suspend Account</div><div class="btn-sub">Temporarily restrict access</div></div>
+      </button>` : '';
+  const banBtn=u.status!=='banned'
+    ?`<button class="action-btn btn-ban" onclick="doAction('${u.id}','ban')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        <div><div class="btn-label">Ban User</div><div class="btn-sub">Permanently block account</div></div>
+      </button>` : '';
+  const approveVerifBtn=!u.verified
+    ?`<button class="action-btn btn-approve" onclick="doAction('${u.id}','verify')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <div><div class="btn-label">Approve Verification</div><div class="btn-sub">Grant verified badge</div></div>
+      </button>` : '';
+
+  document.getElementById('detail-content').innerHTML=`
+    <div class="dp-avatar-wrap">
+      <div class="dp-avatar" style="background:${AVATARS[u.av]}">
+        ${u.initials}
+        <div class="dp-avatar-badge" style="background:${b.bg}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="${b.col}" stroke-width="2.5" stroke-linecap="round">${b.icon}</svg>
+        </div>
+      </div>
+      <div>
+        <div class="dp-name">${u.name}</div>
+        <div class="dp-id">${u.id}</div>
+      </div>
+    </div>
+
+    <div class="dp-chips">
+      <span class="dp-chip ${roleMap[u.role]}">${u.role}</span>
+      <span class="dp-chip ${statusMap[u.status]}">${u.status}</span>
+      ${u.verified?'<span class="dp-chip" style="background:rgba(0,212,170,.12);color:#00D4AA;">✓ Verified</span>':'<span class="dp-chip" style="background:rgba(139,147,169,.10);color:#8B93A9;">Unverified</span>'}
+    </div>
+
+    <div class="dp-section">
+      <div class="dp-section-title">Contact Info</div>
+      <div class="dp-info-grid">
+        <div class="dp-info-row">
+          <span class="dp-info-key">Email</span>
+          <span class="dp-info-val">${u.email}</span>
+        </div>
+        <div class="dp-info-row">
+          <span class="dp-info-key">Phone</span>
+          <span class="dp-info-val mono">${u.phone}</span>
+        </div>
+        <div class="dp-info-row">
+          <span class="dp-info-key">Location</span>
+          <span class="dp-info-val">${u.location}</span>
+        </div>
+        <div class="dp-info-row">
+          <span class="dp-info-key">Joined</span>
+          <span class="dp-info-val mono">${u.joined}</span>
+        </div>
+        <div class="dp-info-row">
+          <span class="dp-info-key">Last Active</span>
+          <span class="dp-info-val">${u.lastActive}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dp-section">
+      <div class="dp-section-title">Activity Stats</div>
+      <div class="dp-info-grid">
+        <div class="dp-info-row">
+          <span class="dp-info-key">Total Posts</span>
+          <span class="dp-info-val mono">${u.posts}</span>
+        </div>
+        <div class="dp-info-row">
+          <span class="dp-info-key">Resolved Cases</span>
+          <span class="dp-info-val mono">${u.resolved}</span>
+        </div>
+        <div class="dp-info-row">
+          <span class="dp-info-key">Reports Received</span>
+          <span class="dp-info-val mono" style="color:${u.reports>0?'#EF4444':'var(--fg)'}">${u.reports}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dp-section">
+      <div class="dp-section-title">Admin Actions</div>
+      <div class="dp-actions">
+        ${approveVerifBtn}
+        ${activBtn}
+        ${suspBtn}
+        ${banBtn}
+        <button class="action-btn btn-reset" onclick="doAction('${u.id}','reset')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+          <div><div class="btn-label">Reset Password</div><div class="btn-sub">Send reset link via email</div></div>
+        </button>
+        <button class="action-btn btn-notif" onclick="doAction('${u.id}','notify')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <div><div class="btn-label">Send Notification</div><div class="btn-sub">Push message to this user</div></div>
+        </button>
+        <button class="action-btn btn-view" onclick="showToast('Viewing post history…','info')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <div><div class="btn-label">View Post History</div><div class="btn-sub">${u.posts} posts total</div></div>
+        </button>
+      </div>
+    </div>
+
+    <div class="dp-section">
+      <div class="dp-section-title">Recent Activity</div>
+      <div class="dp-activity">
+        ${u.activity.map(a=>`
+        <div class="dp-act-item">
+          <div class="dp-act-dot" style="background:${a.bg}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="${a.col}" stroke-width="2" stroke-linecap="round">${a.icon}</svg>
+          </div>
+          <div>
+            <div class="dp-act-text">${a.t}</div>
+            <div class="dp-act-time">${a.s} · ${a.tm}</div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+  `;
+}
+
+/* ═══════════════════════════
+   ACTIONS
+═══════════════════════════ */
+async function updateStatus(id,status){
+  users=users.map(u=>u.id===id?{...u,status}:u);
+  renderStats(); renderTable();
+  if(selectedId===id) renderDetail();
+
+  try {
+    const baseUrl = window.API_BASE_URL || '';
+    await fetch(`${baseUrl}/api/admin/users/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    });
+  } catch (e) {
+    console.warn('Could not update status in MongoDB:', e);
+  }
+}
+
+function doAction(id,type){
+  const u=users.find(u=>u.id===id);
+  if(!u) return;
+  if(type==='activate'){
+    updateStatus(id,'active');
+    showToast(`${u.name}'s account activated`,'success');
+  } else if(type==='suspend'){
+    showConfirmModal({
+      icon:'<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+      iconBg:'rgba(245,158,11,.14)',iconCol:'#F59E0B',
+      title:'Suspend Account',
+      sub:`Suspending <strong>${u.name}</strong> will restrict their access temporarily. They will be notified via email.`,
+      confirmLabel:'Suspend',confirmClass:'amber',
+      onConfirm:()=>{ updateStatus(id,'suspended'); showToast(`${u.name} suspended`,'warning'); }
+    });
+  } else if(type==='ban'){
+    showConfirmModal({
+      icon:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
+      iconBg:'rgba(239,68,68,.13)',iconCol:'#EF4444',
+      title:'Ban User',
+      sub:`This will <strong>permanently ban</strong> ${u.name} from FindIT. All their posts will be hidden. This action is severe.`,
+      confirmLabel:'Ban Permanently',confirmClass:'red',
+      onConfirm:()=>{ updateStatus(id,'banned'); showToast(`${u.name} has been banned`,'danger'); }
+    });
+  } else if(type==='verify'){
+    users=users.map(u=>u.id===id?{...u,verified:true,status:'active'}:u);
+    renderStats(); renderTable(); renderDetail();
+    showToast(`${u.name} verified successfully`,'success');
+    updateStatus(id,'active');
+  } else if(type==='reset'){
+    showConfirmModal({
+      icon:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>',
+      iconBg:'rgba(167,139,250,.14)',iconCol:'#A78BFA',
+      title:'Reset Password',
+      sub:`A password reset link will be sent to <strong>${u.email}</strong>. The user will be prompted to create a new password.`,
+      confirmLabel:'Send Reset Link',confirmClass:'violet',
+      onConfirm:()=>{ showToast(`Reset link sent to ${u.email}`,'info'); }
+    });
+  } else if(type==='notify'){
+    showNotifyModal(u);
+  }
+}
+
+/* ═══════════════════════════
+   ADD USER MODAL
+═══════════════════════════ */
+function showAddUserModal(){
+  const container=document.getElementById('modal-container');
+  container.innerHTML=`
+    <div class="modal-bg" onclick="if(event.target===this)closeModal()">
+      <div class="modal-box">
+        <div class="modal-icon" style="background:rgba(107,138,255,.14)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#6B8AFF" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+        </div>
+        <div class="modal-title">Add New User</div>
+        <div class="modal-sub">Create a new user account and save directly to MongoDB.</div>
+        <textarea class="modal-textarea" rows="1" placeholder="Full name" id="add-name" style="margin-bottom:8px;resize:none;"></textarea>
+        <textarea class="modal-textarea" rows="1" placeholder="Email address" id="add-email" style="margin-bottom:8px;resize:none;"></textarea>
+        <select class="modal-textarea" id="add-role" style="margin-bottom:16px;cursor:pointer;">
+          <option value="user">User</option>
+          <option value="moderator">Moderator</option>
+          <option value="admin">Admin</option>
+        </select>
+        <div class="modal-btns">
+          <button class="modal-btn-cancel" onclick="closeModal()">Cancel</button>
+          <button class="modal-btn-confirm blue" onclick="addUserSubmit()">Create User in MongoDB</button>
+        </div>
+      </div>
+    </div>`;
+}
+async function addUserSubmit(){
+  const name=document.getElementById('add-name').value.trim();
+  const email=document.getElementById('add-email').value.trim();
+  const role=document.getElementById('add-role').value;
+  if(!name||!email){ showToast('Please fill in all fields','warning'); return; }
+
+  try {
+    const baseUrl = window.API_BASE_URL || '';
+    const res = await fetch(`${baseUrl}/api/admin/users`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fullName: name, email, role, password: 'password123' })
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.message || 'Unable to create user');
+
+    closeModal();
+    showToast(`${name} added to MongoDB successfully`,'success');
+    await fetchUsersFromDB();
+  } catch (err) {
+    showToast(err.message || 'Error saving user','danger');
+  }
+}
+
+/* ═══════════════════════════
+   NOTIFY MODAL
+═══════════════════════════ */
+function showNotifyModal(u){
+  const container=document.getElementById('modal-container');
+  container.innerHTML=`
+    <div class="modal-bg" onclick="if(event.target===this)closeModal()">
+      <div class="modal-box">
+        <div class="modal-icon" style="background:rgba(107,138,255,.14)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#6B8AFF" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+        </div>
+        <div class="modal-title">Send Notification</div>
+        <div class="modal-sub">Sending to <strong style="color:var(--fg)">${u.name}</strong> (${u.email})</div>
+        <textarea class="modal-textarea" id="notif-msg" rows="4" placeholder="Write your message here…"></textarea>
+        <div class="modal-btns">
+          <button class="modal-btn-cancel" onclick="closeModal()">Cancel</button>
+          <button class="modal-btn-confirm blue" onclick="sendNotif('${u.id}')">Send</button>
+        </div>
+      </div>
+    </div>`;
+}
+function sendNotif(id){
+  const msg=document.getElementById('notif-msg').value.trim();
+  if(!msg){ showToast('Please write a message first','warning'); return; }
+  const u=users.find(u=>u.id===id);
+  closeModal();
+  showToast(`Notification sent to ${u.name}`,'success');
+}
+
+/* ═══════════════════════════
+   CONFIRM MODAL
+═══════════════════════════ */
+let _onConfirm=null;
+function showConfirmModal({icon,iconBg,iconCol,title,sub,confirmLabel,confirmClass,onConfirm}){
+  _onConfirm=onConfirm;
+  document.getElementById('modal-container').innerHTML=`
+    <div class="modal-bg" onclick="if(event.target===this)closeModal()">
+      <div class="modal-box">
+        <div class="modal-icon" style="background:${iconBg}">
+          <svg viewBox="0 0 24 24" fill="none" stroke="${iconCol}" stroke-width="2" stroke-linecap="round">${icon}</svg>
+        </div>
+        <div class="modal-title">${title}</div>
+        <div class="modal-sub">${sub}</div>
+        <div class="modal-btns">
+          <button class="modal-btn-cancel" onclick="closeModal()">Cancel</button>
+          <button class="modal-btn-confirm ${confirmClass}" onclick="confirmAction()">${confirmLabel}</button>
+        </div>
+      </div>
+    </div>`;
+}
+function confirmAction(){
+  closeModal();
+  if(_onConfirm){ _onConfirm(); _onConfirm=null; }
+}
+function closeModal(){
+  document.getElementById('modal-container').innerHTML='';
+  _onConfirm=null;
+}
+
+/* ═══════════════════════════
+   TOAST
+═══════════════════════════ */
+const TOAST_ICONS={
+  success:'<polyline points="20 6 9 17 4 12"/>',
+  warning:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>',
+  danger:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
+  info:'<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+};
+function showToast(msg, type='info'){
+  const wrap=document.getElementById('toast-wrap');
+  const div=document.createElement('div');
+  div.className=`toast ${type}`;
+  div.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">${TOAST_ICONS[type]}</svg>${msg}`;
+  wrap.appendChild(div);
+  setTimeout(()=>div.remove(), 3500);
+}
+</script>
+</body>
+</html>
